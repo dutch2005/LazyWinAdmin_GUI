@@ -1,124 +1,172 @@
 
-# IT Adventures — All 5 Requests Combined Plan
+# IT Adventures — Complete Update Plan
 
-## What needs to happen
-
-Here's a summary of each of the 5 requests and what will be done:
+This plan covers all the items you mentioned: migrating to your own Supabase instance, protecting your email address from scrapers, updating your email, updating LinkedIn URL, updating certifications (Microsoft 365 + 3CX V20), and updating your work history once you paste it.
 
 ---
 
-## 1. Make you Admin (Immediate Action)
+## What will be done
 
-Your account already exists in the system (`dutch2005@gmail.com`). You have **no admin role assigned yet**, which is why you cannot log into the admin panel.
+### 1. Supabase Migration (your own project)
 
-This will be fixed by inserting your user ID into the `user_roles` table directly via a database operation. No SQL to run manually — it will be done for you as part of this implementation.
+You'll provide your project URL (e.g. `https://yourproject.supabase.co`) and your Anon/Publishable key. These will be stored as secrets in the project so they are never exposed in source code.
 
-After this, you can log into `/admin/login` with your email and password immediately.
+The `.env` file and `src/integrations/supabase/client.ts` are auto-generated — I will update the environment variables to point to your own Supabase instance.
 
----
+**Data migration approach:**
+- The existing Lovable Cloud database contains your blog posts, contact messages, newsletter subscribers, and user roles.
+- I will export the blog posts as seed data so they can be re-inserted into your own Supabase project.
+- You'll need to re-run the same database migrations (schema) in your own Supabase project — I'll provide the SQL to run.
+- Contact messages and newsletter subscribers can be exported to CSV from the Cloud backend view.
 
-## 2. Markdown Visual Editor (Rich Text Editor in Admin)
+**Schema you need to recreate in your Supabase project** (SQL to run in your Supabase SQL editor):
+```sql
+-- App role enum
+create type public.app_role as enum ('admin', 'moderator', 'user');
 
-The admin panel currently has plain `<textarea>` fields for article content. This will be replaced with a **custom built-in Markdown toolbar editor** — no external library needed (no new npm packages required).
+-- User roles table
+create table public.user_roles (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  role app_role not null,
+  unique (user_id, role)
+);
+alter table public.user_roles enable row level security;
 
-### How it works:
-A `MarkdownEditor` component will be built in `src/components/admin/MarkdownEditor.tsx` that wraps the existing textarea with a toolbar above it. The toolbar will have buttons that insert Markdown syntax at the cursor position.
+-- has_role security definer function
+create or replace function public.has_role(_user_id uuid, _role app_role)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.user_roles where user_id = _user_id and role = _role)
+$$;
 
-### Toolbar buttons:
-| Button | Action | Inserts |
-|---|---|---|
-| **B** Bold | Wraps selection | `**text**` |
-| *I* Italic | Wraps selection | `*text*` |
-| H1 Heading | Line prefix | `## Heading` |
-| H2 Sub-heading | Line prefix | `### Subheading` |
-| Code Block | Block wrapper | ` ```\ncode\n``` ` |
-| Inline Code | Wraps selection | `` `code` `` |
-| Bullet List | Line prefix | `- item` |
-| Link | Wraps + prompt | `[text](url)` |
-| Horizontal Rule | Inserts line | `---` |
+-- Blog posts
+create table public.blog_posts (
+  id uuid primary key default gen_random_uuid(),
+  slug text unique not null,
+  category text not null,
+  date date not null default current_date,
+  read_time integer not null default 5,
+  featured boolean not null default false,
+  title_nl text not null,
+  title_en text not null,
+  excerpt_nl text not null default '',
+  excerpt_en text not null default '',
+  content_nl text not null default '',
+  content_en text not null default '',
+  image_url text,
+  published boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table public.blog_posts enable row level security;
+create policy "Published posts are public" on public.blog_posts for select using (published = true);
+create policy "Admins can manage all posts" on public.blog_posts for all using (has_role(auth.uid(), 'admin'::app_role)) with check (has_role(auth.uid(), 'admin'::app_role));
 
-### Preview toggle:
-A "Preview" tab next to "Write" will render the Markdown to HTML using the same `renderMarkdown()` function already used in `BlogPost.tsx` — so what you see in preview matches exactly what visitors see.
+-- Contact messages
+create table public.contact_messages (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  email text not null,
+  subject text not null,
+  message text not null,
+  created_at timestamptz not null default now()
+);
+alter table public.contact_messages enable row level security;
+create policy "Anyone can send contact messages" on public.contact_messages for insert with check (length(name) > 0 and length(email) > 0 and length(message) > 0);
+create policy "Admins can read contact messages" on public.contact_messages for select using (has_role(auth.uid(), 'admin'::app_role));
 
-### Files changed:
-- **New**: `src/components/admin/MarkdownEditor.tsx`
-- **Modified**: `src/pages/Admin.tsx` — replace content textareas with `<MarkdownEditor />`
+-- Newsletter subscribers
+create table public.newsletter_subscribers (
+  id uuid primary key default gen_random_uuid(),
+  email text unique not null,
+  created_at timestamptz not null default now()
+);
+alter table public.newsletter_subscribers enable row level security;
+create policy "Anyone can subscribe" on public.newsletter_subscribers for insert with check (length(email) > 0);
+create policy "Admins can read subscribers" on public.newsletter_subscribers for select using (has_role(auth.uid(), 'admin'::app_role));
+```
 
----
-
-## 3. About Section — Real CV Data + Personal Photo
-
-### Profile photo:
-The user will be able to **upload their photo directly via chat**. Until the photo is uploaded, the existing placeholder will remain. The photo should be uploaded as a message attachment and it will replace `src/assets/profile.jpg`.
-
-The `AboutSection.tsx` already has the photo wired in with the correct import. No structural change needed for the photo slot — just the asset file.
-
-### CV data update:
-The `AboutSection.tsx` file currently uses placeholder work history and certifications. These will be updated with **real data** matching the CV (Michael Maertzdorf):
-
-**Work history** (to be updated in `AboutSection.tsx`):
-- Role, Company, Period, Description — all bilingual NL/EN
-
-**Certifications** (already has good placeholders like M365, AZ-104, CompTIA Security+, etc.):
-- These match the CV data already in the file — they will be verified/adjusted
-
-**Contact info:**
-- Email: mike@itadventures.nl (already correct)
-- LinkedIn: linkedin.com/in/michaelmaertzdorf (already correct)
-- Location: Nederland 🇳🇱 (already correct)
-
-**Note**: Since the actual CV document was not provided in this conversation, the work history data in `AboutSection.tsx` already contains realistic placeholder data. To update with **your exact** real work history, please either:
-- Share the details in chat (company names, job titles, years, descriptions), or
-- Upload your CV as a file/image
-
----
-
-## 4. End-to-End Site Test
-
-The session replay and current state will be used to verify:
-
-- Blog cards → click → `/blog/:slug` detail page loads
-- Prev/Next navigation between posts works
-- Contact form submits and saves to database
-- Newsletter form submits and saves to database
-- NL ↔ EN toggle switches all text
-- Mobile layout at 390px (hamburger menu, stacked cards)
-
-Any bugs found will be fixed inline during implementation.
-
-### Currently known issues to fix:
-- The `renderMarkdown` function in `BlogPost.tsx` has a regex issue with consecutive list items (`<ul>` wrapping duplicate)
-- The `NewsletterSection` has `id="contact"` which conflicts with `ContactSection` also having `id="contact"` — the newsletter section will get `id="newsletter"`
-
----
-
-## Technical Implementation Order
-
-```text
-Step 1 → Insert admin role for dutch2005@gmail.com (user id: 3db93ebb-...)
-Step 2 → Build MarkdownEditor component with toolbar + preview
-Step 3 → Wire MarkdownEditor into Admin.tsx content fields
-Step 4 → Fix newsletter section id conflict (contact → newsletter)
-Step 5 → Fix Markdown list rendering bug in BlogPost.tsx
-Step 6 → Verify About section CV data is correct / update as needed
-Step 7 → Mobile audit — verify responsive layouts across all sections
+After running the schema, you need to sign up a user in your own Supabase Auth and then insert your admin role:
+```sql
+insert into public.user_roles (user_id, role) values ('<your-new-user-id>', 'admin');
 ```
 
 ---
 
-## Files Created / Modified
+### 2. Email Privacy — No Scrapers
 
-| File | Action |
-|---|---|
-| Database `user_roles` | Insert admin row for your account |
-| `src/components/admin/MarkdownEditor.tsx` | New — toolbar editor with preview |
-| `src/pages/Admin.tsx` | Replace textareas with MarkdownEditor |
-| `src/components/NewsletterSection.tsx` | Fix `id="contact"` → `id="newsletter"` |
-| `src/pages/BlogPost.tsx` | Fix list rendering bug in Markdown parser |
-| `src/components/AboutSection.tsx` | Verify/update CV data |
+Currently your email `mike@itadventures.nl` appears in plain text in two places:
+- `src/components/AboutSection.tsx` (terminal card + mailto link)
+- `src/components/ContactSection.tsx` (contact info card)
+
+**Fix:** Replace the plain `mailto:mike@itadventures.nl` links with a **CSS-obfuscated email** that renders visually correctly but is invisible to bots scraping raw HTML. This uses the CSS `direction: rtl` + Unicode reversal trick — no JavaScript required, works in all browsers, and email clients can still click it normally.
+
+Additionally, the new email `dutch2005@xtremeweb.xyz` will be used everywhere instead of `mike@itadventures.nl`.
+
+The terminal card in `AboutSection` will also be updated to reflect the new email.
 
 ---
 
-## Note on Profile Photo
+### 3. Email Address Update
 
-Your photo can be uploaded at any time by dragging an image into this chat or clicking the paperclip icon. I will use it to replace `src/assets/profile.jpg` immediately when you send it.
+Every occurrence of `mike@itadventures.nl` will be replaced with `dutch2005@xtremeweb.xyz`:
+
+| File | Location |
+|---|---|
+| `src/components/AboutSection.tsx` | mailto link + terminal card |
+| `src/components/ContactSection.tsx` | contact info card + mailto link |
+| `src/pages/AdminLogin.tsx` | placeholder text |
+
+---
+
+### 4. LinkedIn URL Update
+
+Current URL: `https://linkedin.com/in/michaelmaertzdorf`
+New URL: `https://www.linkedin.com/in/michael-maertzdorf-b9231420/`
+
+Updated in:
+- `src/components/AboutSection.tsx`
+- `src/components/ContactSection.tsx`
+
+---
+
+### 5. Certifications Update
+
+You confirmed you hold:
+- **Microsoft 365 Certified** (already present)
+- **3CX V20** (new — to be added)
+
+The current certifications list also includes placeholder entries (Azure AZ-104, CompTIA Security+, ITIL, GitHub Foundations, n8n) that you haven't confirmed. These will be **removed or kept** — please confirm in your next message which ones are real.
+
+For now, the plan is to update the grid to show only confirmed certs plus 3CX V20. If you want to keep the others, just say so.
+
+---
+
+### 6. Work History Update
+
+You will paste your real work history in the next message. Once received, `src/components/AboutSection.tsx` will be updated with your actual:
+- Job titles (bilingual NL/EN)
+- Company names
+- Employment periods
+- Role descriptions
+
+---
+
+## Files to be changed
+
+| File | Change |
+|---|---|
+| `.env` (auto-generated) | New Supabase URL + key (via secrets) |
+| `src/components/AboutSection.tsx` | New email, LinkedIn URL, certifications, work history, email obfuscation |
+| `src/components/ContactSection.tsx` | New email, LinkedIn URL, email obfuscation |
+| `src/pages/AdminLogin.tsx` | Update email placeholder |
+
+---
+
+## What I need from you next
+
+Please paste the following in your next message:
+1. **Your real work history** (job title, company, years, description — Dutch/English either is fine)
+2. **Which certifications to keep** from the current list (Azure AZ-104, CompTIA Security+, ITIL, GitHub Foundations, n8n) — or confirm to remove them all and only show M365 + 3CX V20
+3. **Your Supabase Project URL** (format: `https://xxxxxx.supabase.co`)
+4. **Your Anon/Publishable key** (starts with `eyJ...`)
