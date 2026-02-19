@@ -20,7 +20,7 @@ export const NewsletterSection = () => {
   };
 
   return (
-    <section id="contact" className="py-24 bg-background border-t border-border relative overflow-hidden">
+    <section id="newsletter" className="py-24 bg-background border-t border-border relative overflow-hidden">
       {/* Background dot pattern */}
       <div className="absolute inset-0 dot-pattern opacity-20" />
       {/* Glow */}
