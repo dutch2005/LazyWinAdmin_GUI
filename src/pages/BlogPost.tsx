@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { supabase } from "@/integrations/supabase/client";
+import { db as supabase } from "@/lib/supabaseClient";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Calendar, Clock, ArrowLeft, ArrowRight, ChevronLeft } from "lucide-react";
