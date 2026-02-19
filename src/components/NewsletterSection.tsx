@@ -1,18 +1,22 @@
 import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Mail, Send } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Mail, Send, CheckCircle } from "lucide-react";
 
 export const NewsletterSection = () => {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email) {
-      setSubmitted(true);
-      setEmail("");
-    }
+    if (!email.includes("@")) return;
+    setLoading(true);
+    await supabase.from("newsletter_subscribers").insert({ email: email.trim().toLowerCase() });
+    setLoading(false);
+    setSubmitted(true);
+    setEmail("");
   };
 
   return (
@@ -49,9 +53,10 @@ export const NewsletterSection = () => {
             />
             <button
               type="submit"
-              className="bg-primary text-primary-foreground px-6 py-3 rounded-md font-semibold hover:opacity-90 transition-all glow-cyan flex items-center gap-2 whitespace-nowrap"
+              disabled={loading}
+              className="bg-primary text-primary-foreground px-6 py-3 rounded-md font-semibold hover:opacity-90 transition-all glow-cyan flex items-center gap-2 whitespace-nowrap disabled:opacity-60"
             >
-              <Send className="w-4 h-4" />
+              {loading ? <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <Send className="w-4 h-4" />}
               {t("newsletter.btn")}
             </button>
           </form>

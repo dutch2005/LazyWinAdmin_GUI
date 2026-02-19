@@ -48,10 +48,22 @@ const translations: Record<Language, Record<string, string>> = {
       "Via IT Adventures deel ik mijn kennis, ervaringen en inzichten over de wereld van technologie — voor iedereen die nieuwsgierig is naar de toekomst van IT.",
     "about.skills": "Expertisegebieden",
 
+    // Contact
+    "contact.title": "Neem contact op",
+    "contact.desc": "Heb je een vraag, wil je samenwerken of gewoon even praten over tech? Stuur mij een bericht.",
+    "contact.info.title": "Contactgegevens",
+    "contact.form.name": "Naam",
+    "contact.form.email": "E-mailadres",
+    "contact.form.subject": "Onderwerp",
+    "contact.form.message": "Bericht",
+    "contact.form.send": "Bericht versturen",
+    "contact.success.title": "Bericht ontvangen!",
+    "contact.success.desc": "Bedankt voor je bericht. Ik neem zo snel mogelijk contact met je op.",
+
     // Newsletter
     "newsletter.tag": "Blijf op de hoogte",
     "newsletter.title": "Nieuwsbrief",
-    "newsletter.desc": "Ontvang de laatste tech-artikelen direct in je inbox.",
+    "newsletter.desc": "Ontvang de laatste tech-artikelen direct in je inbox. Geen spam, alleen de beste content.",
     "newsletter.placeholder": "Jouw e-mailadres",
     "newsletter.btn": "Aanmelden",
 
@@ -98,10 +110,22 @@ const translations: Record<Language, Record<string, string>> = {
       "Through IT Adventures, I share my knowledge, experiences and insights about the world of technology — for everyone curious about the future of IT.",
     "about.skills": "Areas of expertise",
 
+    // Contact
+    "contact.title": "Get in touch",
+    "contact.desc": "Have a question, want to collaborate, or just talk about tech? Send me a message.",
+    "contact.info.title": "Contact information",
+    "contact.form.name": "Name",
+    "contact.form.email": "Email address",
+    "contact.form.subject": "Subject",
+    "contact.form.message": "Message",
+    "contact.form.send": "Send message",
+    "contact.success.title": "Message received!",
+    "contact.success.desc": "Thanks for your message. I'll get back to you as soon as possible.",
+
     // Newsletter
     "newsletter.tag": "Stay updated",
     "newsletter.title": "Newsletter",
-    "newsletter.desc": "Get the latest tech articles directly in your inbox.",
+    "newsletter.desc": "Get the latest tech articles directly in your inbox. No spam, only the best content.",
     "newsletter.placeholder": "Your email address",
     "newsletter.btn": "Subscribe",
 
