@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { supabase } from "@/integrations/supabase/client";
+import { db as supabase } from "@/lib/supabaseClient";
 import { Mail, MapPin, Linkedin, Send, CheckCircle } from "lucide-react";
 
 const schema = z.object({
