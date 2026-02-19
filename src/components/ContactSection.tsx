@@ -75,8 +75,9 @@ export const ContactSection = () => {
             <div>
               <h3 className="text-lg font-semibold mb-6">{t("contact.info.title")}</h3>
               <div className="space-y-4">
+                {/* Email link — obfuscated to prevent bot scraping */}
                 <a
-                  href="mailto:mike@itadventures.nl"
+                  href="mailto:dutch2005@xtremeweb.xyz"
                   className="flex items-center gap-4 p-4 card-glass rounded-xl group hover:border-primary/40 transition-colors"
                 >
                   <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
@@ -84,12 +85,14 @@ export const ContactSection = () => {
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground font-mono">Email</p>
-                    <p className="text-foreground font-medium">mike@itadventures.nl</p>
+                    <p className="text-foreground font-medium" style={{ unicodeBidi: "bidi-override", direction: "rtl" }}>
+                      zyx.bewemertxe@5002hctud
+                    </p>
                   </div>
                 </a>
 
                 <a
-                  href="https://linkedin.com/in/michaelmaertzdorf"
+                  href="https://www.linkedin.com/in/michael-maertzdorf-b9231420/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-4 p-4 card-glass rounded-xl group hover:border-primary/40 transition-colors"

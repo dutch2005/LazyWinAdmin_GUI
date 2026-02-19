@@ -48,11 +48,7 @@ const workHistory = [
 
 const certifications = [
   { label: "Microsoft 365 Certified", icon: "M365" },
-  { label: "Azure Administrator (AZ-104)", icon: "AZ" },
-  { label: "CompTIA Security+", icon: "SEC" },
-  { label: "ITIL Foundation", icon: "ITIL" },
-  { label: "GitHub Foundations", icon: "GH" },
-  { label: "n8n Certified Automation", icon: "n8n" },
+  { label: "3CX V20", icon: "3CX" },
 ];
 
 export const AboutSection = () => {
@@ -92,17 +88,20 @@ export const AboutSection = () => {
                   <span>Nederland 🇳🇱</span>
                 </div>
                 <div className="flex items-center gap-3 mt-3">
+                  {/* Email obfuscated to prevent scraper harvesting */}
                   <a
-                    href="mailto:mike@itadventures.nl"
+                    href="mailto:dutch2005@xtremeweb.xyz"
                     className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors font-mono"
                   >
                     <Mail className="w-3.5 h-3.5" />
-                    mike@itadventures.nl
+                    <span style={{ unicodeBidi: "bidi-override", direction: "rtl" }}>
+                      zyx.bewemertxe@5002hctud
+                    </span>
                   </a>
                 </div>
                 <div className="flex items-center gap-3 mt-1">
                   <a
-                    href="https://linkedin.com/in/michaelmaertzdorf"
+                    href="https://www.linkedin.com/in/michael-maertzdorf-b9231420/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors font-mono"
@@ -130,7 +129,9 @@ export const AboutSection = () => {
               </div>
               <div className="p-5 font-mono text-sm space-y-1.5">
                 <p><span className="text-primary">$</span> <span className="text-muted-foreground">whoami</span></p>
-                <p className="text-foreground">Michael Maertzdorf &lt;mike@itadventures.nl&gt;</p>
+                <p className="text-foreground">
+                  Michael Maertzdorf &lt;<span style={{ unicodeBidi: "bidi-override", direction: "rtl" }}>zyx.bewemertxe@5002hctud</span>&gt;
+                </p>
                 <p className="mt-2"><span className="text-primary">$</span> <span className="text-muted-foreground">cat passion.txt</span></p>
                 <p className="text-green-400">AI Automation · Cloud · Security · Tech News</p>
                 <p className="mt-2"><span className="text-primary">$</span> <span className="text-muted-foreground">echo $EXPERIENCE</span></p>
@@ -223,7 +224,7 @@ export const AboutSection = () => {
             </div>
             {lang === "nl" ? "Certificeringen" : "Certifications"}
           </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-sm">
             {certifications.map((cert) => (
               <div
                 key={cert.label}
