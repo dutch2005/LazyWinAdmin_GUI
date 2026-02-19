@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { MarkdownEditor } from "@/components/admin/MarkdownEditor";
 import {
   Terminal, LogOut, Plus, Edit, Trash2, Eye, EyeOff,
   Star, StarOff, ChevronLeft, Save, X, AlertTriangle
@@ -322,13 +323,29 @@ export default function Admin() {
                   <div className="space-y-4">
                     {formField("Titel (NL)", "title_nl")}
                     {formField("Samenvatting (NL)", "excerpt_nl", "textarea")}
-                    {formField("Inhoud (NL) — gebruik Markdown", "content_nl", "textarea")}
+                    <div>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">Inhoud (NL)</label>
+                      <MarkdownEditor
+                        value={form.content_nl}
+                        onChange={(v) => setForm((f) => ({ ...f, content_nl: v }))}
+                        placeholder="Schrijf de Nederlandse inhoud in Markdown..."
+                        rows={20}
+                      />
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {formField("Title (EN)", "title_en")}
                     {formField("Excerpt (EN)", "excerpt_en", "textarea")}
-                    {formField("Content (EN) — use Markdown", "content_en", "textarea")}
+                    <div>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">Content (EN)</label>
+                      <MarkdownEditor
+                        value={form.content_en}
+                        onChange={(v) => setForm((f) => ({ ...f, content_en: v }))}
+                        placeholder="Write the English content in Markdown..."
+                        rows={20}
+                      />
+                    </div>
                   </div>
                 )}
               </div>
