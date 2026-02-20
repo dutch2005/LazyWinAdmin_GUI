@@ -37,6 +37,22 @@ const categoryLabels: Record<string, { nl: string; en: string }> = {
   tools: { nl: "Tools", en: "Tools" },
 };
 
+function linkify(text: string): string {
+  // Markdown links: [text](url)
+  let out = text.replace(
+    /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
+    '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-primary underline hover:text-primary/80 transition-colors">$1</a>'
+  );
+  // Bare URLs not already inside href=""
+  out = out.replace(
+    /(?<!href=")(https?:\/\/[^\s<>"]+)/g,
+    '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-primary underline hover:text-primary/80 transition-colors">$1</a>'
+  );
+  // Bold
+  out = out.replace(/\*\*(.+?)\*\*/g, '<strong class="text-foreground font-semibold">$1</strong>');
+  return out;
+}
+
 function renderMarkdown(text: string): string {
   return text
     .replace(/^## (.+)$/gm, '<h2 class="text-2xl font-bold mt-10 mb-4 text-foreground">$1</h2>')
@@ -191,14 +207,14 @@ export default function BlogPost() {
                     {items.map((item, j) => (
                       <li key={j} className="flex items-start gap-2 text-muted-foreground leading-relaxed">
                         <span className="text-primary mt-1 flex-shrink-0">•</span>
-                        <span dangerouslySetInnerHTML={{ __html: item.slice(2).replace(/\*\*(.+?)\*\*/g, '<strong class="text-foreground font-semibold">$1</strong>') }} />
+                        <span dangerouslySetInnerHTML={{ __html: linkify(item.slice(2)) }} />
                       </li>
                     ))}
                   </ul>
                 );
               }
               // Regular paragraph — handle bold inline
-              const htmlPara = para.replace(/\*\*(.+?)\*\*/g, '<strong class="text-foreground font-semibold">$1</strong>');
+              const htmlPara = linkify(para);
               if (!para.trim()) return null;
               return (
                 <p key={i} className="text-muted-foreground leading-relaxed my-4" dangerouslySetInnerHTML={{ __html: htmlPara }} />

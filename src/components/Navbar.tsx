@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Menu, X, Terminal } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Menu, X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export const Navbar = () => {
@@ -7,19 +8,19 @@ export const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const navItems = [
-    { key: "nav.home", href: "#home" },
-    { key: "nav.blog", href: "#blog" },
-    { key: "nav.about", href: "#about" },
-    { key: "nav.contact", href: "#contact" },
+    { key: "nav.home", to: "/" },
+    { key: "nav.blog", to: "/#blog" },
+    { key: "nav.about", to: "/#about" },
+    { key: "nav.contact", to: "/#contact" },
   ];
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
-        <a href="#home" className="flex items-center gap-2 group">
+        <Link to="/" className="flex items-center gap-2 group">
           <div className="flex items-center justify-center w-9 h-9 rounded bg-primary/10 border border-primary/30 group-hover:border-primary/60 transition-colors animate-pulse-cyan">
-            <Terminal className="w-4 h-4 text-primary" />
+            <img src="/logo.svg" alt="Mike Maze" className="w-5 h-5" />
           </div>
           <div>
             <span className="font-bold text-foreground font-mono text-sm tracking-wide">
@@ -29,18 +30,18 @@ export const Navbar = () => {
               IT Adventures
             </div>
           </div>
-        </a>
+        </Link>
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-8">
           {navItems.map((item) => (
-            <a
+            <Link
               key={item.key}
-              href={item.href}
+              to={item.to}
               className="nav-link-hover text-sm font-medium text-muted-foreground hover:text-foreground transition-colors pb-1"
             >
               {t(item.key)}
-            </a>
+            </Link>
           ))}
         </nav>
 
@@ -85,14 +86,14 @@ export const Navbar = () => {
         <div className="md:hidden border-t border-border bg-card animate-fade-in">
           <nav className="container mx-auto px-4 py-4 flex flex-col gap-4">
             {navItems.map((item) => (
-              <a
+              <Link
                 key={item.key}
-                href={item.href}
+                to={item.to}
                 className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors py-2 border-b border-border/50"
                 onClick={() => setMobileOpen(false)}
               >
                 {t(item.key)}
-              </a>
+              </Link>
             ))}
           </nav>
         </div>
