@@ -99,7 +99,7 @@ export const BlogSection = () => {
   );
 
   return (
-    <section id="blog" className="py-24 bg-background">
+    <section id="blog" className="py-24 bg-background scroll-mt-16">
       <div className="container mx-auto px-4">
         <div className="mb-12">
           <span className="tag-category text-primary font-mono">// {lang === "nl" ? "artikelen" : "articles"}</span>

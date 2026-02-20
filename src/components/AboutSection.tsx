@@ -55,7 +55,7 @@ export const AboutSection = () => {
   const { lang, t } = useLanguage();
 
   return (
-    <section id="about" className="py-24 bg-card border-t border-border">
+    <section id="about" className="py-24 bg-card border-t border-border scroll-mt-16">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="mb-16">
