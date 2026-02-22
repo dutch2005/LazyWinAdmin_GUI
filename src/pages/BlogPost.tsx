@@ -4,6 +4,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { db as supabase } from "@/lib/supabaseClient";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { SEOHead } from "@/components/SEOHead";
+import { ReadingProgress } from "@/components/ReadingProgress";
+import { TableOfContents, headingToId } from "@/components/TableOfContents";
+import { RelatedPosts } from "@/components/RelatedPosts";
 import { Calendar, Clock, ArrowLeft, ArrowRight, ChevronLeft } from "lucide-react";
 
 type BlogPostRow = {
@@ -38,33 +42,16 @@ const categoryLabels: Record<string, { nl: string; en: string }> = {
 };
 
 function linkify(text: string): string {
-  // Markdown links: [text](url)
   let out = text.replace(
     /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
     '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-primary underline hover:text-primary/80 transition-colors">$1</a>'
   );
-  // Bare URLs not already inside href=""
   out = out.replace(
     /(?<!href=")(https?:\/\/[^\s<>"]+)/g,
     '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-primary underline hover:text-primary/80 transition-colors">$1</a>'
   );
-  // Bold
   out = out.replace(/\*\*(.+?)\*\*/g, '<strong class="text-foreground font-semibold">$1</strong>');
   return out;
-}
-
-function renderMarkdown(text: string): string {
-  return text
-    .replace(/^## (.+)$/gm, '<h2 class="text-2xl font-bold mt-10 mb-4 text-foreground">$1</h2>')
-    .replace(/^### (.+)$/gm, '<h3 class="text-xl font-semibold mt-8 mb-3 text-foreground">$1</h3>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong class="text-foreground font-semibold">$1</strong>')
-    .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre class="bg-secondary/50 border border-border rounded-lg p-4 my-4 overflow-x-auto font-mono text-sm text-foreground"><code>$2</code></pre>')
-    .replace(/`([^`]+)`/g, '<code class="bg-secondary/50 px-1.5 py-0.5 rounded text-primary font-mono text-sm">$1</code>')
-    .replace(/^- (.+)$/gm, '<li class="flex items-start gap-2 text-muted-foreground"><span class="text-primary mt-1">•</span><span>$1</span></li>')
-    .replace(/(<li[\s\S]*?<\/li>)/g, '<ul class="space-y-2 my-4 ml-2">$1</ul>')
-    .replace(/\n\n/g, '</p><p class="text-muted-foreground leading-relaxed my-4">')
-    .replace(/^(?!<[hup])/gm, '')
-    ;
 }
 
 export default function BlogPost() {
@@ -94,6 +81,11 @@ export default function BlogPost() {
     };
     fetchPosts();
   }, [slug, navigate]);
+
+  // Scroll to top on slug change
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [slug]);
 
   const formatDate = (dateStr: string) =>
     new Date(dateStr).toLocaleDateString(lang === "nl" ? "nl-NL" : "en-GB", {
@@ -128,6 +120,7 @@ export default function BlogPost() {
   if (!post) return null;
 
   const title = lang === "nl" ? post.title_nl : post.title_en;
+  const excerpt = lang === "nl" ? post.excerpt_nl : post.excerpt_en;
   const content = lang === "nl" ? post.content_nl : post.content_en;
   const catLabel = categoryLabels[post.category]?.[lang] ?? post.category;
 
@@ -135,10 +128,23 @@ export default function BlogPost() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={title}
+        description={excerpt}
+        image={post.image_url || undefined}
+        url={`/blog/${post.slug}`}
+        type="article"
+        article={{
+          publishedTime: post.date,
+          author: "Michael Maertzdorf",
+          category: catLabel,
+        }}
+      />
+      <ReadingProgress />
       <Navbar />
       <main>
         {/* Hero */}
-        <div className="bg-card border-b border-border py-16">
+        <header className="bg-card border-b border-border py-16">
           <div className="container mx-auto px-4 max-w-3xl">
             <Link
               to="/#blog"
@@ -172,59 +178,75 @@ export default function BlogPost() {
               </span>
             </div>
           </div>
+        </header>
+
+        {/* Content with TOC sidebar */}
+        <div className="container mx-auto px-4 py-12 max-w-5xl">
+          <div className="flex gap-12">
+            {/* TOC sidebar (desktop) */}
+            <aside className="hidden xl:block w-56 flex-shrink-0">
+              <TableOfContents content={content} />
+            </aside>
+
+            {/* Main content */}
+            <article className="flex-1 max-w-3xl">
+              {/* Mobile TOC */}
+              <div className="xl:hidden">
+                <TableOfContents content={content} />
+              </div>
+
+              <div className="prose-custom">
+                {paragraphs.map((para, i) => {
+                  if (para.startsWith("## ")) {
+                    const text = para.slice(3);
+                    return (
+                      <h2 key={i} id={headingToId(text)} className="text-2xl font-bold mt-10 mb-4 text-foreground scroll-mt-20">
+                        {text}
+                      </h2>
+                    );
+                  }
+                  if (para.startsWith("### ")) {
+                    const text = para.slice(4);
+                    return (
+                      <h3 key={i} id={headingToId(text)} className="text-xl font-semibold mt-8 mb-3 text-foreground scroll-mt-20">
+                        {text}
+                      </h3>
+                    );
+                  }
+                  if (para.startsWith("```")) {
+                    const codeContent = para.replace(/^```\w*\n?/, "").replace(/```$/, "");
+                    return (
+                      <pre key={i} className="bg-secondary/50 border border-border rounded-lg p-4 my-6 overflow-x-auto font-mono text-sm text-foreground">
+                        <code>{codeContent}</code>
+                      </pre>
+                    );
+                  }
+                  if (para.includes("\n- ") || para.startsWith("- ")) {
+                    const items = para.split("\n").filter((l) => l.startsWith("- "));
+                    return (
+                      <ul key={i} className="space-y-2 my-4 ml-2">
+                        {items.map((item, j) => (
+                          <li key={j} className="flex items-start gap-2 text-muted-foreground leading-relaxed">
+                            <span className="text-primary mt-1 flex-shrink-0">•</span>
+                            <span dangerouslySetInnerHTML={{ __html: linkify(item.slice(2)) }} />
+                          </li>
+                        ))}
+                      </ul>
+                    );
+                  }
+                  const htmlPara = linkify(para);
+                  if (!para.trim()) return null;
+                  return (
+                    <p key={i} className="text-muted-foreground leading-relaxed my-4" dangerouslySetInnerHTML={{ __html: htmlPara }} />
+                  );
+                })}
+              </div>
+            </article>
+          </div>
         </div>
 
-        {/* Content */}
-        <article className="container mx-auto px-4 py-12 max-w-3xl">
-          <div className="prose-custom">
-            {paragraphs.map((para, i) => {
-              if (para.startsWith("## ")) {
-                return (
-                  <h2 key={i} className="text-2xl font-bold mt-10 mb-4 text-foreground">
-                    {para.slice(3)}
-                  </h2>
-                );
-              }
-              if (para.startsWith("### ")) {
-                return (
-                  <h3 key={i} className="text-xl font-semibold mt-8 mb-3 text-foreground">
-                    {para.slice(4)}
-                  </h3>
-                );
-              }
-              if (para.startsWith("```")) {
-                const codeContent = para.replace(/^```\w*\n?/, "").replace(/```$/, "");
-                return (
-                  <pre key={i} className="bg-secondary/50 border border-border rounded-lg p-4 my-6 overflow-x-auto font-mono text-sm text-foreground">
-                    <code>{codeContent}</code>
-                  </pre>
-                );
-              }
-              if (para.includes("\n- ") || para.startsWith("- ")) {
-                const items = para.split("\n").filter((l) => l.startsWith("- "));
-                return (
-                  <ul key={i} className="space-y-2 my-4 ml-2">
-                    {items.map((item, j) => (
-                      <li key={j} className="flex items-start gap-2 text-muted-foreground leading-relaxed">
-                        <span className="text-primary mt-1 flex-shrink-0">•</span>
-                        <span dangerouslySetInnerHTML={{ __html: linkify(item.slice(2)) }} />
-                      </li>
-                    ))}
-                  </ul>
-                );
-              }
-              // Regular paragraph — handle bold inline
-              const htmlPara = linkify(para);
-              if (!para.trim()) return null;
-              return (
-                <p key={i} className="text-muted-foreground leading-relaxed my-4" dangerouslySetInnerHTML={{ __html: htmlPara }} />
-              );
-            })}
-          </div>
-        </article>
-
         {/* Prev / Next navigation */}
-        <div className="container mx-auto px-4 max-w-3xl pb-24">
+        <div className="container mx-auto px-4 max-w-3xl pb-12">
           <div className="border-t border-border pt-8 grid sm:grid-cols-2 gap-4">
             {prevPost ? (
               <Link
@@ -257,6 +279,13 @@ export default function BlogPost() {
             ) : <div />}
           </div>
         </div>
+
+        {/* Related Posts */}
+        <RelatedPosts
+          currentPostId={post.id}
+          currentCategory={post.category}
+          allPosts={allPosts}
+        />
       </main>
       <Footer />
     </div>
