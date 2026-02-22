@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { db as supabase } from "@/lib/supabaseClient";
 import { Mail, Send, CheckCircle } from "lucide-react";
+import { z } from "zod";
+
+const emailSchema = z.string().trim().email().max(255);
 
 export const NewsletterSection = () => {
   const { lang, t } = useLanguage();
@@ -11,7 +14,8 @@ export const NewsletterSection = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.includes("@")) return;
+    const result = emailSchema.safeParse(email);
+    if (!result.success) return;
     setLoading(true);
     await supabase.from("newsletter_subscribers").insert({ email: email.trim().toLowerCase() });
     setLoading(false);
