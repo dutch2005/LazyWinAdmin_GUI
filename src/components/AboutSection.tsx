@@ -2,7 +2,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import profileImg from "@/assets/profile.jpg";
 import {
   Server, Cloud, Bot, Shield, Network, Terminal, Code2, Cpu,
-  Mail, Linkedin, MapPin, Award, Briefcase,
+  Mail, Linkedin, MapPin, Award, Briefcase, GraduationCap, Languages, Phone,
 } from "lucide-react";
 
 const skills = [
@@ -14,41 +14,105 @@ const skills = [
   { icon: Terminal, label: { nl: "PowerShell / Scripting", en: "PowerShell / Scripting" } },
   { icon: Code2, label: { nl: "DevOps", en: "DevOps" } },
   { icon: Cpu, label: { nl: "Hardware & Infra", en: "Hardware & Infra" } },
+  { icon: Phone, label: { nl: "VoIP / 3CX", en: "VoIP / 3CX" } },
 ];
 
 const workHistory = [
   {
-    role: { nl: "Senior IT Consultant", en: "Senior IT Consultant" },
-    company: "Freelance",
-    period: "2022 – heden",
+    role: { nl: "System Administrator", en: "System Administrator" },
+    company: "Mitsubishi Motors Europe B.V. (via Data4.nl)",
+    period: "Apr 2022 – heden",
     desc: {
-      nl: "Advies en implementatie van cloud-infrastructuur, automatisering en AI-oplossingen voor diverse organisaties.",
-      en: "Advisory and implementation of cloud infrastructure, automation, and AI solutions for various organizations.",
+      nl: "Systeembeheer bij Mitsubishi Motors, Maastricht-Airport.",
+      en: "System administration at Mitsubishi Motors, Maastricht-Airport.",
     },
   },
   {
-    role: { nl: "IT Beheerder / Systeembeheerder", en: "IT Administrator / System Administrator" },
-    company: "Enterprise klant",
-    period: "2018 – 2022",
+    role: { nl: "IT System Administrator", en: "IT System Administrator" },
+    company: "Data4.nl",
+    period: "Jan 2021 – heden",
     desc: {
-      nl: "Beheer van Windows Server-omgevingen, Microsoft 365, Azure AD en automatisering via PowerShell en n8n.",
-      en: "Management of Windows Server environments, Microsoft 365, Azure AD, and automation via PowerShell and n8n.",
+      nl: "Beheer van werkplek- en serveromgevingen (fysiek + virtueel), remote support voor klanten.",
+      en: "Manage workplace and server environments (physical + virtual), remote support for customers.",
     },
   },
   {
-    role: { nl: "Helpdesk / IT Support", en: "Helpdesk / IT Support" },
-    company: "IT Services BV",
-    period: "2015 – 2018",
+    role: { nl: "System Administrator", en: "System Administrator" },
+    company: "Mitsubishi Motors Europe B.V. (via Data4.nl)",
+    period: "Okt 2019 – Okt 2021",
     desc: {
-      nl: "Eerste en tweede lijn support, hardware troubleshooting, netwerken en gebruikersbeheer.",
-      en: "First and second line support, hardware troubleshooting, networking, and user management.",
+      nl: "Gebruikersaccounts, Ivanti Workspace Control & Automation, on-prem servers, MS Teams Calling, Azure projecten.",
+      en: "User accounts, Ivanti Workspace Control & Automation, on-prem servers, MS Teams Calling, Azure projects.",
+    },
+  },
+  {
+    role: { nl: "Diverse detacheringen", en: "Various assignments" },
+    company: "Data4.nl",
+    period: "2018 – 2019",
+    desc: {
+      nl: "Servicedesk bij Gemeente Maastricht, ICT medewerker bij Catharina Ziekenhuis, intaker bij VodafoneZiggo, servicedesk bij VieCuri.",
+      en: "Service desk at Gemeente Maastricht, ICT staff at Catharina Hospital, intake/integrator at VodafoneZiggo, service desk at VieCuri.",
+    },
+  },
+  {
+    role: { nl: "Enterprise Servicedesk NS / Medewerker Automatisering", en: "Enterprise Service Desk NS / Automation Staff" },
+    company: "KPN / Data4.nl",
+    period: "Dec 2016 – Jan 2021",
+    desc: {
+      nl: "Enterprise servicedesk voor NS (via KPN) en automatiseringswerkzaamheden bij Data4.nl.",
+      en: "Enterprise service desk for NS (via KPN) and automation work at Data4.nl.",
+    },
+  },
+  {
+    role: { nl: "Technisch Helpdeskmedewerker", en: "Technical Helpdesk Agent" },
+    company: "Teleperformance Benelux",
+    period: "Jan 2015 – Dec 2016",
+    desc: {
+      nl: "Technische support voor Ziggo (TV, internet, VoIP) en Norton (installatie, virusverwijdering, advies).",
+      en: "Technical support for Ziggo (TV, internet, VoIP) and Norton (installation, virus removal, advisory).",
+    },
+  },
+  {
+    role: { nl: "Medewerker ICT", en: "ICT Staff" },
+    company: "Stichting Jeugdzorg Sint Joseph",
+    period: "Jun 2009 – Dec 2014",
+    desc: {
+      nl: "Helpdesk, printers, Dell switches, XenServer virtualisatie, gebruikersondersteuning.",
+      en: "Helpdesk, printers, Dell switches, XenServer virtualization, user support.",
     },
   },
 ];
 
 const certifications = [
-  { label: "Microsoft 365 Certified", icon: "M365" },
-  { label: "3CX V20", icon: "3CX" },
+  { label: "3CX Basic Certified Engineer V20", icon: "3CX" },
+  { label: "3CX Basic Certified Engineer v18", icon: "3CX" },
+  { label: "Vibe Coding", icon: "VC" },
+  { label: "Ziggo Technische Training", icon: "ZG" },
+  { label: "70-697 Configuring Windows Devices", icon: "MS" },
+];
+
+const education = [
+  {
+    school: "Arcus College",
+    degree: { nl: "Niveau 4, ICT Beheerder", en: "Level 4, ICT Administrator" },
+    period: "2005 – 2009",
+  },
+  {
+    school: "Zuyd University of Applied Sciences",
+    degree: { nl: "HBO, Network Infrastructure Design", en: "Bachelor's, Network Infrastructure Design" },
+    period: "2004 – 2005",
+  },
+  {
+    school: "Sintermeerten College",
+    degree: { nl: "HAVO, Economie en Maatschappij", en: "HAVO, Economics & Society" },
+    period: "1997 – 2004",
+  },
+];
+
+const languages = [
+  { lang: { nl: "Nederlands", en: "Dutch" }, level: { nl: "Moedertaal", en: "Native" } },
+  { lang: { nl: "Engels", en: "English" }, level: { nl: "Volledig professioneel", en: "Full Professional" } },
+  { lang: { nl: "Duits", en: "German" }, level: { nl: "Beperkt werkend", en: "Limited Working" } },
 ];
 
 export const AboutSection = () => {
@@ -88,7 +152,6 @@ export const AboutSection = () => {
                   <span>Nederland 🇳🇱</span>
                 </div>
                 <div className="flex items-center gap-3 mt-3">
-                  {/* Email obfuscated to prevent scraper harvesting */}
                   <a
                     href="mailto:dutch2005@xtremeweb.xyz"
                     className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors font-mono"
@@ -135,7 +198,7 @@ export const AboutSection = () => {
                 <p className="mt-2"><span className="text-primary">$</span> <span className="text-muted-foreground">cat passion.txt</span></p>
                 <p className="text-green-400">AI Automation · Cloud · Security · Tech News</p>
                 <p className="mt-2"><span className="text-primary">$</span> <span className="text-muted-foreground">echo $EXPERIENCE</span></p>
-                <p className="text-foreground">10+ jaar IT · 50+ projecten 🚀</p>
+                <p className="text-foreground">15+ jaar IT · 50+ projecten 🚀</p>
                 <p className="flex items-center gap-0.5 mt-2">
                   <span className="text-primary">$</span>
                   <span className="animate-blink text-foreground ml-1">▋</span>
@@ -167,7 +230,7 @@ export const AboutSection = () => {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4 mt-6">
               {[
-                { num: "10+", label: { nl: "Jaar ervaring", en: "Years experience" } },
+                { num: "15+", label: { nl: "Jaar ervaring", en: "Years experience" } },
                 { num: "50+", label: { nl: "Projecten", en: "Projects" } },
                 { num: "∞", label: { nl: "Passie voor IT", en: "Passion for IT" } },
               ].map((stat) => (
@@ -189,12 +252,10 @@ export const AboutSection = () => {
             {lang === "nl" ? "Werkervaring" : "Work Experience"}
           </h3>
           <div className="relative">
-            {/* Timeline line */}
             <div className="absolute left-4 top-0 bottom-0 w-px bg-border hidden sm:block" />
             <div className="space-y-8">
               {workHistory.map((job, i) => (
                 <div key={i} className="sm:pl-12 relative">
-                  {/* Dot */}
                   <div className="absolute left-2 top-2 w-5 h-5 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center hidden sm:flex">
                     <div className="w-2 h-2 rounded-full bg-primary" />
                   </div>
@@ -216,15 +277,34 @@ export const AboutSection = () => {
           </div>
         </div>
 
+        {/* Education */}
+        <div className="mb-16">
+          <h3 className="text-2xl font-bold mb-8 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <GraduationCap className="w-4 h-4 text-primary" />
+            </div>
+            {lang === "nl" ? "Opleiding" : "Education"}
+          </h3>
+          <div className="grid sm:grid-cols-3 gap-4">
+            {education.map((edu) => (
+              <div key={edu.school} className="card-glass rounded-xl p-5">
+                <h4 className="font-semibold text-foreground text-sm">{edu.school}</h4>
+                <p className="text-primary font-mono text-xs mt-1">{edu.degree[lang]}</p>
+                <p className="text-muted-foreground text-xs mt-2">{edu.period}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Certifications */}
-        <div>
+        <div className="mb-16">
           <h3 className="text-2xl font-bold mb-8 flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
               <Award className="w-4 h-4 text-primary" />
             </div>
             {lang === "nl" ? "Certificeringen" : "Certifications"}
           </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-sm">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {certifications.map((cert) => (
               <div
                 key={cert.label}
@@ -234,6 +314,24 @@ export const AboutSection = () => {
                   <span className="text-primary font-mono font-bold text-xs">{cert.icon}</span>
                 </div>
                 <p className="text-xs text-muted-foreground leading-tight">{cert.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Languages */}
+        <div>
+          <h3 className="text-2xl font-bold mb-8 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <Languages className="w-4 h-4 text-primary" />
+            </div>
+            {lang === "nl" ? "Talen" : "Languages"}
+          </h3>
+          <div className="grid grid-cols-3 gap-4 max-w-md">
+            {languages.map((l) => (
+              <div key={l.lang.en} className="card-glass rounded-xl p-4 text-center">
+                <p className="font-semibold text-foreground text-sm">{l.lang[lang]}</p>
+                <p className="text-xs text-muted-foreground mt-1">{l.level[lang]}</p>
               </div>
             ))}
           </div>
