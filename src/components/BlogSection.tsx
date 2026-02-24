@@ -23,6 +23,7 @@ const categoryColors: Record<string, string> = {
   news: "text-blue-400 border-blue-400/30 bg-blue-400/10",
   tutorials: "text-green-400 border-green-400/30 bg-green-400/10",
   tools: "text-orange-400 border-orange-400/30 bg-orange-400/10",
+  "mycka-amalia": "text-purple-400 border-purple-400/30 bg-purple-400/10",
 };
 
 const categoryLabels: Record<string, { nl: string; en: string }> = {
@@ -30,6 +31,7 @@ const categoryLabels: Record<string, { nl: string; en: string }> = {
   news: { nl: "Tech Nieuws", en: "Tech News" },
   tutorials: { nl: "Tutorial", en: "Tutorial" },
   tools: { nl: "Tools", en: "Tools" },
+  "mycka-amalia": { nl: "Mycka Amalia Chronicles", en: "Mycka Amalia Chronicles" },
 };
 
 const categoryBars: Record<string, string> = {
@@ -37,6 +39,7 @@ const categoryBars: Record<string, string> = {
   news: "bg-gradient-to-r from-blue-500 to-blue-400",
   tutorials: "bg-gradient-to-r from-green-500 to-green-400",
   tools: "bg-gradient-to-r from-orange-500 to-orange-400",
+  "mycka-amalia": "bg-gradient-to-r from-purple-600 to-purple-400",
 };
 
 export const BlogSection = () => {
@@ -66,6 +69,7 @@ export const BlogSection = () => {
     { key: "news", label: t("cat.news") },
     { key: "tutorials", label: t("cat.tutorials") },
     { key: "tools", label: t("cat.tools") },
+    { key: "mycka-amalia", label: t("cat.mycka") },
   ];
 
   const filtered = useMemo(() => {

@@ -32,6 +32,7 @@ const translations: Record<Language, Record<string, string>> = {
     "cat.news": "Tech Nieuws",
     "cat.tutorials": "Tutorials",
     "cat.tools": "Tools & Apps",
+    "cat.mycka": "Mycka Amalia Chronicles",
 
     // Posts
     "posts.title": "Laatste Artikelen",
@@ -94,6 +95,7 @@ const translations: Record<Language, Record<string, string>> = {
     "cat.news": "Tech News",
     "cat.tutorials": "Tutorials",
     "cat.tools": "Tools & Apps",
+    "cat.mycka": "Mycka Amalia Chronicles",
 
     // Posts
     "posts.title": "Latest Articles",
