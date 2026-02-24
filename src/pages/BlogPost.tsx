@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { db as supabase } from "@/lib/supabaseClient";
@@ -8,7 +8,7 @@ import { SEOHead } from "@/components/SEOHead";
 import { ReadingProgress } from "@/components/ReadingProgress";
 import { TableOfContents, headingToId } from "@/components/TableOfContents";
 import { RelatedPosts } from "@/components/RelatedPosts";
-import { Calendar, Clock, ArrowLeft, ArrowRight, ChevronLeft } from "lucide-react";
+import { Calendar, Clock, ArrowLeft, ArrowRight, ChevronLeft, Copy, Check } from "lucide-react";
 
 type BlogPostRow = {
   id: string;
@@ -52,6 +52,42 @@ function linkify(text: string): string {
   );
   out = out.replace(/\*\*(.+?)\*\*/g, '<strong class="text-foreground font-semibold">$1</strong>');
   return out;
+}
+function CodeBlock({ code, language }: { code: string; language?: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [code]);
+
+  return (
+    <div className="relative group my-6 rounded-lg border border-border overflow-hidden">
+      {language && (
+        <div className="flex items-center justify-between px-4 py-2 bg-secondary/80 border-b border-border">
+          <span className="text-xs font-mono text-muted-foreground uppercase tracking-wider">{language}</span>
+          <button
+            onClick={handleCopy}
+            className="flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-primary transition-colors"
+          >
+            {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? "Copied" : "Copy"}
+          </button>
+        </div>
+      )}
+      {!language && (
+        <button
+          onClick={handleCopy}
+          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-primary bg-secondary/80 px-2 py-1 rounded"
+        >
+          {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+        </button>
+      )}
+      <pre className="bg-secondary/30 p-4 overflow-x-auto font-mono text-sm text-foreground leading-relaxed">
+        <code>{code}</code>
+      </pre>
+    </div>
+  );
 }
 
 export default function BlogPost() {
@@ -195,12 +231,12 @@ export default function BlogPost() {
                 <TableOfContents content={content} />
               </div>
 
-              <div className="prose-custom">
+              <div className="prose-custom space-y-1">
                 {paragraphs.map((para, i) => {
                   if (para.startsWith("## ")) {
                     const text = para.slice(3);
                     return (
-                      <h2 key={i} id={headingToId(text)} className="text-2xl font-bold mt-10 mb-4 text-foreground scroll-mt-20">
+                      <h2 key={i} id={headingToId(text)} className="text-2xl font-bold mt-12 mb-4 text-foreground scroll-mt-20 animate-fade-in" style={{ animationDelay: `${i * 0.02}s` }}>
                         {text}
                       </h2>
                     );
@@ -208,18 +244,16 @@ export default function BlogPost() {
                   if (para.startsWith("### ")) {
                     const text = para.slice(4);
                     return (
-                      <h3 key={i} id={headingToId(text)} className="text-xl font-semibold mt-8 mb-3 text-foreground scroll-mt-20">
+                      <h3 key={i} id={headingToId(text)} className="text-xl font-semibold mt-8 mb-3 text-foreground scroll-mt-20 animate-fade-in" style={{ animationDelay: `${i * 0.02}s` }}>
                         {text}
                       </h3>
                     );
                   }
                   if (para.startsWith("```")) {
+                    const langMatch = para.match(/^```(\w+)/);
+                    const lang = langMatch?.[1];
                     const codeContent = para.replace(/^```\w*\n?/, "").replace(/```$/, "");
-                    return (
-                      <pre key={i} className="bg-secondary/50 border border-border rounded-lg p-4 my-6 overflow-x-auto font-mono text-sm text-foreground">
-                        <code>{codeContent}</code>
-                      </pre>
-                    );
+                    return <CodeBlock key={i} code={codeContent} language={lang} />;
                   }
                   if (para.includes("\n- ") || para.startsWith("- ")) {
                     const items = para.split("\n").filter((l) => l.startsWith("- "));

@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { db as supabase } from "@/lib/supabaseClient";
 import { Link } from "react-router-dom";
-import { Calendar, Clock, ArrowRight } from "lucide-react";
+import { Calendar, Clock, ArrowRight, Search } from "lucide-react";
 
 type BlogPost = {
   id: string;
@@ -42,6 +42,7 @@ const categoryBars: Record<string, string> = {
 export const BlogSection = () => {
   const { lang, t } = useLanguage();
   const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -67,10 +68,22 @@ export const BlogSection = () => {
     { key: "tools", label: t("cat.tools") },
   ];
 
-  const filtered =
-    activeCategory === "all"
+  const filtered = useMemo(() => {
+    let result = activeCategory === "all"
       ? posts
       : posts.filter((p) => p.category === activeCategory);
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter((p) => {
+        const t = lang === "nl" ? p.title_nl : p.title_en;
+        const e = lang === "nl" ? p.excerpt_nl : p.excerpt_en;
+        return t.toLowerCase().includes(q) || e.toLowerCase().includes(q);
+      });
+    }
+
+    return result;
+  }, [posts, activeCategory, searchQuery, lang]);
 
   const featured = filtered.find((p) => p.featured);
   const rest = filtered.filter((p) => !p.featured || activeCategory !== "all");
@@ -106,20 +119,33 @@ export const BlogSection = () => {
           <h2 className="text-4xl font-bold mt-2 section-title">{t("posts.title")}</h2>
         </div>
 
-        <div className="flex flex-wrap gap-2 mb-10">
-          {categories.map((cat) => (
-            <button
-              key={cat.key}
-              onClick={() => setActiveCategory(cat.key)}
-              className={`tag-category px-4 py-2 rounded-full border transition-all text-sm ${
-                activeCategory === cat.key
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
+        {/* Search + Category filters */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-10">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={lang === "nl" ? "Zoek artikelen..." : "Search articles..."}
+              className="w-full h-10 pl-10 pr-4 rounded-full border border-border bg-card text-foreground text-sm font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary transition-colors"
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {categories.map((cat) => (
+              <button
+                key={cat.key}
+                onClick={() => setActiveCategory(cat.key)}
+                className={`tag-category px-4 py-2 rounded-full border transition-all text-sm ${
+                  activeCategory === cat.key
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {loading ? (
