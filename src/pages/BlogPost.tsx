@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { db as supabase } from "@/lib/supabaseClient";
@@ -10,6 +10,7 @@ import { TableOfContents, headingToId } from "@/components/TableOfContents";
 import { RelatedPosts } from "@/components/RelatedPosts";
 import { Calendar, Clock, ArrowLeft, ArrowRight, ChevronLeft, Copy, Check } from "lucide-react";
 import { isHtmlContent } from "@/lib/markdownToHtml";
+import DOMPurify from "dompurify";
 
 type BlogPostRow = {
   id: string;
@@ -237,7 +238,7 @@ export default function BlogPost() {
               {isHtml ? (
                 <div
                   className="prose-custom prose-headings:text-foreground prose-p:text-muted-foreground prose-p:leading-relaxed prose-a:text-primary prose-a:underline hover:prose-a:text-primary/80 prose-strong:text-foreground prose-li:text-muted-foreground prose-code:text-foreground prose-pre:bg-secondary/30 prose-pre:border prose-pre:border-border prose-img:rounded-lg prose-img:my-6 prose-hr:border-border space-y-1"
-                  dangerouslySetInnerHTML={{ __html: content }}
+                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }}
                 />
               ) : (
               <div className="prose-custom space-y-1">
