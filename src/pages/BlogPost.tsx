@@ -9,6 +9,7 @@ import { ReadingProgress } from "@/components/ReadingProgress";
 import { TableOfContents, headingToId } from "@/components/TableOfContents";
 import { RelatedPosts } from "@/components/RelatedPosts";
 import { Calendar, Clock, ArrowLeft, ArrowRight, ChevronLeft, Copy, Check } from "lucide-react";
+import { isHtmlContent } from "@/lib/markdownToHtml";
 
 type BlogPostRow = {
   id: string;
@@ -161,7 +162,8 @@ export default function BlogPost() {
   const content = lang === "nl" ? post.content_nl : post.content_en;
   const catLabel = categoryLabels[post.category]?.[lang] ?? post.category;
 
-  const paragraphs = content.split("\n\n");
+  const isHtml = isHtmlContent(content);
+  const paragraphs = isHtml ? [] : content.split("\n\n");
 
   return (
     <div className="min-h-screen bg-background">
@@ -232,6 +234,12 @@ export default function BlogPost() {
                 <TableOfContents content={content} />
               </div>
 
+              {isHtml ? (
+                <div
+                  className="prose-custom prose-headings:text-foreground prose-p:text-muted-foreground prose-p:leading-relaxed prose-a:text-primary prose-a:underline hover:prose-a:text-primary/80 prose-strong:text-foreground prose-li:text-muted-foreground prose-code:text-foreground prose-pre:bg-secondary/30 prose-pre:border prose-pre:border-border prose-img:rounded-lg prose-img:my-6 prose-hr:border-border space-y-1"
+                  dangerouslySetInnerHTML={{ __html: content }}
+                />
+              ) : (
               <div className="prose-custom space-y-1">
                 {paragraphs.map((para, i) => {
                   if (para.startsWith("## ")) {
@@ -276,6 +284,7 @@ export default function BlogPost() {
                   );
                 })}
               </div>
+              )}
             </article>
           </div>
         </div>
