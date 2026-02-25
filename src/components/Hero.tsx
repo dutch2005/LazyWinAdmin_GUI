@@ -13,7 +13,7 @@ export const Hero = () => {
         style={{ backgroundImage: `url(${heroBg})` }}
       />
       {/* Dark overlay */}
-      <div className="absolute inset-0 bg-background/75" />
+      <div className="absolute inset-0 bg-background/80 dark:bg-background/75" />
       {/* Bottom fade */}
       <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-background to-transparent" />
       {/* Dot pattern overlay */}
