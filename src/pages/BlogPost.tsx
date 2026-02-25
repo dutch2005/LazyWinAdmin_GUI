@@ -105,6 +105,7 @@ export default function BlogPost() {
         .from("blog_posts")
         .select("*")
         .eq("published", true)
+        .lte("date", new Date().toISOString().split('T')[0])
         .order("date", { ascending: false });
 
       if (data) {
