@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { db as supabase } from "@/lib/supabaseClient";
 import { MarkdownEditor } from "@/components/admin/MarkdownEditor";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import {
   Plus, Edit, Trash2, Eye, EyeOff,
-  Star, StarOff, ChevronLeft, Save, X, AlertTriangle
+  Star, StarOff, ChevronLeft, Save, X, AlertTriangle, Code, Type
 } from "lucide-react";
 
 type BlogPost = {
@@ -50,6 +51,9 @@ export function BlogPostsPanel() {
   const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"nl" | "en">("nl");
+  const [editorMode, setEditorMode] = useState<"markdown" | "wysiwyg">("wysiwyg");
+
+  const today = new Date().toISOString().split("T")[0];
 
   const fetchPosts = async () => {
     setLoading(true);
@@ -111,7 +115,7 @@ export function BlogPostsPanel() {
           <textarea value={value as string} onChange={(e) => setForm((f) => ({ ...f, [field]: e.target.value }))} rows={6} className={commonClass + " resize-y"} />
         ) : type === "select" ? (
           <select value={value as string} onChange={(e) => setForm((f) => ({ ...f, [field]: e.target.value }))} className={commonClass}>
-            {["ai", "news", "tutorials", "tools"].map((c) => (<option key={c} value={c}>{c}</option>))}
+            {["ai", "news", "tutorials", "tools", "mycka-amalia"].map((c) => (<option key={c} value={c}>{c}</option>))}
           </select>
         ) : type === "checkbox" ? (
           <label className="flex items-center gap-2 cursor-pointer">
@@ -165,6 +169,11 @@ export function BlogPostsPanel() {
                       <span className={`text-xs px-2 py-0.5 rounded-full font-mono ${post.published ? "text-green-400 bg-green-400/10" : "text-muted-foreground bg-secondary/50"}`}>
                         {post.published ? "● gepubliceerd" : "○ concept"}
                       </span>
+                      {post.published && post.date > today && (
+                        <span className="text-xs px-2 py-0.5 rounded-full font-mono text-amber-400 bg-amber-400/10 border border-amber-400/30">
+                          ⏱ scheduled
+                        </span>
+                      )}
                     </div>
                     <h3 className="font-semibold text-sm mt-1 truncate">{post.title_nl}</h3>
                     <p className="text-xs text-muted-foreground font-mono">{post.date} · {post.read_time} min</p>
@@ -210,13 +219,36 @@ export function BlogPostsPanel() {
                 ))}
               </div>
 
+              {/* Editor mode toggle */}
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-xs text-muted-foreground font-mono">Editor:</span>
+                <button
+                  type="button"
+                  onClick={() => setEditorMode("wysiwyg")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-colors ${editorMode === "wysiwyg" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground border border-border hover:border-primary/40"}`}
+                >
+                  <Type className="w-3.5 h-3.5" /> WYSIWYG
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditorMode("markdown")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-colors ${editorMode === "markdown" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground border border-border hover:border-primary/40"}`}
+                >
+                  <Code className="w-3.5 h-3.5" /> Markdown
+                </button>
+              </div>
+
               {activeTab === "nl" ? (
                 <div className="space-y-4">
                   {formField("Titel (NL)", "title_nl")}
                   {formField("Samenvatting (NL)", "excerpt_nl", "textarea")}
                   <div>
                     <label className="block text-xs font-medium text-muted-foreground mb-1">Inhoud (NL)</label>
-                    <MarkdownEditor value={form.content_nl} onChange={(v) => setForm((f) => ({ ...f, content_nl: v }))} placeholder="Schrijf de Nederlandse inhoud in Markdown..." rows={20} />
+                    {editorMode === "wysiwyg" ? (
+                      <RichTextEditor value={form.content_nl} onChange={(v) => setForm((f) => ({ ...f, content_nl: v }))} placeholder="Schrijf de Nederlandse inhoud..." />
+                    ) : (
+                      <MarkdownEditor value={form.content_nl} onChange={(v) => setForm((f) => ({ ...f, content_nl: v }))} placeholder="Schrijf de Nederlandse inhoud in Markdown..." rows={20} />
+                    )}
                   </div>
                 </div>
               ) : (
@@ -225,7 +257,11 @@ export function BlogPostsPanel() {
                   {formField("Excerpt (EN)", "excerpt_en", "textarea")}
                   <div>
                     <label className="block text-xs font-medium text-muted-foreground mb-1">Content (EN)</label>
-                    <MarkdownEditor value={form.content_en} onChange={(v) => setForm((f) => ({ ...f, content_en: v }))} placeholder="Write the English content in Markdown..." rows={20} />
+                    {editorMode === "wysiwyg" ? (
+                      <RichTextEditor value={form.content_en} onChange={(v) => setForm((f) => ({ ...f, content_en: v }))} placeholder="Write the English content..." />
+                    ) : (
+                      <MarkdownEditor value={form.content_en} onChange={(v) => setForm((f) => ({ ...f, content_en: v }))} placeholder="Write the English content in Markdown..." rows={20} />
+                    )}
                   </div>
                 </div>
               )}
