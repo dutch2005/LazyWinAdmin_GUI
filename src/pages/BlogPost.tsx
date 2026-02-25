@@ -158,9 +158,18 @@ export default function BlogPost() {
 
   if (!post) return null;
 
-  const title = lang === "nl" ? post.title_nl : post.title_en;
-  const excerpt = lang === "nl" ? post.excerpt_nl : post.excerpt_en;
-  const content = lang === "nl" ? post.content_nl : post.content_en;
+  const titleRaw = lang === "nl" ? post.title_nl : post.title_en;
+  const titleFallback = lang === "nl" ? post.title_en : post.title_nl;
+  const title = titleRaw?.trim() ? titleRaw : titleFallback;
+
+  const excerptRaw = lang === "nl" ? post.excerpt_nl : post.excerpt_en;
+  const excerptFallback = lang === "nl" ? post.excerpt_en : post.excerpt_nl;
+  const excerpt = excerptRaw?.trim() ? excerptRaw : excerptFallback;
+
+  const contentRaw = lang === "nl" ? post.content_nl : post.content_en;
+  const contentFallback = lang === "nl" ? post.content_en : post.content_nl;
+  const isFallback = (!contentRaw || !contentRaw.trim()) && !!contentFallback?.trim();
+  const content = isFallback ? contentFallback : contentRaw;
   const catLabel = categoryLabels[post.category]?.[lang] ?? post.category;
 
   const isHtml = isHtmlContent(content);
@@ -230,6 +239,17 @@ export default function BlogPost() {
 
             {/* Main content */}
             <article className="flex-1 max-w-3xl">
+              {/* Fallback language banner */}
+              {isFallback && (
+                <div className="flex items-center gap-3 p-4 mb-6 rounded-lg border border-primary/30 bg-primary/5 text-sm text-muted-foreground">
+                  <span className="text-lg">{lang === "nl" ? "🇬🇧" : "🇳🇱"}</span>
+                  <span>
+                    {lang === "nl"
+                      ? "Dit artikel is alleen beschikbaar in het Engels."
+                      : "This article is only available in Dutch."}
+                  </span>
+                </div>
+              )}
               {/* Mobile TOC */}
               <div className="xl:hidden">
                 <TableOfContents content={content} />
