@@ -1,67 +1,44 @@
 
 
-# Plan: Security Fixes + Publish
+# Analysis: Empty Dutch Content on Blog Posts
 
-## Security Scan Results
+## What's Happening
 
-The scan found 6 issues. Here's how each will be addressed:
+I investigated the blog post at `/blog/mycka-amalia-chronicles-01-bloodline`. The screenshot shows the Dutch title renders correctly, but the **content area is completely empty**. This is a **data issue** — the post was created with English content filled in, but the Dutch content field (`content_nl`) was left empty. The rendering code works correctly; it simply has nothing to display.
 
----
+Currently when a language version has no content, the page shows a blank area — which is a poor user experience.
 
-### 1. Enable Leaked Password Protection (warn)
-Use the auth configuration tool to enable leaked password protection, which checks passwords against known breach databases during signup/login.
+## Proposed Fix
 
-### 2–3. "Exposed Sensitive Data" on contact_messages & newsletter_subscribers (error)
-These are **false positives**. Both tables already have restrictive admin-only SELECT policies. No public read access exists. These findings will be marked as ignored with explanation.
+### 1. `src/pages/BlogPost.tsx` — Add language fallback
 
-### 4–5. Missing UPDATE policies on contact_messages & newsletter_subscribers (warn)
-**Fix**: Add a database migration that explicitly denies all UPDATE operations on both tables. These tables should be append-only (subscribers subscribe, messages get sent — neither should ever be modified).
+When the selected language's content is empty, **fall back to the other language** and show a small banner informing the reader:
 
-```sql
--- Deny all updates on contact_messages (append-only)
-CREATE POLICY "No updates allowed on contact messages"
-  ON public.contact_messages FOR UPDATE
-  USING (false);
+- If `content_nl` is empty but `content_en` has content, show the English content with a notice: "Dit artikel is alleen beschikbaar in het Engels."
+- If `content_en` is empty but `content_nl` has content, show the Dutch content with a notice: "This article is only available in Dutch."
+- Apply the same fallback logic to `title` and `excerpt` fields as well, so no part of the page is blank.
 
--- Deny all updates on newsletter_subscribers (append-only)
-CREATE POLICY "No updates allowed on newsletter subscribers"
-  ON public.newsletter_subscribers FOR UPDATE
-  USING (false);
-```
+### 2. `src/components/admin/BlogPostsPanel.tsx` — Add missing content warning
 
-### 6. Unpublished/Scheduled Blog Posts Could Leak (info)
-The current RLS policy `Published posts are public` already restricts SELECT to `published = true`. However, **scheduled posts** (published but future-dated) are only filtered client-side with `.lte("date", ...)`. A savvy user could bypass this.
-
-**Fix**: Update the blog_posts RLS policy to also enforce server-side date filtering:
-
-```sql
--- Drop and recreate the public SELECT policy to include date check
-DROP POLICY "Published posts are public" ON public.blog_posts;
-CREATE POLICY "Published posts are public"
-  ON public.blog_posts FOR SELECT
-  USING (published = true AND date <= CURRENT_DATE);
-```
-
-This ensures scheduled posts are invisible at the database level, regardless of client-side manipulation.
-
-### 7. HTML Content Sanitization (not flagged, but critical)
-The `BlogPost.tsx` page renders WYSIWYG content using `dangerouslySetInnerHTML`. While blog content is admin-authored, sanitizing it adds defense-in-depth.
-
-**Fix**: Install `dompurify` and sanitize HTML before rendering in `BlogPost.tsx` (line 240).
+In the post list view, show a small warning indicator when a post is missing content for one language (e.g., a flag icon or text like "⚠ NL missing" or "⚠ EN missing"). This helps the admin spot incomplete translations at a glance.
 
 ---
 
-## Summary of Changes
+## Technical Details
 
-| File / Resource | Change |
-|---|---|
-| Database migration | Add UPDATE-deny policies on `contact_messages` and `newsletter_subscribers`; update blog_posts SELECT policy to enforce `date <= CURRENT_DATE` |
-| Auth config | Enable leaked password protection |
-| `src/pages/BlogPost.tsx` | Sanitize HTML content with DOMPurify before `dangerouslySetInnerHTML` |
-| `package.json` | Add `dompurify` + `@types/dompurify` |
-| Security findings | Dismiss false positives for contact_messages and newsletter_subscribers "exposed data" findings |
+The fallback logic in `BlogPost.tsx` (around lines 161-163) changes from:
+```
+const content = lang === "nl" ? post.content_nl : post.content_en;
+```
+to:
+```
+const contentRaw = lang === "nl" ? post.content_nl : post.content_en;
+const fallbackContent = lang === "nl" ? post.content_en : post.content_nl;
+const isFallback = (!contentRaw || !contentRaw.trim()) && fallbackContent?.trim();
+const content = isFallback ? fallbackContent : contentRaw;
+```
 
-**Files modified:** 2 (`BlogPost.tsx`, `package.json`)
-**Database changes:** 1 migration (3 policy changes)
-**Auth config:** 1 change (leaked password protection)
+A small info banner renders above the content when `isFallback` is true.
+
+**Files modified:** 2 (`BlogPost.tsx`, `BlogPostsPanel.tsx`)
 
