@@ -29,9 +29,9 @@ type BlogPostRow = {
 
 const categoryColors: Record<string, string> = {
   ai: "text-primary border-primary/30 bg-primary/10",
-  news: "text-blue-400 border-blue-400/30 bg-blue-400/10",
-  tutorials: "text-green-400 border-green-400/30 bg-green-400/10",
-  tools: "text-orange-400 border-orange-400/30 bg-orange-400/10",
+  news: "text-blue-700 dark:text-blue-400 border-blue-600/30 dark:border-blue-400/30 bg-blue-500/10 dark:bg-blue-400/10",
+  tutorials: "text-green-700 dark:text-green-400 border-green-600/30 dark:border-green-400/30 bg-green-500/10 dark:bg-green-400/10",
+  tools: "text-orange-700 dark:text-orange-400 border-orange-600/30 dark:border-orange-400/30 bg-orange-500/10 dark:bg-orange-400/10",
 };
 
 const categoryLabels: Record<string, { nl: string; en: string }> = {

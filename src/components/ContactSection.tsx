@@ -128,7 +128,7 @@ export const ContactSection = () => {
               </div>
               <div className="p-5 font-mono text-sm space-y-1.5">
                 <p><span className="text-primary">$</span> <span className="text-muted-foreground">echo "Heb je een vraag?"</span></p>
-                <p className="text-green-400">{lang === "nl" ? "Stuur mij een bericht!" : "Send me a message!"}</p>
+                <p className="text-green-700 dark:text-green-400">{lang === "nl" ? "Stuur mij een bericht!" : "Send me a message!"}</p>
                 <p className="mt-2"><span className="text-primary">$</span> <span className="text-muted-foreground">response_time</span></p>
                 <p className="text-foreground">{lang === "nl" ? "Binnen 24 uur" : "Within 24 hours"}</p>
                 <p className="flex items-center gap-0.5 mt-2">
@@ -144,7 +144,7 @@ export const ContactSection = () => {
             {submitted ? (
               <div className="card-glass rounded-xl p-10 flex flex-col items-center justify-center text-center min-h-[400px] gap-4">
                 <div className="w-16 h-16 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center">
-                  <CheckCircle className="w-8 h-8 text-green-400" />
+                  <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
                 </div>
                 <h3 className="text-xl font-bold">{t("contact.success.title")}</h3>
                 <p className="text-muted-foreground">{t("contact.success.desc")}</p>

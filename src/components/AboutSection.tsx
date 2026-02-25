@@ -142,7 +142,7 @@ export const AboutSection = () => {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-400 border-2 border-card" title="Available" />
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-500 dark:bg-green-400 border-2 border-card" title="Available" />
               </div>
               <div>
                 <h3 className="text-xl font-bold">Michael Maertzdorf</h3>
@@ -196,7 +196,7 @@ export const AboutSection = () => {
                   Michael Maertzdorf &lt;<span style={{ unicodeBidi: "bidi-override", direction: "rtl" }}>zyx.bewemertxe@5002hctud</span>&gt;
                 </p>
                 <p className="mt-2"><span className="text-primary">$</span> <span className="text-muted-foreground">cat passion.txt</span></p>
-                <p className="text-green-400">AI Automation · Cloud · Security · Tech News</p>
+                <p className="text-green-700 dark:text-green-400">AI Automation · Cloud · Security · Tech News</p>
                 <p className="mt-2"><span className="text-primary">$</span> <span className="text-muted-foreground">echo $EXPERIENCE</span></p>
                 <p className="text-foreground">15+ jaar IT · 50+ projecten 🚀</p>
                 <p className="flex items-center gap-0.5 mt-2">

@@ -1,66 +1,59 @@
 
 
-# Update Work Experience, Certifications and Education from Resume
+# Fine-tune Light Mode Colors and Contrast
 
-Update the `AboutSection.tsx` component to reflect your actual career history from your LinkedIn/resume PDF.
+After reviewing all sections in light mode, here are the specific contrast and readability issues to fix, along with the solutions.
 
 ---
 
-## Changes to `src/components/AboutSection.tsx`
+## Issues Found
 
-### Work History (replace current 3 placeholder entries with your real timeline)
+1. **Category badge colors** (`text-green-400`, `text-blue-400`, `text-orange-400`) are too faint on white/light backgrounds — these need darker variants in light mode
+2. **Terminal output** `text-green-400` in About and Contact section terminal blocks has poor contrast on the light secondary background
+3. **Hero section** overlay (`bg-background/75`) makes the hero too washed-out in light mode — needs a lighter opacity or adjusted overlay
+4. **Dot pattern** opacity is too subtle in light mode
+5. **Blog post page** hardcoded `text-green-400` and `text-blue-400` category colors in `BlogPost.tsx` have same issue
 
-| Period | Role | Company/Client | Description |
-|--------|------|-----------------|-------------|
-| Apr 2022 -- Present | System Administrator | Mitsubishi Motors Europe B.V. (via Data4.nl) | System administration at Mitsubishi Motors, Maastricht-Airport |
-| Jan 2021 -- Present | IT System Administrator | Data4.nl | Manage workplace and server environments (physical + virtual), remote support for customers |
-| Oct 2021 -- Apr 2022 | Project Medewerker Extern | Zuyderland (via Data4.nl) | Project work at Zuyderland hospital, Sittard-Geleen |
-| Oct 2019 -- Oct 2021 | System Administrator | Mitsubishi Motors Europe B.V. (via Data4.nl) | User accounts, Ivanti Workspace Control, Ivanti Automation, on-prem servers, MS Teams Calling, Azure projects |
-| Sep 2018 -- Sep 2019 | Servicedesk Medewerker | Gemeente Maastricht (via Data4.nl) | IT support for municipality employees |
-| Jul 2018 -- Jan 2019 | Intaker / Integrator | VodafoneZiggo (via Data4.nl) | Test installations, intake documents, application packaging |
-| Sep 2018 -- Dec 2018 | ICT Medewerker | Catharina Ziekenhuis Eindhoven (via Data4.nl) | Printer/workstation replacement, HIX patient system rollout |
-| Jan 2019 -- Feb 2019 | Servicedesk Medewerker | VieCuri Medisch Centrum (via Data4.nl) | Phone support for hospital staff |
-| Dec 2016 -- Jun 2018 | Enterprise Servicedesk NS | KPN (via Data4.nl) | Enterprise service desk |
-| Dec 2016 -- Jan 2021 | Medewerker Automatisering | Data4.nl | Automation work, Maastricht-Airport |
-| Oct 2015 -- Dec 2016 | Customer Advisor Norton | Teleperformance Benelux | Technical support: installation, virus removal, product advisory |
-| Jan 2015 -- Oct 2015 | Technisch Helpdeskmedewerker Ziggo | Teleperformance Benelux | Phone support for Ziggo TV, internet, VoIP customers |
-| Jun 2009 -- Dec 2014 | Medewerker ICT | Stichting Jeugdzorg Sint Joseph | Helpdesk, printers, Dell switches, XenServer virtualization, user support |
+---
 
-To keep the section readable, the most recent/significant roles will be shown (roughly 6-7 entries), with older roles grouped or summarized.
+## Changes
 
-### Certifications (replace current 2 with full list)
+### `src/index.css`
+- Add light-mode-aware utility classes for category colors that automatically switch between `-400` (dark) and `-600`/`-700` (light) variants
+- Add a `.light .terminal-output` helper for green terminal text
+- Adjust dot-pattern opacity for light mode
 
-- 3CX Basic Certified Engineer V20
-- 3CX Basic Certified Engineer v18
-- Vibe Coding
-- Ziggo Technische Training
-- 70-697 Configuring Windows Devices
+### `src/components/BlogSection.tsx`
+- Replace hardcoded `text-green-400`/`text-blue-400`/`text-orange-400` in `categoryColors` with theme-aware classes using `dark:text-green-400 text-green-700` pattern
 
-### Education (add new section)
+### `src/pages/BlogPost.tsx`
+- Same category color fix as BlogSection
+- Fix terminal-style green text in rendered content
 
-- Arcus College -- Niveau 4, ICT Beheerder (2005--2009)
-- Zuyd University of Applied Sciences -- HBO, Network Infrastructure Design (2004--2005)
-- Sintermeerten College -- HAVO, Economie and Maatschappij (1997--2004)
+### `src/components/AboutSection.tsx`
+- Replace `text-green-400` on terminal output with a theme-aware class (`text-green-700 dark:text-green-400`)
+- Fix the green "available" dot: `bg-green-400` → `bg-green-500 dark:bg-green-400`
 
-### Languages (add new section)
+### `src/components/ContactSection.tsx`
+- Same terminal output green text fix
+- Fix `text-green-400` on success checkmark icon
 
-- Dutch (Native)
-- English (Full Professional)
-- German (Limited Working)
+### `src/components/Hero.tsx`
+- Change hero dark overlay from `bg-background/75` to `bg-background/80 dark:bg-background/75` for better light-mode contrast with the background image
 
-### Skills update
-- Add VoIP and 3CX to the skills grid (from Top Skills in resume)
+### `src/components/CookieConsent.tsx`
+- No changes needed — already using semantic tokens
+
+### `src/components/Footer.tsx`
+- No changes needed — already using semantic tokens
 
 ---
 
 ## Technical Details
 
-Only one file is modified: `src/components/AboutSection.tsx`
+The core strategy is replacing hardcoded Tailwind color utilities (e.g. `text-green-400`) with dark-mode-prefixed pairs (`text-green-700 dark:text-green-400`). This leverages the existing `darkMode: ["class"]` configuration in `tailwind.config.ts`.
 
-- The `workHistory` array will be replaced with your real positions (showing ~7 key roles, grouping short-term assignments)
-- The `certifications` array will be expanded to 5 entries
-- A new `education` array and `languages` array will be added with their own rendered sections
-- The skills grid gains a VoIP/3CX entry
-- All entries remain bilingual (NL/EN) following existing pattern
-- The summary text ("10+ jaar" / "50+ projecten") stays accurate since your career spans 2009--present (15+ years)
+Files modified: 5 (`BlogSection.tsx`, `BlogPost.tsx`, `AboutSection.tsx`, `ContactSection.tsx`, `Hero.tsx`, `index.css`)
+
+No new dependencies. No database changes.
 

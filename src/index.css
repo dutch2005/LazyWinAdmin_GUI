@@ -224,6 +224,10 @@
     background-size: 32px 32px;
   }
 
+  .light .dot-pattern {
+    background-image: radial-gradient(circle, hsl(186 100% 35% / 0.15) 1px, transparent 1px);
+  }
+
   /* Scanline effect on hero */
   .scanlines::before {
     content: '';
