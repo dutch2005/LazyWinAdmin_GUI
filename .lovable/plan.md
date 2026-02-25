@@ -1,58 +1,42 @@
 
 
-# Plan: Add Image Upload to WYSIWYG Editor
+# Plan: Add "Convert to HTML" Button for Markdown Posts
 
-The WYSIWYG editor currently only supports inserting images via URL prompt. This plan adds drag-and-drop and browse-to-upload support using Lovable Cloud file storage.
+## Overview
+
+Add a conversion button in the admin editor that converts existing Markdown content to HTML using a client-side Markdown-to-HTML converter. This enables old Markdown posts to be edited properly in the WYSIWYG editor. The public `BlogPost.tsx` page also needs to detect whether content is HTML or Markdown and render accordingly.
 
 ---
 
 ## Changes
 
-### 1. Create Storage Bucket (Database Migration)
+### 1. `src/components/admin/BlogPostsPanel.tsx`
 
-Create a public `blog-images` storage bucket with RLS policies allowing admins to upload/manage files and anyone to view them (since blog images are public).
+Add a "Convert to HTML" button that appears in the editor area when editing an existing post and the editor is in WYSIWYG mode. The button:
 
-```sql
-INSERT INTO storage.buckets (id, name, public) VALUES ('blog-images', 'blog-images', true);
+- Detects if the current content looks like Markdown (does not start with `<` tags)
+- Shows an amber warning banner: "This content appears to be Markdown. Convert it to HTML for the WYSIWYG editor? This action cannot be undone."
+- On click, shows a confirmation dialog (reuse the existing modal pattern with `AlertTriangle` icon)
+- Converts `content_nl` and/or `content_en` from Markdown to HTML using a simple client-side converter function
+- The converter handles: headings (`##`, `###`), bold (`**`), italic (`*`), links (`[text](url)`), lists (`- item`), code blocks (``` ``` ```), paragraphs, images (`![alt](url)`), and horizontal rules (`---`)
 
-CREATE POLICY "Anyone can view blog images"
-  ON storage.objects FOR SELECT
-  USING (bucket_id = 'blog-images');
+The conversion function will be defined in the same file (or a small utility). It does not need a library — a ~30-line regex-based converter matching the existing Markdown patterns used in the blog is sufficient.
 
-CREATE POLICY "Admins can upload blog images"
-  ON storage.objects FOR INSERT
-  WITH CHECK (bucket_id = 'blog-images' AND has_role(auth.uid(), 'admin'));
+### 2. `src/pages/BlogPost.tsx`
 
-CREATE POLICY "Admins can delete blog images"
-  ON storage.objects FOR DELETE
-  USING (bucket_id = 'blog-images' AND has_role(auth.uid(), 'admin'));
-```
+Add HTML content detection: if content starts with an HTML tag (e.g. `<p>`, `<h1>`, `<div>`, `<ul>`), render it directly with `dangerouslySetInnerHTML` inside a styled prose container. Otherwise, use the existing Markdown renderer.
 
-### 2. Update `src/components/admin/RichTextEditor.tsx`
-
-- **Add a hidden file input** (`<input type="file" accept="image/*">`) triggered by the existing Image toolbar button
-- **Add drag-and-drop support** on the editor area — listen for `drop` and `dragover` events on the editor wrapper
-- **Upload handler**: When a file is selected or dropped, upload it to the `blog-images` bucket via the storage client, get the public URL, and insert it into the editor with `editor.chain().focus().setImage({ src: publicUrl }).run()`
-- **Keep the URL prompt** as a fallback — show a small popover or modal with two options: "Upload file" and "Enter URL"
-- **Upload progress**: Show a brief loading indicator (spinner or progress bar) while the image uploads
-- **Import** `db` from `@/lib/supabaseClient` for the storage upload
-
-### 3. Tiptap Drop Handler
-
-Configure Tiptap's `editorProps.handleDrop` to intercept file drops directly in the editor content area. When an image file is dropped, upload it and insert at the drop position instead of the default browser behavior.
-
-Also configure `handlePaste` so pasting images from clipboard works the same way.
+This is a small conditional wrapper around lines 235-278.
 
 ---
 
 ## Technical Details
 
-- Uses the external Supabase client (`db` from `supabaseClient.ts`) since that's where the blog data lives
-- Files are stored with a unique name: `blog-images/{timestamp}-{filename}` to avoid collisions
-- Public URL is constructed via `db.storage.from('blog-images').getPublicUrl(path)`
-- Max file size: no enforced limit beyond the default (browser will handle very large files gracefully)
-- Supported formats: any image type the browser accepts (`image/*`)
+- Detection heuristic: `content.trimStart().startsWith('<')` — simple and reliable since Tiptap always outputs HTML starting with tags
+- The Markdown-to-HTML converter is one-way and handles the subset of Markdown actually used in the blog posts
+- No new dependencies needed
+- The conversion button only appears for existing posts (not new ones) and only when content looks like Markdown
+- Both NL and EN content tabs get their own convert button independently
 
-**Files modified:** 1 (`RichTextEditor.tsx`)
-**Database changes:** 1 migration (create bucket + RLS policies)
+**Files modified:** 2 (`BlogPostsPanel.tsx`, `BlogPost.tsx`)
 
