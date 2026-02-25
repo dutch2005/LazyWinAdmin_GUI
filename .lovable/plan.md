@@ -1,42 +1,67 @@
 
 
-# Plan: Add "Convert to HTML" Button for Markdown Posts
+# Plan: Security Fixes + Publish
 
-## Overview
+## Security Scan Results
 
-Add a conversion button in the admin editor that converts existing Markdown content to HTML using a client-side Markdown-to-HTML converter. This enables old Markdown posts to be edited properly in the WYSIWYG editor. The public `BlogPost.tsx` page also needs to detect whether content is HTML or Markdown and render accordingly.
-
----
-
-## Changes
-
-### 1. `src/components/admin/BlogPostsPanel.tsx`
-
-Add a "Convert to HTML" button that appears in the editor area when editing an existing post and the editor is in WYSIWYG mode. The button:
-
-- Detects if the current content looks like Markdown (does not start with `<` tags)
-- Shows an amber warning banner: "This content appears to be Markdown. Convert it to HTML for the WYSIWYG editor? This action cannot be undone."
-- On click, shows a confirmation dialog (reuse the existing modal pattern with `AlertTriangle` icon)
-- Converts `content_nl` and/or `content_en` from Markdown to HTML using a simple client-side converter function
-- The converter handles: headings (`##`, `###`), bold (`**`), italic (`*`), links (`[text](url)`), lists (`- item`), code blocks (``` ``` ```), paragraphs, images (`![alt](url)`), and horizontal rules (`---`)
-
-The conversion function will be defined in the same file (or a small utility). It does not need a library — a ~30-line regex-based converter matching the existing Markdown patterns used in the blog is sufficient.
-
-### 2. `src/pages/BlogPost.tsx`
-
-Add HTML content detection: if content starts with an HTML tag (e.g. `<p>`, `<h1>`, `<div>`, `<ul>`), render it directly with `dangerouslySetInnerHTML` inside a styled prose container. Otherwise, use the existing Markdown renderer.
-
-This is a small conditional wrapper around lines 235-278.
+The scan found 6 issues. Here's how each will be addressed:
 
 ---
 
-## Technical Details
+### 1. Enable Leaked Password Protection (warn)
+Use the auth configuration tool to enable leaked password protection, which checks passwords against known breach databases during signup/login.
 
-- Detection heuristic: `content.trimStart().startsWith('<')` — simple and reliable since Tiptap always outputs HTML starting with tags
-- The Markdown-to-HTML converter is one-way and handles the subset of Markdown actually used in the blog posts
-- No new dependencies needed
-- The conversion button only appears for existing posts (not new ones) and only when content looks like Markdown
-- Both NL and EN content tabs get their own convert button independently
+### 2–3. "Exposed Sensitive Data" on contact_messages & newsletter_subscribers (error)
+These are **false positives**. Both tables already have restrictive admin-only SELECT policies. No public read access exists. These findings will be marked as ignored with explanation.
 
-**Files modified:** 2 (`BlogPostsPanel.tsx`, `BlogPost.tsx`)
+### 4–5. Missing UPDATE policies on contact_messages & newsletter_subscribers (warn)
+**Fix**: Add a database migration that explicitly denies all UPDATE operations on both tables. These tables should be append-only (subscribers subscribe, messages get sent — neither should ever be modified).
+
+```sql
+-- Deny all updates on contact_messages (append-only)
+CREATE POLICY "No updates allowed on contact messages"
+  ON public.contact_messages FOR UPDATE
+  USING (false);
+
+-- Deny all updates on newsletter_subscribers (append-only)
+CREATE POLICY "No updates allowed on newsletter subscribers"
+  ON public.newsletter_subscribers FOR UPDATE
+  USING (false);
+```
+
+### 6. Unpublished/Scheduled Blog Posts Could Leak (info)
+The current RLS policy `Published posts are public` already restricts SELECT to `published = true`. However, **scheduled posts** (published but future-dated) are only filtered client-side with `.lte("date", ...)`. A savvy user could bypass this.
+
+**Fix**: Update the blog_posts RLS policy to also enforce server-side date filtering:
+
+```sql
+-- Drop and recreate the public SELECT policy to include date check
+DROP POLICY "Published posts are public" ON public.blog_posts;
+CREATE POLICY "Published posts are public"
+  ON public.blog_posts FOR SELECT
+  USING (published = true AND date <= CURRENT_DATE);
+```
+
+This ensures scheduled posts are invisible at the database level, regardless of client-side manipulation.
+
+### 7. HTML Content Sanitization (not flagged, but critical)
+The `BlogPost.tsx` page renders WYSIWYG content using `dangerouslySetInnerHTML`. While blog content is admin-authored, sanitizing it adds defense-in-depth.
+
+**Fix**: Install `dompurify` and sanitize HTML before rendering in `BlogPost.tsx` (line 240).
+
+---
+
+## Summary of Changes
+
+| File / Resource | Change |
+|---|---|
+| Database migration | Add UPDATE-deny policies on `contact_messages` and `newsletter_subscribers`; update blog_posts SELECT policy to enforce `date <= CURRENT_DATE` |
+| Auth config | Enable leaked password protection |
+| `src/pages/BlogPost.tsx` | Sanitize HTML content with DOMPurify before `dangerouslySetInnerHTML` |
+| `package.json` | Add `dompurify` + `@types/dompurify` |
+| Security findings | Dismiss false positives for contact_messages and newsletter_subscribers "exposed data" findings |
+
+**Files modified:** 2 (`BlogPost.tsx`, `package.json`)
+**Database changes:** 1 migration (3 policy changes)
+**Auth config:** 1 change (leaked password protection)
 
