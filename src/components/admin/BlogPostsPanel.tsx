@@ -177,6 +177,15 @@ export function BlogPostsPanel() {
                         </span>
                       )}
                     </div>
+                    {/* Missing content warnings */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {!post.content_nl.trim() && (
+                        <span className="text-xs px-2 py-0.5 rounded-full font-mono text-amber-500 bg-amber-500/10 border border-amber-500/30">⚠ NL missing</span>
+                      )}
+                      {!post.content_en.trim() && (
+                        <span className="text-xs px-2 py-0.5 rounded-full font-mono text-amber-500 bg-amber-500/10 border border-amber-500/30">⚠ EN missing</span>
+                      )}
+                    </div>
                     <h3 className="font-semibold text-sm mt-1 truncate">{post.title_nl}</h3>
                     <p className="text-xs text-muted-foreground font-mono">{post.date} · {post.read_time} min</p>
                   </div>
