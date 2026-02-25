@@ -56,6 +56,7 @@ export const BlogSection = () => {
         .from("blog_posts")
         .select("id, slug, category, date, read_time, featured, title_nl, title_en, excerpt_nl, excerpt_en, published")
         .eq("published", true)
+        .lte("date", new Date().toISOString().split('T')[0])
         .order("date", { ascending: false });
       setPosts(data || []);
       setLoading(false);
