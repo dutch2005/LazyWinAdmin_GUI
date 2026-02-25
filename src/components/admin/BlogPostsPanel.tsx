@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { db as supabase } from "@/lib/supabaseClient";
 import { MarkdownEditor } from "@/components/admin/MarkdownEditor";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { markdownToHtml, isHtmlContent } from "@/lib/markdownToHtml";
 import {
   Plus, Edit, Trash2, Eye, EyeOff,
-  Star, StarOff, ChevronLeft, Save, X, AlertTriangle, Code, Type
+  Star, StarOff, ChevronLeft, Save, X, AlertTriangle, Code, Type, RefreshCw
 } from "lucide-react";
 
 type BlogPost = {
@@ -52,6 +53,7 @@ export function BlogPostsPanel() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"nl" | "en">("nl");
   const [editorMode, setEditorMode] = useState<"markdown" | "wysiwyg">("wysiwyg");
+  const [showConvertConfirm, setShowConvertConfirm] = useState<"nl" | "en" | null>(null);
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -244,6 +246,15 @@ export function BlogPostsPanel() {
                   {formField("Samenvatting (NL)", "excerpt_nl", "textarea")}
                   <div>
                     <label className="block text-xs font-medium text-muted-foreground mb-1">Inhoud (NL)</label>
+                    {editorMode === "wysiwyg" && !isHtmlContent(form.content_nl) && form.content_nl.trim() && (
+                      <div className="flex items-center gap-3 p-3 mb-2 rounded-lg border border-amber-500/30 bg-amber-500/10 text-sm text-amber-700 dark:text-amber-400">
+                        <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                        <span className="flex-1">Deze inhoud lijkt Markdown te zijn. Converteer naar HTML voor de WYSIWYG editor.</span>
+                        <button type="button" onClick={() => setShowConvertConfirm("nl")} className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-xs font-semibold transition-colors whitespace-nowrap">
+                          <RefreshCw className="w-3.5 h-3.5" /> Converteer
+                        </button>
+                      </div>
+                    )}
                     {editorMode === "wysiwyg" ? (
                       <RichTextEditor value={form.content_nl} onChange={(v) => setForm((f) => ({ ...f, content_nl: v }))} placeholder="Schrijf de Nederlandse inhoud..." />
                     ) : (
@@ -257,6 +268,15 @@ export function BlogPostsPanel() {
                   {formField("Excerpt (EN)", "excerpt_en", "textarea")}
                   <div>
                     <label className="block text-xs font-medium text-muted-foreground mb-1">Content (EN)</label>
+                    {editorMode === "wysiwyg" && !isHtmlContent(form.content_en) && form.content_en.trim() && (
+                      <div className="flex items-center gap-3 p-3 mb-2 rounded-lg border border-amber-500/30 bg-amber-500/10 text-sm text-amber-700 dark:text-amber-400">
+                        <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                        <span className="flex-1">This content appears to be Markdown. Convert to HTML for the WYSIWYG editor.</span>
+                        <button type="button" onClick={() => setShowConvertConfirm("en")} className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-xs font-semibold transition-colors whitespace-nowrap">
+                          <RefreshCw className="w-3.5 h-3.5" /> Convert
+                        </button>
+                      </div>
+                    )}
                     {editorMode === "wysiwyg" ? (
                       <RichTextEditor value={form.content_en} onChange={(v) => setForm((f) => ({ ...f, content_en: v }))} placeholder="Write the English content..." />
                     ) : (
@@ -310,6 +330,36 @@ export function BlogPostsPanel() {
             <div className="flex gap-3">
               <button onClick={() => setDeleteId(null)} className="flex-1 py-2 rounded-lg border border-border text-sm">Annuleren</button>
               <button onClick={() => handleDelete(deleteId)} className="flex-1 py-2 rounded-lg bg-destructive text-destructive-foreground text-sm hover:bg-destructive/90 transition-colors">Verwijderen</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Convert to HTML confirm modal */}
+      {showConvertConfirm && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-card border border-border rounded-xl p-6 max-w-sm w-full space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                <RefreshCw className="w-5 h-5 text-amber-500" />
+              </div>
+              <div>
+                <h3 className="font-semibold">Markdown naar HTML converteren?</h3>
+                <p className="text-sm text-muted-foreground">Dit kan niet ongedaan worden gemaakt.</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setShowConvertConfirm(null)} className="flex-1 py-2 rounded-lg border border-border text-sm">Annuleren</button>
+              <button
+                onClick={() => {
+                  const field = showConvertConfirm === "nl" ? "content_nl" : "content_en";
+                  setForm((f) => ({ ...f, [field]: markdownToHtml(f[field]) }));
+                  setShowConvertConfirm(null);
+                }}
+                className="flex-1 py-2 rounded-lg bg-amber-500 text-white text-sm hover:bg-amber-600 transition-colors"
+              >
+                Converteer
+              </button>
             </div>
           </div>
         </div>
