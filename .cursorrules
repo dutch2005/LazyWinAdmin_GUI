@@ -1,0 +1,13 @@
+# Superpowers Workflow Protocol
+
+## When to use this skill
+- Before implementing non-trivial features
+- Before refactors with unclear scope
+- Before debugging complex issues
+
+## Enforcement
+You must follow this sequence to navigate the task. Do not write code until a plan is verified.
+1. Brainstorm - Explore ideas with Q&A
+2. Write Plan - Create a detailed, step-by-step plan
+3. Execute Plan - Build code step-by-step based on the approved plan
+4. Review - Check code quality before finishing
