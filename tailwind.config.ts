@@ -101,6 +101,10 @@ export default {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0" },
         },
+        "glow-brand": {
+          "0%, 100%": { filter: "drop-shadow(0 0 8px rgba(0, 212, 255, 0.35))" },
+          "50%": { filter: "drop-shadow(0 0 28px rgba(0, 212, 255, 0.85)) drop-shadow(0 0 56px rgba(0, 212, 255, 0.4))" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -110,6 +114,7 @@ export default {
         "slide-in-right": "slide-in-right 0.4s ease-out forwards",
         "pulse-cyan": "pulse-cyan 3s ease-in-out infinite",
         "blink": "blink 1s step-end infinite",
+        "glow-brand": "glow-brand 3s ease-in-out infinite",
       },
     },
   },

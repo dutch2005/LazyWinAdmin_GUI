@@ -22,12 +22,12 @@ export function SettingsPanel() {
             <span className="text-xs text-muted-foreground uppercase tracking-wide">URL</span>
             <p className="text-sm font-mono mt-1">
               <a
-                href="https://mike-maze-it-adventures.lovable.app"
+                href="https://mikemaze.nl"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:underline"
               >
-                mike-maze-it-adventures.lovable.app
+                mikemaze.nl
               </a>
             </p>
           </div>

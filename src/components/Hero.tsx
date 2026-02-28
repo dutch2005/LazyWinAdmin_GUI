@@ -21,7 +21,8 @@ export const Hero = () => {
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 py-32">
-        <div className="max-w-3xl">
+        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+        <div className="max-w-2xl flex-1">
           {/* Tag */}
           <div
             className="inline-flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-full px-4 py-1.5 mb-8 animate-fade-in-up"
@@ -82,6 +83,19 @@ export const Hero = () => {
               {t("hero.cta.about")}
             </a>
           </div>
+        </div>
+
+        {/* Brand image — visible on large screens */}
+        <div
+          className="hidden lg:flex flex-1 items-center justify-center animate-fade-in-up"
+          style={{ animationDelay: "0.7s", opacity: 0 }}
+        >
+          <img
+            src="/brand.png"
+            alt="Mike Maze IT Adventures"
+            className="w-full max-w-md xl:max-w-lg animate-glow-brand select-none pointer-events-none"
+          />
+        </div>
         </div>
       </div>
 

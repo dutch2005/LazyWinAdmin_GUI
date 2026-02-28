@@ -11,7 +11,7 @@ interface Post {
   published: boolean;
 }
 
-const SITE_URL = "https://mike-maze-it-adventures.lovable.app";
+const SITE_URL = "https://mikemaze.nl";
 
 export function SocialSharePanel() {
   const [posts, setPosts] = useState<Post[]>([]);

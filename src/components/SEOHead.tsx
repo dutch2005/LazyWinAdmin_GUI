@@ -18,7 +18,7 @@ interface SEOHeadProps {
 const SITE_NAME = "Mike Maze | IT Adventures";
 const DEFAULT_DESCRIPTION =
   "Mike Maze deelt IT-ervaringen, tech nieuws en AI automatisering tips via IT Adventures.";
-const SITE_URL = "https://mike-maze-it-adventures.lovable.app";
+const SITE_URL = "https://mikemaze.nl";
 
 export const SEOHead = ({
   title,
