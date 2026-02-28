@@ -1,26 +1,54 @@
 import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { db as supabase } from "@/lib/supabaseClient";
-import { Mail, Send, CheckCircle } from "lucide-react";
+import { Mail, Send } from "lucide-react";
 import { z } from "zod";
 
 const emailSchema = z.string().trim().email().max(255);
 
+const SUPABASE_URL =
+  import.meta.env.VITE_EXTERNAL_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY =
+  import.meta.env.VITE_EXTERNAL_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
 export const NewsletterSection = () => {
-  const { lang, t } = useLanguage();
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = emailSchema.safeParse(email);
     if (!result.success) return;
+
     setLoading(true);
-    await supabase.from("newsletter_subscribers").insert({ email: email.trim().toLowerCase() });
-    setLoading(false);
-    setSubmitted(true);
-    setEmail("");
+    setErrorMsg(null);
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/subscribe`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error ?? `HTTP ${res.status}`);
+      }
+
+      setSubmitted(true);
+      setEmail("");
+    } catch (err) {
+      setErrorMsg(
+        err instanceof Error ? err.message : "Er is iets misgegaan. Probeer het opnieuw."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -46,24 +74,29 @@ export const NewsletterSection = () => {
             {t("newsletter.btn")}!
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="flex gap-3">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={t("newsletter.placeholder")}
-              required
-              className="flex-1 bg-card border border-border rounded-md px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-all font-sans"
-            />
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-primary text-primary-foreground px-6 py-3 rounded-md font-semibold hover:opacity-90 transition-all glow-cyan flex items-center gap-2 whitespace-nowrap disabled:opacity-60"
-            >
-              {loading ? <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <Send className="w-4 h-4" />}
-              {t("newsletter.btn")}
-            </button>
-          </form>
+          <div className="flex flex-col gap-3">
+            <form onSubmit={handleSubmit} className="flex gap-3">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); setErrorMsg(null); }}
+                placeholder={t("newsletter.placeholder")}
+                required
+                className="flex-1 bg-card border border-border rounded-md px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-all font-sans"
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                className="bg-primary text-primary-foreground px-6 py-3 rounded-md font-semibold hover:opacity-90 transition-all glow-cyan flex items-center gap-2 whitespace-nowrap disabled:opacity-60"
+              >
+                {loading ? <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <Send className="w-4 h-4" />}
+                {t("newsletter.btn")}
+              </button>
+            </form>
+            {errorMsg && (
+              <p className="text-sm text-destructive text-left px-1">{errorMsg}</p>
+            )}
+          </div>
         )}
       </div>
     </section>

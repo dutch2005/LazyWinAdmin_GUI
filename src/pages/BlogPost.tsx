@@ -8,7 +8,7 @@ import { SEOHead } from "@/components/SEOHead";
 import { ReadingProgress } from "@/components/ReadingProgress";
 import { TableOfContents, headingToId } from "@/components/TableOfContents";
 import { RelatedPosts } from "@/components/RelatedPosts";
-import { Calendar, Clock, ArrowLeft, ArrowRight, ChevronLeft, Copy, Check } from "lucide-react";
+import { Calendar, Clock, ArrowLeft, ArrowRight, ChevronLeft, Copy, Check, Linkedin, Twitter, Facebook, MessageCircle } from "lucide-react";
 import { isHtmlContent } from "@/lib/markdownToHtml";
 import DOMPurify from "dompurify";
 
@@ -99,6 +99,7 @@ export default function BlogPost() {
   const [post, setPost] = useState<BlogPostRow | null>(null);
   const [allPosts, setAllPosts] = useState<BlogPostRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [copiedShare, setCopiedShare] = useState(false);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -228,6 +229,70 @@ export default function BlogPost() {
             </div>
           </div>
         </header>
+
+        {/* Share bar */}
+        {(() => {
+          const shareUrl = `https://mikemaze.nl/blog/${post.slug}`;
+          const shareTitle = title;
+          return (
+            <div className="border-b border-border bg-card">
+              <div className="container mx-auto px-4 max-w-3xl py-3 flex items-center gap-3">
+                <span className="text-xs text-muted-foreground font-mono">
+                  {lang === "nl" ? "Deel dit artikel:" : "Share this article:"}
+                </span>
+                <a
+                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded-lg border border-border hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                  aria-label="Share on LinkedIn"
+                >
+                  <Linkedin className="w-4 h-4 text-muted-foreground" />
+                </a>
+                <a
+                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareTitle)}&url=${encodeURIComponent(shareUrl)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded-lg border border-border hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                  aria-label="Share on X / Twitter"
+                >
+                  <Twitter className="w-4 h-4 text-muted-foreground" />
+                </a>
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(shareTitle + ' — ' + shareUrl)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded-lg border border-border hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                  aria-label="Share on WhatsApp"
+                >
+                  <MessageCircle className="w-4 h-4 text-muted-foreground" />
+                </a>
+                <a
+                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded-lg border border-border hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                  aria-label="Share on Facebook"
+                >
+                  <Facebook className="w-4 h-4 text-muted-foreground" />
+                </a>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(shareUrl);
+                    setCopiedShare(true);
+                    setTimeout(() => setCopiedShare(false), 2000);
+                  }}
+                  className="p-2 rounded-lg border border-border hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                  aria-label="Copy link"
+                >
+                  {copiedShare
+                    ? <Check className="w-4 h-4 text-green-400" />
+                    : <Copy className="w-4 h-4 text-muted-foreground" />}
+                </button>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Content with TOC sidebar */}
         <div className="container mx-auto px-4 py-12 max-w-5xl">
