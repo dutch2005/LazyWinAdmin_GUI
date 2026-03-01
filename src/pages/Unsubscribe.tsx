@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { supabase } from "@/lib/supabaseClient";
+import { db as supabase } from "@/lib/supabaseClient";
 
 export default function Unsubscribe() {
   const [searchParams] = useSearchParams();
