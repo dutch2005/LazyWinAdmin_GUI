@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { useVisitTracking } from "@/hooks/useVisitTracking";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { db as supabase } from "@/lib/supabaseClient";
 import { Navbar } from "@/components/Navbar";
@@ -93,6 +94,7 @@ function CodeBlock({ code, language }: { code: string; language?: string }) {
 }
 
 export default function BlogPost() {
+  useVisitTracking();
   const { slug } = useParams<{ slug: string }>();
   const { lang } = useLanguage();
   const navigate = useNavigate();

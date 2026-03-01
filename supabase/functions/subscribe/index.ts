@@ -8,7 +8,7 @@ const ALLOWED_ORIGINS = ["https://mikemaze.nl", "http://localhost:8080"];
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const WELCOME_HTML = (email: string, unsubscribeToken: string) => `<!DOCTYPE html>
+const WELCOME_HTML = (email: string, unsubscribeToken: string, supabaseUrl: string) => `<!DOCTYPE html>
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
@@ -61,7 +61,7 @@ const WELCOME_HTML = (email: string, unsubscribeToken: string) => `<!DOCTYPE htm
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:28px;">
                 <tr>
                   <td align="center" style="background:linear-gradient(135deg,#00d4ff,#0099cc);border-radius:8px;">
-                    <a href="https://mikemaze.nl" target="_blank" style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:700;color:#0a0a0f;text-decoration:none;letter-spacing:0.02em;">Bezoek de blog &rarr;</a>
+                    <a href="https://mikemaze.nl?ut=${unsubscribeToken}" target="_blank" style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:700;color:#0a0a0f;text-decoration:none;letter-spacing:0.02em;">Bezoek de blog &rarr;</a>
                   </td>
                 </tr>
               </table>
@@ -87,7 +87,7 @@ const WELCOME_HTML = (email: string, unsubscribeToken: string) => `<!DOCTYPE htm
                 Je kunt je altijd <a href="https://mikemaze.nl/unsubscribe?token=${unsubscribeToken}" style="color:#00d4ff;text-decoration:underline;">afmelden via deze link</a>.
               </p>
               <p style="margin:12px 0 0 0;font-size:12px;color:#444455;">
-                &copy; ${new Date().getFullYear()} Mike Maze IT Adventures &bull; <a href="https://mikemaze.nl" style="color:#00d4ff;text-decoration:none;">mikemaze.nl</a>
+                &copy; ${new Date().getFullYear()} Mike Maze IT Adventures &bull; <a href="https://mikemaze.nl?ut=${unsubscribeToken}" style="color:#00d4ff;text-decoration:none;">mikemaze.nl</a>
               </p>
             </td>
           </tr>
@@ -96,6 +96,7 @@ const WELCOME_HTML = (email: string, unsubscribeToken: string) => `<!DOCTYPE htm
       </td>
     </tr>
   </table>
+  <img src="${supabaseUrl}/functions/v1/track-open?t=${unsubscribeToken}" width="1" height="1" style="display:none" />
 </body>
 </html>`;
 
@@ -187,7 +188,7 @@ Deno.serve(async (req: Request) => {
     from: "Mike Maze <newsletter@mikemaze.nl>",
     to: [email],
     subject: "Welkom bij Mike Maze IT Adventures! 🚀",
-    html: WELCOME_HTML(email, insertedData.unsubscribe_token),
+    html: WELCOME_HTML(email, insertedData.unsubscribe_token, supabaseUrl),
   };
 
   const resendRes = await fetch("https://api.resend.com/emails", {

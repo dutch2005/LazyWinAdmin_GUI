@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { useVisitTracking } from "@/hooks/useVisitTracking";
 import { Navbar } from "@/components/Navbar";
 import { Hero } from "@/components/Hero";
 import { BlogSection } from "@/components/BlogSection";
@@ -10,6 +11,7 @@ import { Footer } from "@/components/Footer";
 
 const Index = () => {
   const location = useLocation();
+  useVisitTracking();
 
   // When navigating here from another page (e.g. /blog/:slug) with a scrollTo
   // target in location.state, scroll to the right section after render.

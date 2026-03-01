@@ -99,6 +99,14 @@ export const CookieConsent = () => {
                         : "Google Analytics (visitor stats) and Google Ads (personalised ads). Only activated with your consent."}
                     </p>
                     <p>
+                      <span className="text-primary font-semibold">
+                        {lang === "nl" ? "Nieuwsbrief tracking:" : "Newsletter tracking:"}
+                      </span>{" "}
+                      {lang === "nl"
+                        ? "Als je op een link in de nieuwsbrief klikt, onthouden we dit om je toekomstige mails beter af te stemmen. Geen toestemming betekent dat we dit alleen registreren zolang je op de gelinkte pagina bent."
+                        : "If you click a newsletter link, we remember this to tailor future emails. No consent means we only register this while you are on the linked page."}
+                    </p>
+                    <p>
                       {lang === "nl"
                         ? "Je kunt je keuze op elk moment herzien via de cookieverklaring onderaan de pagina."
                         : "You can change your choice at any time via the cookie statement at the bottom of the page."}
