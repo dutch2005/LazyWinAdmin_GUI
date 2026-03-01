@@ -14,7 +14,7 @@ import {
   AlignLeft, AlignCenter, AlignRight,
   Link as LinkIcon, ImageIcon, Code2, Minus, Upload, Loader2,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { db as supabase } from "@/lib/supabaseClient";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "@/hooks/use-toast";
 
