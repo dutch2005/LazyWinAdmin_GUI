@@ -123,13 +123,14 @@ const REMINDERS = {
 };
 
 Deno.serve(async (req: Request) => {
-  // Enforce service role auth (usually called via pg_cron with Bearer token)
+  // Enforce cron secret auth (called via pg_cron with Bearer <CRON_SECRET>)
   const authHeader = req.headers.get("Authorization");
+  const cronSecret = Deno.env.get("CRON_SECRET");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const resendKey = Deno.env.get("RESEND_API_KEY");
 
-  if (!authHeader || !serviceRoleKey || !supabaseUrl || authHeader !== `Bearer ${serviceRoleKey}`) {
+  if (!authHeader || !cronSecret || !serviceRoleKey || !supabaseUrl || authHeader !== `Bearer ${cronSecret}`) {
     return new Response("Unauthorized", { status: 401 });
   }
 
