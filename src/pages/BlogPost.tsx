@@ -357,7 +357,7 @@ export default function BlogPost() {
                         {items.map((item, j) => (
                           <li key={j} className="flex items-start gap-2 text-muted-foreground leading-relaxed">
                             <span className="text-primary mt-1 flex-shrink-0">•</span>
-                            <span dangerouslySetInnerHTML={{ __html: linkify(item.slice(2)) }} />
+                            <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(linkify(item.slice(2))) }} />
                           </li>
                         ))}
                       </ul>
@@ -366,7 +366,7 @@ export default function BlogPost() {
                   const htmlPara = linkify(para);
                   if (!para.trim()) return null;
                   return (
-                    <p key={i} className="text-muted-foreground leading-relaxed my-4" dangerouslySetInnerHTML={{ __html: htmlPara }} />
+                    <p key={i} className="text-muted-foreground leading-relaxed my-4" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(htmlPara) }} />
                   );
                 })}
               </div>
