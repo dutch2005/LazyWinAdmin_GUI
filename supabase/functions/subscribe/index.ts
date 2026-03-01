@@ -8,7 +8,7 @@ const ALLOWED_ORIGINS = ["https://mikemaze.nl", "http://localhost:8080"];
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const WELCOME_HTML = (email: string) => `<!DOCTYPE html>
+const WELCOME_HTML = (email: string, unsubscribeToken: string) => `<!DOCTYPE html>
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
@@ -84,7 +84,7 @@ const WELCOME_HTML = (email: string) => `<!DOCTYPE html>
             <td align="center" style="padding-top:24px;">
               <p style="margin:0;font-size:12px;color:#555566;line-height:1.6;">
                 Je ontvangt deze e-mail omdat ${email} zich heeft aangemeld voor de Mike Maze IT Adventures nieuwsbrief.<br/>
-                Je kunt je altijd afmelden door op de afmeldlink te klikken.
+                Je kunt je altijd <a href="https://mikemaze.nl/unsubscribe?token=${unsubscribeToken}" style="color:#00d4ff;text-decoration:underline;">afmelden via deze link</a>.
               </p>
               <p style="margin:12px 0 0 0;font-size:12px;color:#444455;">
                 &copy; ${new Date().getFullYear()} Mike Maze IT Adventures &bull; <a href="https://mikemaze.nl" style="color:#00d4ff;text-decoration:none;">mikemaze.nl</a>
@@ -161,9 +161,9 @@ Deno.serve(async (req: Request) => {
 
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-  const { error: dbError } = await supabase
+  const { data: insertedData, error: dbError } = await supabase
     .from("newsletter_subscribers")
-    .insert({ email });
+    .insert({ email }).select('unsubscribe_token').single();
 
   if (dbError) {
     // Unique constraint violation — subscriber already exists, treat as success
@@ -187,7 +187,7 @@ Deno.serve(async (req: Request) => {
     from: "Mike Maze <newsletter@mikemaze.nl>",
     to: [email],
     subject: "Welkom bij Mike Maze IT Adventures! 🚀",
-    html: WELCOME_HTML(email),
+    html: WELCOME_HTML(email, insertedData.unsubscribe_token),
   };
 
   const resendRes = await fetch("https://api.resend.com/emails", {

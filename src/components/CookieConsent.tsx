@@ -4,6 +4,17 @@ import { Cookie, X } from "lucide-react";
 
 const STORAGE_KEY = "mm_consent";
 
+
+function injectSkimlinks() {
+  if (document.getElementById('skimlinks-script')) return;
+  const script = document.createElement('script');
+  script.id = 'skimlinks-script';
+  script.type = 'text/javascript';
+  script.src = 'https://s.skimresources.com/js/299018X1786643.skimlinks.js';
+  script.async = true;
+  document.head.appendChild(script);
+}
+
 function updateGtagConsent(granted: boolean) {
   const state = granted ? "granted" : "denied";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -22,11 +33,13 @@ export const CookieConsent = () => {
 
   useEffect(() => {
     if (!localStorage.getItem(STORAGE_KEY)) setVisible(true);
+    if (localStorage.getItem(STORAGE_KEY) === "granted") injectSkimlinks();
   }, []);
 
   const accept = () => {
     localStorage.setItem(STORAGE_KEY, "granted");
     updateGtagConsent(true);
+    injectSkimlinks();
     setVisible(false);
   };
 
