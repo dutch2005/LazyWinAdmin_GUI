@@ -1,6 +1,6 @@
 # Project Status — mike-maze-it-adventures
 
-**Last updated: 2026-03-01 (session 2)**
+**Last updated: 2026-03-01 (session 3)**
 
 ---
 
@@ -29,50 +29,25 @@
 | XSS fix in BlogPost | `DOMPurify.sanitize()` on all `dangerouslySetInnerHTML` |
 | SEOHead useMemo | Structured data stringified once via `useMemo` |
 | Unify Supabase client | All pages use `src/lib/supabaseClient.ts` |
+| Supabase Edge Functions deployed | subscribe, unsubscribe, track-open, track-visit, send-reminders |
+| Resend DNS verified | SPF/DKIM/DMARC for mikemaze.nl in Cloudflare |
+| Welcome email end-to-end | Subscribe → Resend → inbox confirmed working |
+| Re-engagement email system | track-open pixel, track-visit beacon, send-reminders + pg_cron |
+| Re-engagement DB schema | last_visit_at, last_email_open_at, last_active_at (generated), reminders_sent, reminder_log |
+| pg_cron daily job | Fires 09:00 UTC, authenticated via CRON_SECRET |
+| GDPR-aware visit tracking | `useVisitTracking` hook — requires cookie_consent=granted |
 
 ---
 
 ## ⏳ Requires Manual Action (cannot be done from code)
 
-### 1. Deploy Supabase Edge Functions
-Both edge functions are written and committed but NOT deployed to Supabase cloud.
-
-```bash
-npx supabase login
-npx supabase link --project-ref <your-project-ref>
-npx supabase functions deploy subscribe
-npx supabase functions deploy unsubscribe
-npx supabase secrets set RESEND_API_KEY=re_xxx
-```
-
-### 2. Apply DB Migration
-The migration file exists at `supabase/migrations/20230101000000_newsletter_subscribers.sql`.
-Either push via CLI or run directly in Supabase SQL Editor:
-
-```sql
-CREATE TABLE IF NOT EXISTS newsletter_subscribers (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  email text UNIQUE NOT NULL,
-  unsubscribe_token uuid DEFAULT gen_random_uuid() NOT NULL,
-  subscribed_at timestamptz DEFAULT now()
-);
-ALTER TABLE newsletter_subscribers ENABLE ROW LEVEL SECURITY;
-```
-
-### 3. Resend DNS Verification
-For `newsletter@mikemaze.nl` to send mail:
-- Sign up at resend.com, add domain `mikemaze.nl`
-- Add SPF, DKIM, DMARC records to OVH DNS
-- Verify domain in Resend dashboard
-- Set secret: `npx supabase secrets set RESEND_API_KEY=re_xxx`
-
-### 4. Publish Content Drafts
+### 1. Publish Content Drafts
 Three draft posts are in the `drafts/` folder. Publish via the admin panel at `/admin`:
 - `drafts/tech/ai-automation-first-post.md`
 - `drafts/personal/mycka-amalia.md`
 - `drafts/gaming/cities-skylines-airsoft.md`
 
-### 5. Verify OG Image Live
+### 2. Verify OG Image Live
 After deploy, confirm `https://mikemaze.nl/og-image.jpg` loads correctly.
 Test with: https://developers.facebook.com/tools/debug/ or https://cards-dev.twitter.com/validator
 
