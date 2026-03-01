@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useVisitTracking } from "@/hooks/useVisitTracking";
+import { SEOHead } from "@/components/SEOHead";
 import { Navbar } from "@/components/Navbar";
 import { Hero } from "@/components/Hero";
 import { BlogSection } from "@/components/BlogSection";
@@ -8,6 +9,8 @@ import { AboutSection } from "@/components/AboutSection";
 import { ContactSection } from "@/components/ContactSection";
 import { NewsletterSection } from "@/components/NewsletterSection";
 import { Footer } from "@/components/Footer";
+
+const OG_IMAGE = "https://ppmhntfohxjcqyzfbpui.supabase.co/storage/v1/object/public/site-assets/og-image.jpg";
 
 const Index = () => {
   const location = useLocation();
@@ -29,6 +32,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead image={OG_IMAGE} />
       <Navbar />
       <main>
         <Hero />
