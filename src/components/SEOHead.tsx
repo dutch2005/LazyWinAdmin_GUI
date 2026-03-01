@@ -1,4 +1,7 @@
 import { Helmet } from "react-helmet-async";
+import { useMemo } from "react";
+
+
 
 interface SEOHeadProps {
   title?: string;
@@ -32,41 +35,44 @@ export const SEOHead = ({
   const fullTitle = title ? `${title} | ${SITE_NAME}` : SITE_NAME;
   const canonical = url ? `${SITE_URL}${url}` : SITE_URL;
 
-  const defaultJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: SITE_NAME,
-    url: SITE_URL,
-    description: DEFAULT_DESCRIPTION,
-    author: {
-      "@type": "Person",
-      name: "Michael Maertzdorf",
-    },
-  };
+  const stringifiedStructuredData = useMemo(() => {
+    const defaultJsonLd = {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: SITE_NAME,
+      url: SITE_URL,
+      description: DEFAULT_DESCRIPTION,
+      author: {
+        "@type": "Person",
+        name: "Michael Maertzdorf",
+      },
+    };
 
-  const articleJsonLd = article
-    ? {
-        "@context": "https://schema.org",
-        "@type": "BlogPosting",
-        headline: title,
-        description,
-        image,
-        url: canonical,
-        datePublished: article.publishedTime,
-        author: {
-          "@type": "Person",
-          name: article.author,
-        },
-        publisher: {
-          "@type": "Organization",
-          name: SITE_NAME,
-        },
-        articleSection: article.category,
-        keywords: article.tags?.join(", "),
-      }
-    : null;
+    const articleJsonLd = article
+      ? {
+          "@context": "https://schema.org",
+          "@type": "BlogPosting",
+          headline: title,
+          description,
+          image,
+          url: canonical,
+          datePublished: article.publishedTime,
+          author: {
+            "@type": "Person",
+            name: article.author,
+          },
+          publisher: {
+            "@type": "Organization",
+            name: SITE_NAME,
+          },
+          articleSection: article.category,
+          keywords: article.tags?.join(", "),
+        }
+      : null;
 
-  const structuredData = jsonLd || articleJsonLd || defaultJsonLd;
+    const structuredData = jsonLd || articleJsonLd || defaultJsonLd;
+    return JSON.stringify(structuredData);
+  }, [article, title, description, image, canonical, jsonLd]);
 
   return (
     <Helmet>
@@ -101,7 +107,7 @@ export const SEOHead = ({
 
       {/* JSON-LD */}
       <script type="application/ld+json">
-        {JSON.stringify(structuredData)}
+        {stringifiedStructuredData}
       </script>
     </Helmet>
   );
