@@ -32,7 +32,6 @@ function Start-LazyWinAdmin {
         $lvServices = $window.FindName("lvServices")
         $txtServiceSearch = $window.FindName("txtServiceSearch")
 
-        # Identity Controls
         $btnGetLocalUsers = $window.FindName("btnGetLocalUsers")
         $btnGetLocalGroups = $window.FindName("btnGetLocalGroups")
         $lvLocalAccounts = $window.FindName("lvLocalAccounts")
@@ -40,6 +39,13 @@ function Start-LazyWinAdmin {
         $btnGetEntraGroups = $window.FindName("btnGetEntraGroups")
         $lvEntraIdentity = $window.FindName("lvEntraIdentity")
         $txtEntraSearch = $window.FindName("txtEntraSearch")
+
+        # Governance Controls
+        $btnGetIntuneDevices = $window.FindName("btnGetIntuneDevices")
+        $lvIntuneDevices = $window.FindName("lvIntuneDevices")
+        $txtIntuneSearch = $window.FindName("txtIntuneSearch")
+        $btnGetAzureSummary = $window.FindName("btnGetAzureSummary")
+        $lvAzureResources = $window.FindName("lvAzureResources")
 
         $btnRegRead = $window.FindName("btnRegRead")
         $cbRegHive = $window.FindName("cbRegHive")
@@ -72,6 +78,38 @@ function Start-LazyWinAdmin {
                 $lblStatus.Text = if ($isBusy) { "Working..." } else { "Ready" }
             })
         }
+
+        # --- GOVERNANCE HANDLERS ---
+        $btnGetIntuneDevices.Add_Click({
+            $SetBusy.Invoke($true)
+            $search = $txtIntuneSearch.Text
+            $funcDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Get-IntuneDevice.ps1") -Raw
+            Start-ThreadJob -RunspacePool $state.RunspacePool -ArgumentList $funcDef, $search -ScriptBlock {
+                param($f, $s) ; Invoke-Expression $f
+                return Get-IntuneDevice -Search $s
+            } | Wait-Job | Receive-Job | ForEach-Object {
+                $window.Dispatcher.Invoke([action]{
+                    $lvIntuneDevices.Items.Clear()
+                    $_ | ForEach-Object { $lvIntuneDevices.Items.Add($_) }
+                })
+            }
+            $SetBusy.Invoke($false)
+        })
+
+        $btnGetAzureSummary.Add_Click({
+            $SetBusy.Invoke($true)
+            $funcDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Get-AzureResourceSummary.ps1") -Raw
+            Start-ThreadJob -RunspacePool $state.RunspacePool -ArgumentList $funcDef -ScriptBlock {
+                param($f) ; Invoke-Expression $f
+                return Get-AzureResourceSummary
+            } | Wait-Job | Receive-Job | ForEach-Object {
+                $window.Dispatcher.Invoke([action]{
+                    $lvAzureResources.Items.Clear()
+                    $_ | ForEach-Object { $lvAzureResources.Items.Add($_) }
+                })
+            }
+            $SetBusy.Invoke($false)
+        })
 
         # --- IDENTITY HANDLERS (LOCAL) ---
         $btnGetLocalUsers.Add_Click({
@@ -134,7 +172,6 @@ function Start-LazyWinAdmin {
                 $window.Dispatcher.Invoke([action]{
                     $lvEntraIdentity.Items.Clear()
                     $_ | ForEach-Object { 
-                        # Remap Description to UserPrincipalName field for display consistency in this specific UI
                         $item = $_
                         if ($item.Description) { $item.UserPrincipalName = $item.Description }
                         $lvEntraIdentity.Items.Add($item) 
