@@ -22,22 +22,44 @@ function Start-LazyWinAdmin {
         $xmlReader = [System.Xml.XmlNodeReader]::new([System.Xml.XmlDocument]::new().LoadXml($xamlContent))
         $window = [System.Windows.Markup.XamlReader]::Load($xmlReader)
 
-        # Find Controls
+        # --- FIND CONTROLS ---
         $txtComputerName = $window.FindName("txtComputerName")
         $btnPing = $window.FindName("btnPing")
         $btnUptime = $window.FindName("btnUptime")
-        $btnCheckPort = $window.FindName("btnCheckPort")
         $txtOutput = $window.FindName("txtOutput")
+        
+        $btnGetServices = $window.FindName("btnGetServices")
+        $lvServices = $window.FindName("lvServices")
+        $txtServiceSearch = $window.FindName("txtServiceSearch")
+
+        # Identity Controls
+        $btnGetLocalUsers = $window.FindName("btnGetLocalUsers")
+        $btnGetLocalGroups = $window.FindName("btnGetLocalGroups")
+        $lvLocalAccounts = $window.FindName("lvLocalAccounts")
+        $btnGetEntraUsers = $window.FindName("btnGetEntraUsers")
+        $btnGetEntraGroups = $window.FindName("btnGetEntraGroups")
+        $lvEntraIdentity = $window.FindName("lvEntraIdentity")
+        $txtEntraSearch = $window.FindName("txtEntraSearch")
+
+        $btnRegRead = $window.FindName("btnRegRead")
+        $cbRegHive = $window.FindName("cbRegHive")
+        $txtRegValueName = $window.FindName("txtRegValueName")
+        $txtRegPath = $window.FindName("txtRegPath")
+        $txtRegResult = $window.FindName("txtRegResult")
+
+        $btnCloudLogin = $window.FindName("btnCloudLogin")
+        $lblCloudStatus = $window.FindName("lblCloudStatus")
+
         $lblStatus = $window.FindName("lblStatus")
         $pbBusy = $window.FindName("pbBusy")
 
         # Default Value
         $txtComputerName.Text = $env:COMPUTERNAME
 
-        # Helper function to append text to output
+        # --- UI HELPERS ---
         $AppendOutput = {
             param($text)
-            $txtOutput.Dispatcher.Invoke([action]{
+            $window.Dispatcher.Invoke([action]{
                 $txtOutput.AppendText("$text`n")
                 $txtOutput.ScrollToEnd()
             })
@@ -47,109 +69,149 @@ function Start-LazyWinAdmin {
             param([bool]$isBusy)
             $window.Dispatcher.Invoke([action]{
                 $pbBusy.IsIndeterminate = $isBusy
-                $btnPing.IsEnabled = -not $isBusy
-                $btnUptime.IsEnabled = -not $isBusy
-                $btnCheckPort.IsEnabled = -not $isBusy
                 $lblStatus.Text = if ($isBusy) { "Working..." } else { "Ready" }
             })
         }
 
-        # Event Handlers
+        # --- IDENTITY HANDLERS (LOCAL) ---
+        $btnGetLocalUsers.Add_Click({
+            $comp = $txtComputerName.Text
+            $SetBusy.Invoke($true)
+            $funcDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Get-ComputerLocalUser.ps1") -Raw
+            Start-ThreadJob -RunspacePool $state.RunspacePool -ArgumentList $comp, $funcDef -ScriptBlock {
+                param($t, $f) ; Invoke-Expression $f
+                return Get-ComputerLocalUser -ComputerName $t
+            } | Wait-Job | Receive-Job | ForEach-Object {
+                $window.Dispatcher.Invoke([action]{
+                    $lvLocalAccounts.Items.Clear()
+                    $_ | ForEach-Object { $lvLocalAccounts.Items.Add($_) }
+                })
+            }
+            $SetBusy.Invoke($false)
+        })
+
+        $btnGetLocalGroups.Add_Click({
+            $comp = $txtComputerName.Text
+            $SetBusy.Invoke($true)
+            $funcDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Get-ComputerLocalGroup.ps1") -Raw
+            Start-ThreadJob -RunspacePool $state.RunspacePool -ArgumentList $comp, $funcDef -ScriptBlock {
+                param($t, $f) ; Invoke-Expression $f
+                return Get-ComputerLocalGroup -ComputerName $t
+            } | Wait-Job | Receive-Job | ForEach-Object {
+                $window.Dispatcher.Invoke([action]{
+                    $lvLocalAccounts.Items.Clear()
+                    $_ | ForEach-Object { $lvLocalAccounts.Items.Add($_) }
+                })
+            }
+            $SetBusy.Invoke($false)
+        })
+
+        # --- IDENTITY HANDLERS (ENTRA) ---
+        $btnGetEntraUsers.Add_Click({
+            $SetBusy.Invoke($true)
+            $search = $txtEntraSearch.Text
+            $funcDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Get-EntraIdentity.ps1") -Raw
+            Start-ThreadJob -RunspacePool $state.RunspacePool -ArgumentList $funcDef, $search -ScriptBlock {
+                param($f, $s) ; Invoke-Expression $f
+                return Get-EntraIdentity -Type "User" -Search $s
+            } | Wait-Job | Receive-Job | ForEach-Object {
+                $window.Dispatcher.Invoke([action]{
+                    $lvEntraIdentity.Items.Clear()
+                    $_ | ForEach-Object { $lvEntraIdentity.Items.Add($_) }
+                })
+            }
+            $SetBusy.Invoke($false)
+        })
+
+        $btnGetEntraGroups.Add_Click({
+            $SetBusy.Invoke($true)
+            $search = $txtEntraSearch.Text
+            $funcDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Get-EntraIdentity.ps1") -Raw
+            Start-ThreadJob -RunspacePool $state.RunspacePool -ArgumentList $funcDef, $search -ScriptBlock {
+                param($f, $s) ; Invoke-Expression $f
+                return Get-EntraIdentity -Type "Group" -Search $s
+            } | Wait-Job | Receive-Job | ForEach-Object {
+                $window.Dispatcher.Invoke([action]{
+                    $lvEntraIdentity.Items.Clear()
+                    $_ | ForEach-Object { 
+                        # Remap Description to UserPrincipalName field for display consistency in this specific UI
+                        $item = $_
+                        if ($item.Description) { $item.UserPrincipalName = $item.Description }
+                        $lvEntraIdentity.Items.Add($item) 
+                    }
+                })
+            }
+            $SetBusy.Invoke($false)
+        })
+
+        # --- SYSTEM HANDLERS ---
         $btnPing.Add_Click({
             $comp = $txtComputerName.Text
-            if ([string]::IsNullOrWhiteSpace($comp)) { return }
-
             $SetBusy.Invoke($true)
-            $AppendOutput.Invoke("Pinging $comp ...")
-
-            # Example of Runspace/ThreadJob to prevent UI freeze
-            $job = Start-ThreadJob -RunspacePool $state.RunspacePool -ArgumentList $comp -ScriptBlock {
-                param($target)
-                if (Test-Connection -ComputerName $target -Count 1 -Quiet) {
-                    return "[OK] $target replied to ping."
-                }
-                else {
-                    return "[!] $target did not reply to ping."
-                }
-            }
-
-            # Register a timer to check job completion
-            $timer = New-Object System.Windows.Threading.DispatcherTimer
-            $timer.Interval = [TimeSpan]::FromMilliseconds(100)
-            $timer.Add_Tick({
-                if ($job.State -ne 'Running') {
-                    $timer.Stop()
-                    $result = Receive-Job -Job $job
-                    $AppendOutput.Invoke($result)
-                    $SetBusy.Invoke($false)
-                    Remove-Job -Job $job
-                }
-            })
-            $timer.Start()
+            Start-ThreadJob -RunspacePool $state.RunspacePool -ArgumentList $comp -ScriptBlock {
+                param($t) ; if (Test-Connection $t -Count 1 -Quiet) { return "[OK] $t online" } else { return "[!] $t offline" }
+            } | Wait-Job | Receive-Job | ForEach-Object { $AppendOutput.Invoke($_) }
+            $SetBusy.Invoke($false)
         })
 
         $btnUptime.Add_Click({
             $comp = $txtComputerName.Text
-            if ([string]::IsNullOrWhiteSpace($comp)) { return }
-
             $SetBusy.Invoke($true)
-            $AppendOutput.Invoke("Getting uptime for $comp ...")
-
-            # Pass the function definition into the thread job
-            $getUptimeDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Get-ComputerUptime.ps1") -Raw
-
-            $job = Start-ThreadJob -RunspacePool $state.RunspacePool -ArgumentList $comp, $getUptimeDef -ScriptBlock {
-                param($target, $funcDef)
-                Invoke-Expression $funcDef
-                $result = Get-ComputerUptime -ComputerName $target
-                return "[INFO] Uptime for $target : $result"
-            }
-
-            $timer = New-Object System.Windows.Threading.DispatcherTimer
-            $timer.Interval = [TimeSpan]::FromMilliseconds(100)
-            $timer.Add_Tick({
-                if ($job.State -ne 'Running') {
-                    $timer.Stop()
-                    $result = Receive-Job -Job $job
-                    $AppendOutput.Invoke($result)
-                    $SetBusy.Invoke($false)
-                    Remove-Job -Job $job
-                }
-            })
-            $timer.Start()
+            $funcDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Get-ComputerUptime.ps1") -Raw
+            Start-ThreadJob -RunspacePool $state.RunspacePool -ArgumentList $comp, $funcDef -ScriptBlock {
+                param($t, $f) ; Invoke-Expression $f ; return Get-ComputerUptime -ComputerName $t
+            } | Wait-Job | Receive-Job | ForEach-Object { $AppendOutput.Invoke("[UPTIME] $_") }
+            $SetBusy.Invoke($false)
         })
 
-        $btnCheckPort.Add_Click({
+        # --- SERVICE HANDLERS ---
+        $btnGetServices.Add_Click({
             $comp = $txtComputerName.Text
-            if ([string]::IsNullOrWhiteSpace($comp)) { return }
-
             $SetBusy.Invoke($true)
-            $AppendOutput.Invoke("Checking port 80 on $comp ...")
-
-            $checkPortDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Test-ComputerPort.ps1") -Raw
-
-            $job = Start-ThreadJob -RunspacePool $state.RunspacePool -ArgumentList $comp, $checkPortDef -ScriptBlock {
-                param($target, $funcDef)
-                Invoke-Expression $funcDef
-                $result = Test-ComputerPort -ComputerName $target -Port 80
-                return "[INFO] Port 80 on $target : $result"
+            $search = $txtServiceSearch.Text
+            $funcDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Get-ComputerService.ps1") -Raw
+            Start-ThreadJob -RunspacePool $state.RunspacePool -ArgumentList $comp, $funcDef, $search -ScriptBlock {
+                param($t, $f, $s) ; Invoke-Expression $f ; return Get-ComputerService -ComputerName $t -Name $s
+            } | Wait-Job | Receive-Job | ForEach-Object {
+                $window.Dispatcher.Invoke([action]{
+                    $lvServices.Items.Clear()
+                    $_ | ForEach-Object { $lvServices.Items.Add($_) }
+                })
             }
-
-            $timer = New-Object System.Windows.Threading.DispatcherTimer
-            $timer.Interval = [TimeSpan]::FromMilliseconds(100)
-            $timer.Add_Tick({
-                if ($job.State -ne 'Running') {
-                    $timer.Stop()
-                    $result = Receive-Job -Job $job
-                    $AppendOutput.Invoke($result)
-                    $SetBusy.Invoke($false)
-                    Remove-Job -Job $job
-                }
-            })
-            $timer.Start()
+            $SetBusy.Invoke($false)
         })
 
-        # Show the GUI
+        # --- REGISTRY HANDLERS ---
+        $btnRegRead.Add_Click({
+            $comp = $txtComputerName.Text
+            $hive = $cbRegHive.Text
+            $path = $txtRegPath.Text
+            $val = $txtRegValueName.Text
+            $SetBusy.Invoke($true)
+            $funcDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Get-ComputerRegistryValue.ps1") -Raw
+            Start-ThreadJob -RunspacePool $state.RunspacePool -ArgumentList $comp, $funcDef, $hive, $path, $val -ScriptBlock {
+                param($t, $f, $h, $p, $v) ; Invoke-Expression $f ; return Get-ComputerRegistryValue -ComputerName $t -Hive $h -KeyPath $p -ValueName $v
+            } | Wait-Job | Receive-Job | ForEach-Object {
+                $window.Dispatcher.Invoke([action]{ $txtRegResult.Text = if ($_) { "Value: $_" } else { "Value not found." } })
+            }
+            $SetBusy.Invoke($false)
+        })
+
+        # --- CLOUD AUTH HANDLER ---
+        $btnCloudLogin.Add_Click({
+            $SetBusy.Invoke($true)
+            $funcDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Connect-ModernCloud.ps1") -Raw
+            Start-ThreadJob -RunspacePool $state.RunspacePool -ArgumentList $funcDef -ScriptBlock {
+                param($f) ; Invoke-Expression $f ; return Connect-ModernCloud -Interactive
+            } | Wait-Job | Receive-Job | ForEach-Object {
+                $window.Dispatcher.Invoke([action]{
+                    $lblCloudStatus.Text = $_
+                    $lblCloudStatus.Foreground = if ($_ -match "OK") { [System.Windows.Media.Brushes]::Green } else { [System.Windows.Media.Brushes]::Red }
+                })
+            }
+            $SetBusy.Invoke($false)
+        })
+
         $window.ShowDialog() | Out-Null
     }
     catch {
