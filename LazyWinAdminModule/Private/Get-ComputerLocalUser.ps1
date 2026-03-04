@@ -9,12 +9,14 @@ function Get-ComputerLocalUser {
         [string]$ComputerName = "localhost"
     )
 
-    try {
-        $users = Get-CimInstance -ClassName Win32_UserAccount -Filter "LocalAccount = True" -ComputerName $ComputerName -ErrorAction Stop
-        return $users | Select-Object Name, FullName, Disabled, Lockout, PasswordRequired, PasswordExpires, SID, Status
-    }
-    catch {
-        Write-Warning "Error getting local users for $ComputerName`: $_"
-        return $null
+    process {
+        try {
+            $users = Get-CimInstance -ClassName Win32_UserAccount -Filter "LocalAccount = True" -ComputerName $ComputerName -ErrorAction Stop
+            return $users | Select-Object Name, FullName, Disabled, Lockout, PasswordRequired, PasswordExpires, SID, Status
+        }
+        catch {
+            Write-Warning "Error getting local users for $ComputerName`: $_"
+            return $null
+        }
     }
 }

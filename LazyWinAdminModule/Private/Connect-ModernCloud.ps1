@@ -10,7 +10,7 @@ function Connect-ModernCloud {
 
         [string]$ClientId,
 
-        [string]$ClientSecret,
+        [SecureString]$ClientSecret,
 
         [switch]$Interactive
     )
@@ -22,10 +22,14 @@ function Connect-ModernCloud {
         }
         elseif ($ClientId -and $ClientSecret) {
             Write-Verbose "Connecting via Service Principal..."
+            # Convert SecureString to string securely for the underlying API if needed, 
+            # or pass it if the module supports it. Connect-MgGraph natively supports -ClientSecretCredential.
+            # We'll use the proper credential approach.
+            $credential = [System.Management.Automation.PSCredential]::new($ClientId, $ClientSecret)
             $body = @{
                 TenantId = $TenantId
                 ClientId = $ClientId
-                ClientSecret = $ClientSecret
+                ClientSecretCredential = $credential
             }
             Connect-MgGraph @body
         }
