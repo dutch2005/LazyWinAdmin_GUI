@@ -1,0 +1,37 @@
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="LazyWinAdmin - Modernized" Height="600" Width="800"
+        WindowStartupLocation="CenterScreen" Background="#F5F5F5">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="LazyWinAdmin 2026" FontSize="24" FontWeight="Bold" Margin="0,0,0,10"/>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+            <TextBlock Text="Computer Name:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <TextBox Name="txtComputerName" Width="200" VerticalAlignment="Center" Padding="4"/>
+            <Button Name="btnPing" Content="Ping" Width="80" Margin="10,0,0,0" Padding="4"/>
+            <Button Name="btnUptime" Content="Get Uptime" Width="80" Margin="10,0,0,0" Padding="4"/>
+            <Button Name="btnCheckPort" Content="Check Port 80" Width="100" Margin="10,0,0,0" Padding="4"/>
+        </StackPanel>
+
+        <GroupBox Grid.Row="2" Header="Output" Margin="0,0,0,10">
+            <TextBox Name="txtOutput" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" 
+                     FontFamily="Consolas" Background="White" Padding="5"/>
+        </GroupBox>
+
+        <StatusBar Grid.Row="3">
+            <StatusBarItem>
+                <TextBlock Name="lblStatus" Text="Ready"/>
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <ProgressBar Name="pbBusy" Width="100" Height="15" IsIndeterminate="False"/>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</Window>
