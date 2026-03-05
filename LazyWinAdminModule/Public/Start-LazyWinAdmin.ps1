@@ -109,17 +109,17 @@ function Start-LazyWinAdmin {
         function Invoke-AsyncAction {
             param(
                 [scriptblock]$ScriptBlock,
-                [hashtable]$Args = @{},
+                [hashtable]$Parameters = @{},
                 [scriptblock]$OnCompleted
             )
             
             $SetBusy.Invoke($true)
             
             # Use PowerShell 7 Start-ThreadJob for efficiency
-            $job = Start-ThreadJob -RunspacePool $state.RunspacePool -ArgumentList $Args, $ScriptBlock -ScriptBlock {
-                param($a, $s)
-                # Unpack arguments into scope
-                foreach ($key in $a.Keys) { Set-Variable -Name $key -Value $a[$key] }
+            $job = Start-ThreadJob -RunspacePool $state.RunspacePool -ArgumentList $Parameters, $ScriptBlock -ScriptBlock {
+                param($p, $s)
+                # Unpack parameters into scope
+                foreach ($key in $p.Keys) { Set-Variable -Name $key -Value $p[$key] }
                 & $s
             }
 
@@ -144,7 +144,7 @@ function Start-LazyWinAdmin {
         $btnGetIntuneDevices.Add_Click({
             $search = $txtIntuneSearch.Text
             $funcDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Get-IntuneDevice.ps1") -Raw
-            Invoke-AsyncAction -Args @{f=$funcDef; s=$search} -ScriptBlock {
+            Invoke-AsyncAction -Parameters @{f=$funcDef; s=$search} -ScriptBlock {
                 Invoke-Expression $f
                 Get-IntuneDevice -Search $s
             } -OnCompleted {
@@ -156,7 +156,7 @@ function Start-LazyWinAdmin {
 
         $btnGetAzureSummary.Add_Click({
             $funcDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Get-AzureResourceSummary.ps1") -Raw
-            Invoke-AsyncAction -Args @{f=$funcDef} -ScriptBlock {
+            Invoke-AsyncAction -Parameters @{f=$funcDef} -ScriptBlock {
                 Invoke-Expression $f
                 Get-AzureResourceSummary
             } -OnCompleted {
@@ -170,7 +170,7 @@ function Start-LazyWinAdmin {
         $btnGetLocalUsers.Add_Click({
             $comp = $txtComputerName.Text
             $funcDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Get-ComputerLocalUser.ps1") -Raw
-            Invoke-AsyncAction -Args @{t=$comp; f=$funcDef} -ScriptBlock {
+            Invoke-AsyncAction -Parameters @{t=$comp; f=$funcDef} -ScriptBlock {
                 Invoke-Expression $f
                 Get-ComputerLocalUser -ComputerName $t
             } -OnCompleted {
@@ -183,7 +183,7 @@ function Start-LazyWinAdmin {
         $btnGetLocalGroups.Add_Click({
             $comp = $txtComputerName.Text
             $funcDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Get-ComputerLocalGroup.ps1") -Raw
-            Invoke-AsyncAction -Args @{t=$comp; f=$funcDef} -ScriptBlock {
+            Invoke-AsyncAction -Parameters @{t=$comp; f=$funcDef} -ScriptBlock {
                 Invoke-Expression $f
                 Get-ComputerLocalGroup -ComputerName $t
             } -OnCompleted {
@@ -197,7 +197,7 @@ function Start-LazyWinAdmin {
         $btnGetEntraUsers.Add_Click({
             $search = $txtEntraSearch.Text
             $funcDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Get-EntraIdentity.ps1") -Raw
-            Invoke-AsyncAction -Args @{f=$funcDef; s=$search} -ScriptBlock {
+            Invoke-AsyncAction -Parameters @{f=$funcDef; s=$search} -ScriptBlock {
                 Invoke-Expression $f
                 Get-EntraIdentity -Type "User" -Search $s
             } -OnCompleted {
@@ -210,7 +210,7 @@ function Start-LazyWinAdmin {
         $btnGetEntraGroups.Add_Click({
             $search = $txtEntraSearch.Text
             $funcDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Get-EntraIdentity.ps1") -Raw
-            Invoke-AsyncAction -Args @{f=$funcDef; s=$search} -ScriptBlock {
+            Invoke-AsyncAction -Parameters @{f=$funcDef; s=$search} -ScriptBlock {
                 Invoke-Expression $f
                 Get-EntraIdentity -Type "Group" -Search $s
             } -OnCompleted {
@@ -227,7 +227,7 @@ function Start-LazyWinAdmin {
         # --- SYSTEM HANDLERS ---
         $btnPing.Add_Click({
             $comp = $txtComputerName.Text
-            Invoke-AsyncAction -Args @{t=$comp} -ScriptBlock {
+            Invoke-AsyncAction -Parameters @{t=$comp} -ScriptBlock {
                 if (Test-Connection $t -Count 1 -Quiet) { "[OK] $t online" } else { "[!] $t offline" }
             } -OnCompleted {
                 param($res) $AppendOutput.Invoke($res)
@@ -237,7 +237,7 @@ function Start-LazyWinAdmin {
         $btnUptime.Add_Click({
             $comp = $txtComputerName.Text
             $funcDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Get-ComputerUptime.ps1") -Raw
-            Invoke-AsyncAction -Args @{t=$comp; f=$funcDef} -ScriptBlock {
+            Invoke-AsyncAction -Parameters @{t=$comp; f=$funcDef} -ScriptBlock {
                 Invoke-Expression $f
                 Get-ComputerUptime -ComputerName $t
             } -OnCompleted {
@@ -248,7 +248,7 @@ function Start-LazyWinAdmin {
         $btnEnableRdp.Add_Click({
             $comp = $txtComputerName.Text
             $funcDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Set-ComputerRDP.ps1") -Raw
-            Invoke-AsyncAction -Args @{t=$comp; f=$funcDef} -ScriptBlock {
+            Invoke-AsyncAction -Parameters @{t=$comp; f=$funcDef} -ScriptBlock {
                 Invoke-Expression $f
                 Set-ComputerRDP -ComputerName $t -Enabled $true
             } -OnCompleted {
@@ -259,7 +259,7 @@ function Start-LazyWinAdmin {
         $btnDisableRdp.Add_Click({
             $comp = $txtComputerName.Text
             $funcDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Set-ComputerRDP.ps1") -Raw
-            Invoke-AsyncAction -Args @{t=$comp; f=$funcDef} -ScriptBlock {
+            Invoke-AsyncAction -Parameters @{t=$comp; f=$funcDef} -ScriptBlock {
                 Invoke-Expression $f
                 Set-ComputerRDP -ComputerName $t -Enabled $false
             } -OnCompleted {
@@ -272,7 +272,7 @@ function Start-LazyWinAdmin {
             $comp = $txtComputerName.Text
             $search = $txtServiceSearch.Text
             $funcDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Get-ComputerService.ps1") -Raw
-            Invoke-AsyncAction -Args @{t=$comp; f=$funcDef; s=$search} -ScriptBlock {
+            Invoke-AsyncAction -Parameters @{t=$comp; f=$funcDef; s=$search} -ScriptBlock {
                 Invoke-Expression $f
                 Get-ComputerService -ComputerName $t -Name $s
             } -OnCompleted {
@@ -285,7 +285,7 @@ function Start-LazyWinAdmin {
         $btnGetStoppedAuto.Add_Click({
             $comp = $txtComputerName.Text
             $funcDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Get-ComputerService.ps1") -Raw
-            Invoke-AsyncAction -Args @{t=$comp; f=$funcDef} -ScriptBlock {
+            Invoke-AsyncAction -Parameters @{t=$comp; f=$funcDef} -ScriptBlock {
                 Invoke-Expression $f
                 Get-ComputerService -ComputerName $t -OnlyAutoStopped
             } -OnCompleted {
@@ -300,7 +300,7 @@ function Start-LazyWinAdmin {
             $comp = $txtComputerName.Text
             $search = $txtSoftwareSearch.Text
             $funcDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Get-ComputerSoftware.ps1") -Raw
-            Invoke-AsyncAction -Args @{t=$comp; f=$funcDef; s=$search} -ScriptBlock {
+            Invoke-AsyncAction -Parameters @{t=$comp; f=$funcDef; s=$search} -ScriptBlock {
                 Invoke-Expression $f
                 Get-ComputerSoftware -ComputerName $t -Search $s
             } -OnCompleted {
@@ -316,7 +316,7 @@ function Start-LazyWinAdmin {
             $hwFunc = Get-Content (Join-Path $PSScriptRoot "..\Private\Get-ComputerHardware.ps1") -Raw
             $moboFunc = Get-Content (Join-Path $PSScriptRoot "..\Private\Get-ComputerMotherboard.ps1") -Raw
             
-            Invoke-AsyncAction -Args @{t=$comp; f1=$hwFunc; f2=$moboFunc} -ScriptBlock {
+            Invoke-AsyncAction -Parameters @{t=$comp; f1=$hwFunc; f2=$moboFunc} -ScriptBlock {
                 Invoke-Expression $f1
                 Invoke-Expression $f2
                 $hw = Get-ComputerHardware -ComputerName $t
@@ -346,7 +346,7 @@ function Start-LazyWinAdmin {
             $comp = $txtComputerName.Text
             $onlyIP = $chkOnlyIPEnabled.IsChecked
             $funcDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Get-ComputerNetwork.ps1") -Raw
-            Invoke-AsyncAction -Args @{t=$comp; f=$funcDef; o=$onlyIP} -ScriptBlock {
+            Invoke-AsyncAction -Parameters @{t=$comp; f=$funcDef; o=$onlyIP} -ScriptBlock {
                 Invoke-Expression $f
                 Get-ComputerNetwork -ComputerName $t -OnlyIPEnabled $o
             } -OnCompleted {
@@ -363,7 +363,7 @@ function Start-LazyWinAdmin {
             $path = $txtRegPath.Text
             $val = $txtRegValueName.Text
             $funcDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Invoke-ComputerRegistry.ps1") -Raw
-            Invoke-AsyncAction -Args @{t=$comp; f=$funcDef; h=$hive; p=$path; v=$val} -ScriptBlock {
+            Invoke-AsyncAction -Parameters @{t=$comp; f=$funcDef; h=$hive; p=$path; v=$val} -ScriptBlock {
                 Invoke-Expression $f
                 Invoke-ComputerRegistry -Action "Get" -ComputerName $t -Hive $h -KeyPath $p -ValueName $v
             } -OnCompleted {
@@ -379,7 +379,7 @@ function Start-LazyWinAdmin {
             $data = $txtRegValueData.Text
             $type = $cbRegType.Text
             $funcDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Invoke-ComputerRegistry.ps1") -Raw
-            Invoke-AsyncAction -Args @{t=$comp; f=$funcDef; h=$hive; p=$path; v=$val; d=$data; ty=$type} -ScriptBlock {
+            Invoke-AsyncAction -Parameters @{t=$comp; f=$funcDef; h=$hive; p=$path; v=$val; d=$data; ty=$type} -ScriptBlock {
                 Invoke-Expression $f
                 Invoke-ComputerRegistry -Action "Set" -ComputerName $t -Hive $h -KeyPath $p -ValueName $v -Value $d -ValueType $ty
             } -OnCompleted {
@@ -393,7 +393,7 @@ function Start-LazyWinAdmin {
             $path = $txtRegPath.Text
             $val = $txtRegValueName.Text
             $funcDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Invoke-ComputerRegistry.ps1") -Raw
-            Invoke-AsyncAction -Args @{t=$comp; f=$funcDef; h=$hive; p=$path; v=$val} -ScriptBlock {
+            Invoke-AsyncAction -Parameters @{t=$comp; f=$funcDef; h=$hive; p=$path; v=$val} -ScriptBlock {
                 Invoke-Expression $f
                 Invoke-ComputerRegistry -Action "Remove" -ComputerName $t -Hive $h -KeyPath $p -ValueName $v
             } -OnCompleted {
@@ -404,7 +404,7 @@ function Start-LazyWinAdmin {
         # --- CLOUD AUTH HANDLER ---
         $btnCloudLogin.Add_Click({
             $funcDef = Get-Content (Join-Path $PSScriptRoot "..\Private\Connect-ModernCloud.ps1") -Raw
-            Invoke-AsyncAction -Args @{f=$funcDef} -ScriptBlock {
+            Invoke-AsyncAction -Parameters @{f=$funcDef} -ScriptBlock {
                 Invoke-Expression $f
                 Connect-ModernCloud -Interactive
             } -OnCompleted {
