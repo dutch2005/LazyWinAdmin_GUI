@@ -40,10 +40,14 @@ Transform the 2012-era monolithic WinForms PowerShell script (`LazyWinAdmin.ps1`
 - [x] **Task 2: Decouple Business Logic** → Verify: Extract core functions (ping, query AD, check services) into separate `.ps1` files in the `Private/` folder.
 - [x] **Task 3: Modernize Cmdlets** → Verify: Regex replace `Get-WmiObject` with `Get-CimInstance` and update WMI syntax across extracted scripts.
 - [x] **Task 4: Build Modern UI (WPF)** → Verify: Convert the WinForms layout into a `MainView.xaml` file and load it using `[Windows.Markup.XamlReader]::Load()`.
-- [x] **Task 5: Implement Threading (Runspaces)** → Verify: Wrap the execution of long-running tasks in thread jobs updating a thread-safe UI dispatcher.
+- [x] **Task 5: Implement Threading (Runspaces)** → Verify: Wrap the execution of long-running tasks in thread jobs updating a thread-safe UI dispatcher. (Improved with `Invoke-AsyncAction` pattern).
 - [x] **Task 6: Strict Mode & Cleanup** → Verify: Add strict typing, remove `$global` scopes in favor of a shared `[hashtable]::Synchronized(@{})` state, and ensure PS7 compatibility.
+- [x] **Task 7: Software & Hardware Inventory** → Added new tabs and modernized background logic for inventory collection.
+- [x] **Task 8: Modularity & Quality Control** → Enforce 500-line limit per file, implement Pester tests for core functions, and add GitHub Actions for CI.
 
 ## Done When
-- [ ] The application launches via `Import-Module LazyWinAdmin; Start-LazyWinAdmin`.
-- [ ] The UI does not freeze when querying a remote computer.
-- [ ] The codebase runs cleanly in PowerShell 7.4+.
+- [x] The application launches via `Import-Module LazyWinAdmin; Start-LazyWinAdmin`.
+- [x] The UI does not freeze when querying a remote computer.
+- [x] The codebase runs cleanly in PowerShell 7.4+.
+- [x] All core business logic has accompanying Pester tests.
+- [x] GitHub Actions workflow is active for automated testing.

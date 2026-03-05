@@ -27,6 +27,8 @@
                         <TextBox Name="txtComputerName" Width="250" VerticalAlignment="Center" Padding="6"/>
                         <Button Name="btnPing" Content="Ping" Width="80" Margin="10,0,0,0" Padding="6" Background="#E8F0FE"/>
                         <Button Name="btnUptime" Content="Get Uptime" Width="100" Margin="10,0,0,0" Padding="6"/>
+                        <Button Name="btnEnableRdp" Content="Enable RDP" Width="100" Margin="10,0,0,0" Padding="6" Background="#CEEAD6"/>
+                        <Button Name="btnDisableRdp" Content="Disable RDP" Width="100" Margin="10,0,0,0" Padding="6" Background="#FAD2CF"/>
                     </StackPanel>
                     <GroupBox Grid.Row="1" Header="System Output" Padding="5">
                         <TextBox Name="txtOutput" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" 
@@ -62,7 +64,113 @@
                 </Grid>
             </TabItem>
 
-            <!-- TAB 3: IDENTITY -->
+            <!-- TAB 3: SOFTWARE -->
+            <TabItem Header="Software Inventory">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <Button Name="btnGetSoftware" Content="Fetch Installed Software" Width="180" Padding="6" Background="#E8F0FE"/>
+                        <TextBlock Text="Search:" VerticalAlignment="Center" Margin="20,0,10,0"/>
+                        <TextBox Name="txtSoftwareSearch" Width="200" VerticalAlignment="Center" Padding="6"/>
+                    </StackPanel>
+                    <ListView Name="lvSoftware" Grid.Row="1" Background="White">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}" Width="350"/>
+                                <GridViewColumn Header="Version" DisplayMemberBinding="{Binding Version}" Width="150"/>
+                                <GridViewColumn Header="Vendor" DisplayMemberBinding="{Binding Vendor}" Width="250"/>
+                                <GridViewColumn Header="Install Date" DisplayMemberBinding="{Binding InstallDate}" Width="150"/>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </Grid>
+            </TabItem>
+
+            <!-- TAB 4: HARDWARE -->
+            <TabItem Header="Hardware Inventory">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <Button Name="btnGetHardware" Content="Fetch Hardware Info" Width="180" Padding="6" Background="#E8F0FE"/>
+                    </StackPanel>
+                    
+                    <GroupBox Header="System Summary" Grid.Row="1" Margin="0,0,0,10" Padding="10">
+                        <UniformGrid Columns="2">
+                            <StackPanel Margin="5">
+                                <TextBlock Text="Manufacturer/Model:" FontWeight="Bold"/>
+                                <TextBlock Name="txtHwModel" Text="N/A"/>
+                            </StackPanel>
+                            <StackPanel Margin="5">
+                                <TextBlock Text="Serial Number:" FontWeight="Bold"/>
+                                <TextBlock Name="txtHwSerial" Text="N/A"/>
+                            </StackPanel>
+                            <StackPanel Margin="5">
+                                <TextBlock Text="CPU:" FontWeight="Bold"/>
+                                <TextBlock Name="txtHwCpu" Text="N/A"/>
+                            </StackPanel>
+                            <StackPanel Margin="5">
+                                <TextBlock Text="Total RAM:" FontWeight="Bold"/>
+                                <TextBlock Name="txtHwRam" Text="N/A"/>
+                            </StackPanel>
+                            <StackPanel Margin="5">
+                                <TextBlock Text="Operating System:" FontWeight="Bold"/>
+                                <TextBlock Name="txtHwOs" Text="N/A"/>
+                            </StackPanel>
+                            <StackPanel Margin="5">
+                                <TextBlock Text="Motherboard:" FontWeight="Bold"/>
+                                <TextBlock Name="txtHwMobo" Text="N/A"/>
+                            </StackPanel>
+                        </UniformGrid>
+                    </GroupBox>
+
+                    <GroupBox Header="Disk Space" Grid.Row="2" Padding="5">
+                        <ListView Name="lvHwDisks">
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Header="Drive" DisplayMemberBinding="{Binding DeviceID}" Width="60"/>
+                                    <GridViewColumn Header="Total (GB)" DisplayMemberBinding="{Binding SizeGB}" Width="100"/>
+                                    <GridViewColumn Header="Free (GB)" DisplayMemberBinding="{Binding FreeGB}" Width="100"/>
+                                    <GridViewColumn Header="Free (%)" DisplayMemberBinding="{Binding PercentFree}" Width="80"/>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                    </GroupBox>
+                </Grid>
+            </TabItem>
+
+            <!-- TAB 5: NETWORK -->
+            <TabItem Header="Network">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <Button Name="btnGetNetwork" Content="Fetch Network Adapters" Width="180" Padding="6" Background="#E8F0FE"/>
+                        <CheckBox Name="chkOnlyIPEnabled" Content="Only IP Enabled" VerticalAlignment="Center" Margin="20,0,0,0" IsChecked="True"/>
+                    </StackPanel>
+                    <ListView Name="lvNetwork" Grid.Row="1" Background="White">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Description" DisplayMemberBinding="{Binding Description}" Width="250"/>
+                                <GridViewColumn Header="IP Address" DisplayMemberBinding="{Binding IPAddress}" Width="200"/>
+                                <GridViewColumn Header="MAC Address" DisplayMemberBinding="{Binding MACAddress}" Width="130"/>
+                                <GridViewColumn Header="DHCP" DisplayMemberBinding="{Binding DHCPEnabled}" Width="60"/>
+                                <GridViewColumn Header="Gateway" DisplayMemberBinding="{Binding DefaultIPGateway}" Width="150"/>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </Grid>
+            </TabItem>
+
+            <!-- TAB 6: IDENTITY -->
             <TabItem Header="Identity (Users/Groups)">
                 <TabControl Background="Transparent" BorderThickness="0" Margin="5">
                     <TabItem Header="Local Accounts">
@@ -172,22 +280,30 @@
                         <TextBlock Text="Quick Registry Read" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
                         <UniformGrid Columns="2">
                             <StackPanel Margin="5">
-                                <TextBlock Text="Hive:"/>
-                                <ComboBox Name="cbRegHive" SelectedIndex="2" Padding="6">
-                                    <ComboBoxItem Content="HKCR"/>
-                                    <ComboBoxItem Content="HKCU"/>
-                                    <ComboBoxItem Content="HKLM"/>
-                                    <ComboBoxItem Content="HKU"/>
-                                </ComboBox>
-                            </StackPanel>
-                            <StackPanel Margin="5">
                                 <TextBlock Text="Value Name:"/>
                                 <TextBox Name="txtRegValueName" Padding="6"/>
                             </StackPanel>
+                            <StackPanel Margin="5">
+                                <TextBlock Text="Value Data (Write only):"/>
+                                <TextBox Name="txtRegValueData" Padding="6"/>
+                            </StackPanel>
                         </UniformGrid>
+                        <StackPanel Orientation="Horizontal" Margin="5,10,5,0">
+                            <TextBlock Text="Value Type:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <ComboBox Name="cbRegType" SelectedIndex="0" Width="120" Padding="4">
+                                <ComboBoxItem Content="String"/>
+                                <ComboBoxItem Content="DWord"/>
+                                <ComboBoxItem Content="ExpandString"/>
+                                <ComboBoxItem Content="MultiString"/>
+                            </ComboBox>
+                        </StackPanel>
                         <TextBlock Text="Key Path:" Margin="5,10,0,0"/>
                         <TextBox Name="txtRegPath" Margin="5" Padding="6" Text="SOFTWARE\Microsoft\Windows\CurrentVersion"/>
-                        <Button Name="btnRegRead" Content="Read Registry Value" Margin="5,10,5,0" Padding="8" Background="#E8F0FE"/>
+                        <StackPanel Orientation="Horizontal" Margin="5,10,5,0">
+                            <Button Name="btnRegRead" Content="Read Value" Width="120" Padding="8" Background="#E8F0FE"/>
+                            <Button Name="btnRegWrite" Content="Write Value" Width="120" Margin="10,0,0,0" Padding="8" Background="#E6F4EA"/>
+                            <Button Name="btnRegDelete" Content="Delete Value/Key" Width="120" Margin="10,0,0,0" Padding="8" Background="#FCE8E6"/>
+                        </StackPanel>
                         <TextBlock Name="txtRegResult" Text="Result will appear here..." Margin="5,20,5,0" FontStyle="Italic" Foreground="#5F6368" TextWrapping="Wrap"/>
                     </StackPanel>
                 </Grid>
