@@ -46,6 +46,17 @@ Start-LazyWinAdmin
 - **Active Directory Integration:** Modernized AD object lookup and description management.
 - **Security:** RDP status management and remote registry tools.
 
+## 📜 Documentation
+Comprehensive documentation is available in the project wiki:
+- **[Principal-Level Onboarding](./docs/wiki/onboarding-principal.md)**
+- **[Zero-to-Hero Contributor Guide](./docs/wiki/onboarding-zero-to-hero.md)**
+- **[Getting Started](./docs/wiki/getting-started.md)**
+- **[Architecture Deep Dive](./docs/wiki/architecture-deep-dive.md)**
+- **[Quality & Contribution](./docs/wiki/quality-and-contribution.md)**
+
+Other guides:
+- [Web GUI Migration Plan](./WEB_GUI_MIGRATION_PLAN.md)
+
 ## 📜 Contributions
 Contributions are welcome! Please ensure all new logic includes Pester tests and adheres to the modular module structure.
 
