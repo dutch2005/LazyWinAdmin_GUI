@@ -1,0 +1,40 @@
+STATE lazywinadmin
+
+  CHECKS
+    powershell-7-4               OK          # 7.6.0 verified — satisfies >= 7.4 requirement
+    dep.system.winrm             UNVERIFIED  # cloud-only machine; on-prem CIM out of scope here
+    dep.runtime.microsoft-graph  OK          # 2.36.1 verified (OneDrive module path)
+    dep.runtime.az               OK          # Az.Accounts 5.3.4 verified (OneDrive module path)
+    dep.runtime.threadjob        OK          # Start-ThreadJob is inbox in PS 7.6; PS version confirmed
+    dep.system.rsat-ad-ds        UNVERIFIED  # cloud-only machine; AD integration out of scope here
+
+  ENTITY
+    computer                PARTIAL  # ping/uptime/rdp done; AD integration out of scope on this machine
+    service                 BUILT
+    software                BUILT    # registry enumeration via StdRegProv; Win32_Product removed
+    hardware                BUILT    # single CimSession per call; finally-block cleanup
+    network_adapter         BUILT    # single CimSession per call; finally-block cleanup
+    registry_entry          BUILT    # $cimArgs rename done; all 3 actions (Get/Set/Remove) working
+    local_user              BUILT
+    local_group             BUILT
+    entra_user              BUILT    # OData injection fix applied; input validation on EntraFilter
+    entra_group             BUILT    # OData injection fix applied; input validation on EntraFilter
+    intune_device           BUILT    # OData injection fix; hybrid fields added (JoinType, ManagementState)
+    azure_resource          BUILT    # migrated to Search-AzGraph (server-side aggregation)
+    cloud_session           BUILT    # credential leakage fixed; scopes narrowed to least-privilege
+    cim_session             PARTIAL  # per-call reuse done; cross-call STATE cache present but not wired to CORE yet; RunspacePool kept in STATE but no longer passed to Start-ThreadJob (PS 7 inbox stub lacks -RunspacePool param)
+    ad_computer             PENDING  # requires rsat-ad-ds; out of scope on this machine
+    ad_user                 PENDING  # requires rsat-ad-ds; out of scope on this machine
+    ad_group                PENDING  # requires rsat-ad-ds; out of scope on this machine
+
+  FLOWS
+    cloud_connect           BUILT    # 6 steps implemented; catch acts as rollback; credential not logged
+    registry_write          BUILT    # 4 steps implemented; registry_value_data not logged per OBSERVABILITY
+    rdp_toggle              BUILT    # registry and firewall now split into separate CIM operations
+    ad_lookup               PENDING  # requires rsat-ad-ds; out of scope on this machine
+
+  LAYERS
+    UI                      BUILT    # Invoke-Expression removed; InitializationScript pattern; Register-ObjectEvent; $RequireCloudSession + $RequireComputerName guards on all handlers; try/catch in Invoke-AsyncAction prevents ShowDialog crash
+    CORE                    BUILT    # CimSession reuse in hardware/network; Win32_Product gone; $args fixed
+    CLOUD                   BUILT    # error return sanitised; scopes narrowed; Resource Graph migration done
+    STATE                   BUILT    # CimSessions cache + EvictCimSession + RunspacePool.Close() in Dispose

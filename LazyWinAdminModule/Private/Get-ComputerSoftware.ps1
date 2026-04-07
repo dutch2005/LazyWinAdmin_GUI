@@ -1,10 +1,11 @@
 function Get-ComputerSoftware {
     <#
     .SYNOPSIS
-        Retrieves installed software from a remote computer using CIM (WMI over WinRM).
+        Retrieves installed software from a remote computer via registry enumeration.
     .DESCRIPTION
-        Uses Win32_Product class via CIM. Note that Win32_Product can be slow 
-        as it performs a consistency check of the installed packages.
+        Uses StdRegProv via CIM to read Uninstall keys from HKLM.
+        This avoids Win32_Product which triggers an MSI consistency check on every query.
+        Adheres to: software.* ALWAYS use-registry-enumeration (CONTRACTS)
     #>
     [CmdletBinding()]
     param (
@@ -16,16 +17,62 @@ function Get-ComputerSoftware {
 
     process {
         try {
-            $filter = if ($Search) { "Name LIKE '%$Search%'" } else { $null }
-            
-            $software = Get-CimInstance -ComputerName $ComputerName -ClassName Win32_Product -Filter $filter -ErrorAction Stop
-            
-            $results = foreach ($item in $software) {
-                [PSCustomObject]@{
-                    Name        = $item.Name
-                    Version     = $item.Version
-                    Vendor      = $item.Vendor
-                    InstallDate = if ($item.InstallDate) { [DateTime]::ParseExact($item.InstallDate, "yyyyMMdd", $null).ToString("yyyy-MM-dd") } else { "Unknown" }
+            $hive = [UInt32]2147483650  # HKLM
+
+            $reg = Get-CimInstance -ComputerName $ComputerName -Namespace "root\default" -ClassName StdRegProv -ErrorAction Stop
+
+            $uninstallPaths = @(
+                "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
+                "SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
+            )
+
+            $seen   = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+            $results = [System.Collections.Generic.List[PSCustomObject]]::new()
+
+            foreach ($path in $uninstallPaths) {
+                $enumResult = Invoke-CimMethod -InputObject $reg -MethodName "EnumKey" `
+                    -Arguments @{ hDefKey = $hive; sSubKeyName = $path }
+
+                if ($enumResult.ReturnValue -ne 0 -or -not $enumResult.sNames) { continue }
+
+                foreach ($keyName in $enumResult.sNames) {
+                    $subPath = "$path\$keyName"
+
+                    $nameResult = Invoke-CimMethod -InputObject $reg -MethodName "GetStringValue" `
+                        -Arguments @{ hDefKey = $hive; sSubKeyName = $subPath; sValueName = "DisplayName" }
+
+                    if ($nameResult.ReturnValue -ne 0 -or [string]::IsNullOrWhiteSpace($nameResult.sValue)) { continue }
+                    $displayName = $nameResult.sValue
+
+                    # Deduplicate across both registry hives
+                    if (-not $seen.Add($displayName)) { continue }
+
+                    # Apply SoftwareRegistry search filter (contract: SoftwareRegistry is the canonical filter term)
+                    if ($Search -and $displayName -notlike "*$Search*") { continue }
+
+                    $verResult  = Invoke-CimMethod -InputObject $reg -MethodName "GetStringValue" `
+                        -Arguments @{ hDefKey = $hive; sSubKeyName = $subPath; sValueName = "DisplayVersion" }
+                    $pubResult  = Invoke-CimMethod -InputObject $reg -MethodName "GetStringValue" `
+                        -Arguments @{ hDefKey = $hive; sSubKeyName = $subPath; sValueName = "Publisher" }
+                    $dateResult = Invoke-CimMethod -InputObject $reg -MethodName "GetStringValue" `
+                        -Arguments @{ hDefKey = $hive; sSubKeyName = $subPath; sValueName = "InstallDate" }
+
+                    $installDate = "Unknown"
+                    if ($dateResult.ReturnValue -eq 0 -and $dateResult.sValue) {
+                        try {
+                            $installDate = [DateTime]::ParseExact($dateResult.sValue, "yyyyMMdd", $null).ToString("yyyy-MM-dd")
+                        }
+                        catch {
+                            $installDate = $dateResult.sValue
+                        }
+                    }
+
+                    $results.Add([PSCustomObject]@{
+                        Name        = $displayName
+                        Version     = if ($verResult.ReturnValue  -eq 0) { $verResult.sValue  } else { "" }
+                        Vendor      = if ($pubResult.ReturnValue  -eq 0) { $pubResult.sValue  } else { "" }
+                        InstallDate = $installDate
+                    })
                 }
             }
 

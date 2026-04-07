@@ -15,13 +15,24 @@ function Get-IntuneDevice {
                 return $null
             }
 
-            if ($Search) {
-                return Get-MgDeviceManagementManagedDevice -Filter "startsWith(DeviceName, '$Search') or startsWith(UserPrincipalName, '$Search')" -Top 50 | 
-                       Select-Object DeviceName, UserPrincipalName, ComplianceState, OS, Model, SerialNumber
+            # Validate IntuneFilter: allow only characters safe for OData $filter strings
+            if ($Search -and $Search -match "[^a-zA-Z0-9\s\-\.\@_]") {
+                Write-Warning "Search term contains characters not permitted in an Intune filter."
+                return $null
             }
-            
-            return Get-MgDeviceManagementManagedDevice -Top 50 | 
-                   Select-Object DeviceName, UserPrincipalName, ComplianceState, OS, Model, SerialNumber
+
+            if ($Search) {
+                $SafeSearch = $Search.Trim()
+                return Get-MgDeviceManagementManagedDevice `
+                    -Filter "startsWith(deviceName,'$SafeSearch') or startsWith(userPrincipalName,'$SafeSearch')" `
+                    -Top 50 |
+                    Select-Object DeviceName, UserPrincipalName, ComplianceState, OperatingSystem, Model, SerialNumber,
+                                  JoinType, ManagementState, DeviceEnrollmentType
+            }
+
+            return Get-MgDeviceManagementManagedDevice -Top 50 |
+                   Select-Object DeviceName, UserPrincipalName, ComplianceState, OperatingSystem, Model, SerialNumber,
+                                 JoinType, ManagementState, DeviceEnrollmentType
         }
         catch {
             Write-Warning "Error querying Intune: $_"

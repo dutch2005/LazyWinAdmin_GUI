@@ -18,30 +18,29 @@ function Connect-ModernCloud {
     try {
         if ($Interactive) {
             Write-Verbose "Triggering interactive login..."
-            Connect-MgGraph -Scopes "User.Read.All", "Group.Read.All", "DeviceManagementManagedDevices.Read.All"
+            Connect-MgGraph -Scopes "User.ReadBasic.All", "Group.Read.All", "DeviceManagementManagedDevices.Read.All"
         }
         elseif ($ClientId -and $ClientSecret) {
             Write-Verbose "Connecting via Service Principal..."
-            # Convert SecureString to string securely for the underlying API if needed, 
-            # or pass it if the module supports it. Connect-MgGraph natively supports -ClientSecretCredential.
-            # We'll use the proper credential approach.
             $credential = [System.Management.Automation.PSCredential]::new($ClientId, $ClientSecret)
             $body = @{
-                TenantId = $TenantId
-                ClientId = $ClientId
+                TenantId              = $TenantId
+                ClientId              = $ClientId
                 ClientSecretCredential = $credential
             }
             Connect-MgGraph @body
         }
-        
+
         $context = Get-MgContext
         if ($context) {
+            # TenantId is internal; account is non-sensitive display info
             return "[OK] Connected to Tenant: $($context.TenantId) as $($context.Account)"
         }
-        return "[!] Failed to retrieve Graph context."
+        return "[!] Authentication completed but Graph context could not be retrieved."
     }
     catch {
-        Write-Warning "Cloud Connection Failed: $_"
-        return "Error: $_"
+        # Write full exception to Verbose only — never surface token fragments or credentials in the return value
+        Write-Verbose "Cloud connection exception detail: $_"
+        return "[!] Connection failed. Verify credentials and network connectivity."
     }
 }

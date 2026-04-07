@@ -220,6 +220,34 @@
                             </ListView>
                         </Grid>
                     </TabItem>
+
+                    <!-- Active Directory sub-tab — requires RSAT (rsat-ad-ds) on the running machine -->
+                    <TabItem Header="Active Directory">
+                        <Grid Margin="10">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <Button Name="btnGetAdComputer" Content="Find Computer" Width="130" Padding="6" Background="#E8F0FE"/>
+                                <Button Name="btnGetAdUsers"    Content="Find Users"    Width="110" Margin="10,0,0,0" Padding="6"/>
+                                <Button Name="btnGetAdGroups"   Content="Find Groups"   Width="110" Margin="10,0,0,0" Padding="6"/>
+                                <TextBlock Text="AdFilter:" VerticalAlignment="Center" Margin="20,0,10,0"/>
+                                <TextBox Name="txtAdSearch" Width="200" VerticalAlignment="Center" Padding="6"/>
+                            </StackPanel>
+                            <ListView Name="lvAdResults" Grid.Row="1" Background="White">
+                                <ListView.View>
+                                    <GridView>
+                                        <GridViewColumn Header="Name"        DisplayMemberBinding="{Binding Name}"              Width="180"/>
+                                        <GridViewColumn Header="DN / UPN"    DisplayMemberBinding="{Binding DistinguishedName}" Width="350"/>
+                                        <GridViewColumn Header="Enabled"     DisplayMemberBinding="{Binding Enabled}"           Width="70"/>
+                                        <GridViewColumn Header="Last Logon"  DisplayMemberBinding="{Binding LastLogonDate}"     Width="150"/>
+                                        <GridViewColumn Header="OS / Dept"   DisplayMemberBinding="{Binding OperatingSystem}"   Width="200"/>
+                                    </GridView>
+                                </ListView.View>
+                            </ListView>
+                        </Grid>
+                    </TabItem>
                 </TabControl>
             </TabItem>
 
@@ -295,6 +323,15 @@
                                 <ComboBoxItem Content="DWord"/>
                                 <ComboBoxItem Content="ExpandString"/>
                                 <ComboBoxItem Content="MultiString"/>
+                            </ComboBox>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="5,10,5,0">
+                            <TextBlock Text="Hive:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <ComboBox Name="cbRegHive" SelectedIndex="0" Width="80" Padding="4">
+                                <ComboBoxItem Content="HKLM"/>
+                                <ComboBoxItem Content="HKCU"/>
+                                <ComboBoxItem Content="HKU"/>
+                                <ComboBoxItem Content="HKCR"/>
                             </ComboBox>
                         </StackPanel>
                         <TextBlock Text="Key Path:" Margin="5,10,0,0"/>

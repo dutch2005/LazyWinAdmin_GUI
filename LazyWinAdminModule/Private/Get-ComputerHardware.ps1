@@ -1,7 +1,10 @@
 function Get-ComputerHardware {
     <#
     .SYNOPSIS
-        Retrieves hardware information (System, CPU, RAM, Disks) from a remote computer using CIM.
+        Retrieves hardware information (System, CPU, RAM, Disks) from a remote computer.
+    .DESCRIPTION
+        Opens a single CimSession and reuses it for all queries within the call.
+        Adheres to: cim_session.* ALWAYS reuse-before-create (CONTRACTS)
     #>
     [CmdletBinding()]
     param (
@@ -10,46 +13,52 @@ function Get-ComputerHardware {
     )
 
     process {
+        $CimSession = $null
         try {
-            # System Info
-            $cs = Get-CimInstance -ComputerName $ComputerName -ClassName Win32_ComputerSystem -ErrorAction Stop
-            $os = Get-CimInstance -ComputerName $ComputerName -ClassName Win32_OperatingSystem -ErrorAction Stop
-            $bios = Get-CimInstance -ComputerName $ComputerName -ClassName Win32_Bios -ErrorAction Stop
-            
-            # CPU Info
-            $cpus = Get-CimInstance -ComputerName $ComputerName -ClassName Win32_Processor -ErrorAction Stop
-            $cpuInfo = $cpus | ForEach-Object { "$($_.Name) ($($_.NumberOfCores) Cores)" }
-            
-            # RAM Info
-            $mem = Get-CimInstance -ComputerName $ComputerName -ClassName Win32_PhysicalMemory -ErrorAction Stop
+            $CimSession = New-CimSession -ComputerName $ComputerName -ErrorAction Stop
+
+            $cs   = Get-CimInstance -CimSession $CimSession -ClassName Win32_ComputerSystem    -ErrorAction Stop
+            $os   = Get-CimInstance -CimSession $CimSession -ClassName Win32_OperatingSystem   -ErrorAction Stop
+            $bios = Get-CimInstance -CimSession $CimSession -ClassName Win32_Bios              -ErrorAction Stop
+
+            $cpus     = Get-CimInstance -CimSession $CimSession -ClassName Win32_Processor       -ErrorAction Stop
+            $cpuInfo  = $cpus | ForEach-Object { "$($_.Name) ($($_.NumberOfCores) Cores)" }
+
+            $mem          = Get-CimInstance -CimSession $CimSession -ClassName Win32_PhysicalMemory -ErrorAction Stop
             $totalRamBytes = ($mem | Measure-Object -Property Capacity -Sum).Sum
-            $totalRamGB = [Math]::Round($totalRamBytes / 1GB, 2)
-            
-            # Disk Info
-            $disks = Get-CimInstance -ComputerName $ComputerName -ClassName Win32_LogicalDisk -Filter "DriveType=3" -ErrorAction Stop
+            $totalRamGB    = [Math]::Round($totalRamBytes / 1GB, 2)
+
+            $disks = Get-CimInstance -CimSession $CimSession -ClassName Win32_LogicalDisk `
+                        -Filter "DriveType=3" -ErrorAction Stop
+
             $diskResults = foreach ($d in $disks) {
                 [PSCustomObject]@{
-                    DeviceID   = $d.DeviceID
-                    SizeGB     = [Math]::Round($d.Size / 1GB, 2)
-                    FreeGB     = [Math]::Round($d.FreeSpace / 1GB, 2)
+                    DeviceID    = $d.DeviceID
+                    SizeGB      = [Math]::Round($d.Size      / 1GB, 2)
+                    FreeGB      = [Math]::Round($d.FreeSpace / 1GB, 2)
                     PercentFree = [Math]::Round(($d.FreeSpace / $d.Size) * 100, 2)
                 }
             }
 
             return [PSCustomObject]@{
-                Model       = $cs.Model
+                Model        = $cs.Model
                 Manufacturer = $cs.Manufacturer
-                RAM_GB      = $totalRamGB
-                CPU         = $cpuInfo -join ", "
-                OS          = $os.Caption
-                OS_Version  = $os.Version
+                RAM_GB       = $totalRamGB
+                CPU          = $cpuInfo -join ", "
+                OS           = $os.Caption
+                OS_Version   = $os.Version
                 SerialNumber = $bios.SerialNumber
-                Disks       = $diskResults
+                Disks        = $diskResults
             }
         }
         catch {
             Write-Warning "Error retrieving hardware on $ComputerName`: $_"
             return $null
+        }
+        finally {
+            if ($null -ne $CimSession) {
+                Remove-CimSession -CimSession $CimSession -ErrorAction SilentlyContinue
+            }
         }
     }
 }

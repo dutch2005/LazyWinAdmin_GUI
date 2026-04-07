@@ -4,6 +4,7 @@ function Invoke-ComputerRegistry {
         Performs registry operations (Get, Set, New, Remove) on a remote computer.
     .DESCRIPTION
         Uses CIM (StdRegProv) for cross-platform compatibility and performance.
+        Adheres to: registry_entry.* REQUIRES hive-valid (CONTRACTS)
     #>
     [CmdletBinding()]
     param (
@@ -32,10 +33,10 @@ function Invoke-ComputerRegistry {
     process {
         try {
             $hives = @{
-                "HKCR" = 2147483648
-                "HKCU" = 2147483649
-                "HKLM" = 2147483650
-                "HKU"  = 2147483651
+                "HKCR" = [UInt32]2147483648
+                "HKCU" = [UInt32]2147483649
+                "HKLM" = [UInt32]2147483650
+                "HKU"  = [UInt32]2147483651
             }
             $hDef = $hives[$Hive]
 
@@ -43,33 +44,51 @@ function Invoke-ComputerRegistry {
 
             switch ($Action) {
                 "Get" {
-                    $res = Invoke-CimMethod -InputObject $reg -MethodName "GetStringValue" -Arguments @{hDef=$hDef; sSubKeyName=$KeyPath; sValueName=$ValueName}
+                    $res = Invoke-CimMethod -InputObject $reg -MethodName "GetStringValue" `
+                        -Arguments @{ hDefKey = $hDef; sSubKeyName = $KeyPath; sValueName = $ValueName }
                     if ($res.ReturnValue -eq 0) { return $res.sValue }
-                    
-                    # Try DWord if string fails
-                    $res = Invoke-CimMethod -InputObject $reg -MethodName "GetDWORDValue" -Arguments @{hDef=$hDef; sSubKeyName=$KeyPath; sValueName=$ValueName}
+
+                    # Fall back to DWORD if string lookup returns no result
+                    $res = Invoke-CimMethod -InputObject $reg -MethodName "GetDWORDValue" `
+                        -Arguments @{ hDefKey = $hDef; sSubKeyName = $KeyPath; sValueName = $ValueName }
                     if ($res.ReturnValue -eq 0) { return $res.uValue }
-                    
+
                     return $null
                 }
                 "Set" {
-                    $method = "Set$($ValueType)Value"
-                    if ($ValueType -eq "String") { $args = @{hDef=$hDef; sSubKeyName=$KeyPath; sValueName=$ValueName; sValue=[string]$Value} }
-                    elseif ($ValueType -eq "DWord") { $args = @{hDef=$hDef; sSubKeyName=$KeyPath; sValueName=$ValueName; uValue=[uint32]$Value} }
-                    # Add others as needed
-                    
-                    $res = Invoke-CimMethod -InputObject $reg -MethodName $method -Arguments $args
+                    $methodName = "Set$($ValueType)Value"
+
+                    # $cimArgs renamed from $args — $args is a PowerShell automatic variable
+                    if ($ValueType -eq "String") {
+                        $cimArgs = @{ hDefKey = $hDef; sSubKeyName = $KeyPath; sValueName = $ValueName; sValue = [string]$Value }
+                    }
+                    elseif ($ValueType -eq "DWord") {
+                        $cimArgs = @{ hDefKey = $hDef; sSubKeyName = $KeyPath; sValueName = $ValueName; uValue = [uint32]$Value }
+                    }
+                    elseif ($ValueType -eq "QWord") {
+                        $cimArgs = @{ hDefKey = $hDef; sSubKeyName = $KeyPath; sValueName = $ValueName; uValue = [uint64]$Value }
+                    }
+                    else {
+                        Write-Warning "ValueType '$ValueType' is not yet fully implemented."
+                        return $false
+                    }
+
+                    $res = Invoke-CimMethod -InputObject $reg -MethodName $methodName -Arguments $cimArgs
                     return ($res.ReturnValue -eq 0)
                 }
                 "New" {
-                    $res = Invoke-CimMethod -InputObject $reg -MethodName "CreateKey" -Arguments @{hDef=$hDef; sSubKeyName=$KeyPath}
+                    $res = Invoke-CimMethod -InputObject $reg -MethodName "CreateKey" `
+                        -Arguments @{ hDefKey = $hDef; sSubKeyName = $KeyPath }
                     return ($res.ReturnValue -eq 0)
                 }
                 "Remove" {
                     if ($ValueName) {
-                        $res = Invoke-CimMethod -InputObject $reg -MethodName "DeleteValue" -Arguments @{hDef=$hDef; sSubKeyName=$KeyPath; sValueName=$ValueName}
-                    } else {
-                        $res = Invoke-CimMethod -InputObject $reg -MethodName "DeleteKey" -Arguments @{hDef=$hDef; sSubKeyName=$KeyPath}
+                        $res = Invoke-CimMethod -InputObject $reg -MethodName "DeleteValue" `
+                            -Arguments @{ hDefKey = $hDef; sSubKeyName = $KeyPath; sValueName = $ValueName }
+                    }
+                    else {
+                        $res = Invoke-CimMethod -InputObject $reg -MethodName "DeleteKey" `
+                            -Arguments @{ hDefKey = $hDef; sSubKeyName = $KeyPath }
                     }
                     return ($res.ReturnValue -eq 0)
                 }

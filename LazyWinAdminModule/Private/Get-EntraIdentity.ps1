@@ -19,19 +19,33 @@ function Get-EntraIdentity {
                 return $null
             }
 
+            # Validate EntraFilter: allow only characters safe for OData $filter strings
+            if ($Search -and $Search -match "[^a-zA-Z0-9\s\-\.\@_]") {
+                Write-Warning "Search term contains characters not permitted in an Entra filter."
+                return $null
+            }
+
             if ($Type -eq "User") {
                 if ($Search) {
-                    return Get-MgUser -Filter "startsWith(DisplayName, '$Search') or startsWith(UserPrincipalName, '$Search')" -Top 50 | 
-                           Select-Object DisplayName, UserPrincipalName, Id, Mail, JobTitle
+                    $SafeSearch = $Search.Trim()
+                    return Get-MgUser `
+                        -Filter "startsWith(displayName,'$SafeSearch') or startsWith(userPrincipalName,'$SafeSearch')" `
+                        -Top 50 |
+                        Select-Object DisplayName, UserPrincipalName, Id, Mail, JobTitle
                 }
-                return Get-MgUser -Top 50 | Select-Object DisplayName, UserPrincipalName, Id, Mail, JobTitle
+                return Get-MgUser -Top 50 |
+                       Select-Object DisplayName, UserPrincipalName, Id, Mail, JobTitle
             }
             else {
                 if ($Search) {
-                    return Get-MgGroup -Filter "startsWith(DisplayName, '$Search')" -Top 50 | 
-                           Select-Object DisplayName, Id, Description, GroupTypes
+                    $SafeSearch = $Search.Trim()
+                    return Get-MgGroup `
+                        -Filter "startsWith(displayName,'$SafeSearch')" `
+                        -Top 50 |
+                        Select-Object DisplayName, Id, Description, GroupTypes
                 }
-                return Get-MgGroup -Top 50 | Select-Object DisplayName, Id, Description, GroupTypes
+                return Get-MgGroup -Top 50 |
+                       Select-Object DisplayName, Id, Description, GroupTypes
             }
         }
         catch {
