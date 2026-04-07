@@ -95,7 +95,41 @@ function Start-LazyWinAdmin {
         $btnCloudConnectSP = $window.FindName("btnCloudConnectSP")
 
         $lblStatus         = $window.FindName("lblStatus")
+        $lblAdminStatus    = $window.FindName("lblAdminStatus")
+        $btnRestartAdmin   = $window.FindName("btnRestartAdmin")
         $pbBusy            = $window.FindName("pbBusy")
+
+        # --- ADMIN ELEVATION CHECK ---
+        # Detect whether this process is running with local administrator rights.
+        # Stored as a plain bool — read-only, UI thread only, no sync needed.
+        $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+        if ($isAdmin) {
+            $lblAdminStatus.Text       = 'Administrator'
+            $lblAdminStatus.Foreground = [System.Windows.Media.Brushes]::Green
+            $btnRestartAdmin.Visibility = [System.Windows.Visibility]::Collapsed
+            $window.Title = 'LazyWinAdmin - Modernized 2026 [Administrator]'
+        }
+        else {
+            # lblAdminStatus and btnRestartAdmin keep their XAML defaults (visible + amber)
+            $window.Title = 'LazyWinAdmin - Modernized 2026'
+        }
+
+        # Relaunch this session elevated. Resolves the module manifest path relative to
+        # this script file so the new elevated window loads the same module.
+        $btnRestartAdmin.Add_Click({
+            $psd1 = Resolve-Path (Join-Path $PSScriptRoot '..\LazyWinAdminModule.psd1')
+            try {
+                Start-Process -FilePath 'pwsh.exe' `
+                    -ArgumentList "-NoProfile -Command `"Import-Module '$psd1' -Force; Start-LazyWinAdmin`"" `
+                    -Verb RunAs
+                $window.Close()
+            }
+            catch {
+                # User cancelled the UAC prompt — just show a status note.
+                $lblStatus.Text = '[!] Elevation cancelled.'
+            }
+        })
 
         # Default Value
         $txtComputerName.Text = $env:COMPUTERNAME
@@ -141,6 +175,24 @@ function Start-LazyWinAdmin {
                 return $false
             }
             return $true
+        }
+
+        # Appends an admin-rights hint to the output box when all three are true:
+        #   1. The operation returned no results (null/empty data)
+        #   2. The process is not elevated
+        #   3. The target is the local machine (localhost / 127.0.0.1 / $env:COMPUTERNAME)
+        # Called from OnCompleted handlers for features that require local admin.
+        $AdminHint = {
+            param([string]$computer)
+            $isLocalTarget = ($computer -ieq 'localhost'   -or
+                              $computer -ieq '127.0.0.1'   -or
+                              $computer -ieq $env:COMPUTERNAME)
+            if (-not $isAdmin -and $isLocalTarget) {
+                $AppendOutput.Invoke(
+                    "[!] No results returned. This feature requires local Administrator rights." +
+                    " Use the 'Restart as Admin' button in the status bar to relaunch elevated."
+                )
+            }
         }
 
         # --- ASYNC HELPER ---
@@ -353,7 +405,9 @@ function Start-LazyWinAdmin {
                 -Parameters  @{ t = $comp } `
                 -ScriptBlock { Set-ComputerRDP -ComputerName $t -Enabled $true } `
                 -OnCompleted {
-                    param($res) $AppendOutput.Invoke("[RDP] $res")
+                    param($res)
+                    $AppendOutput.Invoke("[RDP] $res")
+                    if ($res -match '^Error:') { $AdminHint.Invoke($comp) }
                 }
         })
 
@@ -365,7 +419,9 @@ function Start-LazyWinAdmin {
                 -Parameters  @{ t = $comp } `
                 -ScriptBlock { Set-ComputerRDP -ComputerName $t -Enabled $false } `
                 -OnCompleted {
-                    param($res) $AppendOutput.Invoke("[RDP] $res")
+                    param($res)
+                    $AppendOutput.Invoke("[RDP] $res")
+                    if ($res -match '^Error:') { $AdminHint.Invoke($comp) }
                 }
         })
 
@@ -442,6 +498,9 @@ function Start-LazyWinAdmin {
                         $lvHwDisks.Items.Clear()
                         $hw.Disks | ForEach-Object { $lvHwDisks.Items.Add($_) }
                     }
+                    else {
+                        $AdminHint.Invoke($comp)
+                    }
                     if ($data.mobo) {
                         $txtHwMobo.Text = "$($data.mobo.Product) ($($data.mobo.SerialNumber))"
                     }
@@ -495,7 +554,13 @@ function Start-LazyWinAdmin {
                 -ScriptBlock { Invoke-ComputerRegistry -Action "Set" -ComputerName $t -Hive $h -KeyPath $p -ValueName $v -Value $d -ValueType $ty } `
                 -OnCompleted {
                     param($res)
-                    $txtRegResult.Text = if ($res) { "Success: Value written." } else { "Error: Failed to write value." }
+                    if ($res) {
+                        $txtRegResult.Text = "Success: Value written."
+                    }
+                    else {
+                        $txtRegResult.Text = "Error: Failed to write value."
+                        $AdminHint.Invoke($comp)
+                    }
                 }
         })
 
@@ -511,7 +576,13 @@ function Start-LazyWinAdmin {
                 -ScriptBlock { Invoke-ComputerRegistry -Action "Remove" -ComputerName $t -Hive $h -KeyPath $p -ValueName $v } `
                 -OnCompleted {
                     param($res)
-                    $txtRegResult.Text = if ($res) { "Success: Item removed." } else { "Error: Failed to remove item." }
+                    if ($res) {
+                        $txtRegResult.Text = "Success: Item removed."
+                    }
+                    else {
+                        $txtRegResult.Text = "Error: Failed to remove item."
+                        $AdminHint.Invoke($comp)
+                    }
                 }
         })
 

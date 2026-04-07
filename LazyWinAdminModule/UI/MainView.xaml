@@ -27,8 +27,12 @@
                         <TextBox Name="txtComputerName" Width="250" VerticalAlignment="Center" Padding="6"/>
                         <Button Name="btnPing" Content="Ping" Width="80" Margin="10,0,0,0" Padding="6" Background="#E8F0FE"/>
                         <Button Name="btnUptime" Content="Get Uptime" Width="100" Margin="10,0,0,0" Padding="6"/>
-                        <Button Name="btnEnableRdp" Content="Enable RDP" Width="100" Margin="10,0,0,0" Padding="6" Background="#CEEAD6"/>
-                        <Button Name="btnDisableRdp" Content="Disable RDP" Width="100" Margin="10,0,0,0" Padding="6" Background="#FAD2CF"/>
+                        <Button Name="btnEnableRdp" Content="Enable RDP" Width="100" Margin="10,0,0,0" Padding="6" Background="#CEEAD6">
+                            <Button.ToolTip>Requires Administrator rights — modifies HKLM registry and Windows Firewall rules</Button.ToolTip>
+                        </Button>
+                        <Button Name="btnDisableRdp" Content="Disable RDP" Width="100" Margin="10,0,0,0" Padding="6" Background="#FAD2CF">
+                            <Button.ToolTip>Requires Administrator rights — modifies HKLM registry and Windows Firewall rules</Button.ToolTip>
+                        </Button>
                     </StackPanel>
                     <GroupBox Grid.Row="1" Header="System Output" Padding="5">
                         <TextBox Name="txtOutput" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" 
@@ -98,7 +102,9 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <Button Name="btnGetHardware" Content="Fetch Hardware Info" Width="180" Padding="6" Background="#E8F0FE"/>
+                        <Button Name="btnGetHardware" Content="Fetch Hardware Info" Width="180" Padding="6" Background="#E8F0FE">
+                            <Button.ToolTip>Requires local Administrator rights — WMI classes Win32_PhysicalMemory and Win32_DiskDrive are restricted to admins</Button.ToolTip>
+                        </Button>
                     </StackPanel>
                     
                     <GroupBox Header="System Summary" Grid.Row="1" Margin="0,0,0,10" Padding="10">
@@ -338,8 +344,12 @@
                         <TextBox Name="txtRegPath" Margin="5" Padding="6" Text="SOFTWARE\Microsoft\Windows\CurrentVersion"/>
                         <StackPanel Orientation="Horizontal" Margin="5,10,5,0">
                             <Button Name="btnRegRead" Content="Read Value" Width="120" Padding="8" Background="#E8F0FE"/>
-                            <Button Name="btnRegWrite" Content="Write Value" Width="120" Margin="10,0,0,0" Padding="8" Background="#E6F4EA"/>
-                            <Button Name="btnRegDelete" Content="Delete Value/Key" Width="120" Margin="10,0,0,0" Padding="8" Background="#FCE8E6"/>
+                            <Button Name="btnRegWrite" Content="Write Value" Width="120" Margin="10,0,0,0" Padding="8" Background="#E6F4EA">
+                                <Button.ToolTip>Writing to HKLM requires Administrator rights</Button.ToolTip>
+                            </Button>
+                            <Button Name="btnRegDelete" Content="Delete Value/Key" Width="120" Margin="10,0,0,0" Padding="8" Background="#FCE8E6">
+                                <Button.ToolTip>Deleting from HKLM requires Administrator rights</Button.ToolTip>
+                            </Button>
                         </StackPanel>
                         <TextBlock Name="txtRegResult" Text="Result will appear here..." Margin="5,20,5,0" FontStyle="Italic" Foreground="#5F6368" TextWrapping="Wrap"/>
                     </StackPanel>
@@ -377,6 +387,18 @@
             <Separator/>
             <StatusBarItem>
                 <TextBlock Name="lblTime" Text=""/>
+            </StatusBarItem>
+            <Separator/>
+            <!-- Admin elevation indicator — updated at startup; hidden when already elevated -->
+            <StatusBarItem>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Name="lblAdminStatus" Text="(!) Standard User" Foreground="#E37400"
+                               FontWeight="SemiBold" VerticalAlignment="Center"
+                               ToolTip="Some features (hardware, RDP, registry write) require Administrator rights"/>
+                    <Button Name="btnRestartAdmin" Content="Restart as Admin" Margin="8,0,0,0" Padding="5,2"
+                            FontSize="11" Background="#FCE8E6" BorderBrush="#D93025" Foreground="#D93025"
+                            Cursor="Hand" ToolTip="Relaunch LazyWinAdmin elevated as Administrator"/>
+                </StackPanel>
             </StatusBarItem>
             <StatusBarItem HorizontalAlignment="Right">
                 <ProgressBar Name="pbBusy" Width="150" Height="18" IsIndeterminate="False" BorderThickness="0" Background="#DADCE0" Foreground="#1A73E8"/>

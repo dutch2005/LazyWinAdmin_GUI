@@ -209,6 +209,8 @@ Describe 'XAML Validity' {
         @{ ControlName = 'btnCloudLogin'     }
         @{ ControlName = 'lblCloudStatus'    }
         @{ ControlName = 'lblStatus'         }
+        @{ ControlName = 'lblAdminStatus'    }
+        @{ ControlName = 'btnRestartAdmin'   }
     ) {
         param($ControlName)
         # XPath that finds any element whose local-name attribute (x:Name or Name) equals the control name
