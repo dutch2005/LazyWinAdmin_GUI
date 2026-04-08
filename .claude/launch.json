@@ -1,0 +1,34 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "LazyWinAdmin GUI",
+      "runtimeExecutable": "pwsh",
+      "runtimeArgs": [
+        "-NoProfile",
+        "-Command",
+        "Import-Module './LazyWinAdminModule/LazyWinAdminModule.psd1' -Force; Start-LazyWinAdmin"
+      ]
+    },
+    {
+      "name": "Pester Tests (Detailed)",
+      "runtimeExecutable": "pwsh",
+      "runtimeArgs": [
+        "-NoProfile",
+        "-File",
+        "./LazyWinAdminModule/Tests/Run-Tests.ps1",
+        "-Output",
+        "Detailed"
+      ]
+    },
+    {
+      "name": "Pester Tests (Normal)",
+      "runtimeExecutable": "pwsh",
+      "runtimeArgs": [
+        "-NoProfile",
+        "-File",
+        "./LazyWinAdminModule/Tests/Run-Tests.ps1"
+      ]
+    }
+  ]
+}

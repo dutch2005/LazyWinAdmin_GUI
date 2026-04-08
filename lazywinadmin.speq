@@ -1,0 +1,211 @@
+VERSION 1.0.0
+
+PROJECT
+  NAME   "lazywinadmin"
+  LANG   powershell
+  STACK  wpf, xaml, microsoft-graph, az-powershell, cim, threadjob
+  ARCH   layered
+  DEPS
+    SYSTEM   powershell-7-4, winrm, rsat-ad-ds
+    RUNTIME  microsoft-graph, az, threadjob
+    DEV      pester
+
+VOCABULARY
+  ComputerName          # never: target, hostname, machine, computername, machineName
+  CimSession            # never: wmi_session, cim_conn, session_obj
+  CloudSession          # never: cloud_conn, cloud_auth, mg_session, az_session
+  GraphContext          # never: mg_context, graph_conn, graph_auth
+  AzContext             # never: az_conn, azure_context, azure_session
+  RunspacePool          # never: thread_pool, runspace, pool
+  SyncHash              # never: shared_state, global_hash, state_dict
+  AppState              # never: global_state, app_context, state_obj
+  ServiceFilter         # never: svc_filter, service_query, filter_str
+  SoftwareRegistry      # never: reg_software, sw_path, registry_path_sw
+  RegistryHive          # never: hive, reg_hive, hive_name, h
+  RegistryPath          # never: key_path, reg_path, subkey, p
+  RegistryValueName     # never: value_name, reg_value, val_name, v
+  RegistryValueData     # never: value_data, reg_data, val_data, d
+  EntraFilter           # never: entra_search, aad_filter, user_filter, s
+  IntuneFilter          # never: intune_search, device_filter, mdm_filter
+  TenantId              # never: tenant, aad_tenant, directory_id
+  ClientId              # never: app_id, application_id, client
+  InitializationScript  # never: funcDef, f, func_def, init_script, load_script
+  OnCompleted           # never: callback, on_done, completion_handler
+  AdFilter              # never: ad_search, ad_filter, ldap_filter, search_str, s
+
+ENTITY computer, service, software, hardware, network_adapter
+ENTITY registry_entry, local_user, local_group
+ENTITY entra_user, entra_group, intune_device, azure_resource
+ENTITY cloud_session, cim_session
+ENTITY ad_computer, ad_user, ad_group
+
+TRANSFORM
+  computer      -> service          : read
+  computer      -> software         : read
+  computer      -> hardware         : read
+  computer      -> network_adapter  : read
+  computer      -> registry_entry   : read, write, delete
+  computer      -> local_user       : read
+  computer      -> local_group      : read
+  cloud_session -> entra_user       : read
+  cloud_session -> entra_group      : read
+  cloud_session -> intune_device    : read
+  cloud_session -> azure_resource   : read
+  computer      -> ad_computer      : read
+  computer      -> ad_user          : read
+  computer      -> ad_group         : read
+
+SECRETS
+  TENANT_ID      -> CLOUD
+  CLIENT_ID      -> CLOUD
+  CLIENT_SECRET  -> CLOUD
+
+CLASSIFY
+  cloud_session.client_secret  credential
+  cloud_session.token          credential
+  entra_user.mail              pii
+  entra_user.upn               pii
+  local_user.name              pii
+  local_user.sid               sensitive
+  hardware.serial_number       internal
+  registry_entry.value         sensitive
+  ad_user.samaccountname  pii
+  ad_user.distinguishedname  internal
+
+LAYERS
+  UI
+    BOUNDARY  external
+    EXPOSES   ping_computer, get_uptime, toggle_rdp, get_services, get_software, get_hardware, get_network, get_local_users, get_local_groups, get_entra_users, get_entra_groups, get_intune_devices, get_azure_summary, read_registry, write_registry, delete_registry, connect_cloud
+    OWNS      xaml-layout, event-handlers, dispatcher-updates, async-action-dispatch
+    CALLS     CORE, CLOUD, STATE
+    NEVER     block-ui-thread
+    NEVER     call-invoke-expression
+    NEVER     read-private-files-as-strings
+
+  CORE
+    OWNS      cim-queries, registry-operations, ping, uptime, rdp-toggle, software-enumeration
+    CAN       open-cim-session, reuse-cim-session, invoke-cim-method, use-initialization-script, use-rsat-ad-module
+    CALLS     STATE
+    NEVER     use-get-wmiobject
+    NEVER     use-win32-product
+    NEVER     create-new-cim-session-per-query
+    NEVER     call-graph-api
+
+  CLOUD
+    OWNS      graph-authentication, intune-queries, entra-queries, azure-resource-queries
+    CAN       connect-mg-graph, connect-az-account, use-managed-identity, use-service-principal
+    CALLS     STATE
+    NEVER     log-client-secret
+    NEVER     expose-token-in-error
+    NEVER     hardcode-tenant-id
+    NEVER     call-cim-api
+
+  STATE
+    OWNS      sync-hash, runspace-pool, cim-session-cache, cloud-connection-status
+    CAN       cache-cim-sessions, evict-stale-sessions, store-cloud-status
+    NEVER     call-cim-api
+    NEVER     call-graph-api
+    NEVER     block-calling-thread
+
+CONTRACTS
+  computer.*        REQUIRES computername-not-empty
+  registry_entry.*  REQUIRES computername-not-empty
+  registry_entry.*  REQUIRES hive-valid
+  entra_user.*      REQUIRES cloud-session-active
+  entra_group.*     REQUIRES cloud-session-active
+  intune_device.*   REQUIRES cloud-session-active
+  azure_resource.*  REQUIRES cloud-session-active
+  cloud_session.*   NEVER expose-credentials
+  software.*        ALWAYS use-registry-enumeration
+  cim_session.*     ALWAYS reuse-before-create
+  service.*         ALWAYS use-cim-instance
+  local_user.*      NEVER expose-password-hash
+  ad_computer.*     REQUIRES rsat-ad-module
+  ad_user.*         REQUIRES rsat-ad-module
+  ad_group.*        REQUIRES rsat-ad-module
+
+  FLOW cloud_connect
+    1.  [UI]    cloud_session.validate_auth_selection
+    2.  [CLOUD] cloud_session.connect_graph
+    3.  [CLOUD] cloud_session.connect_azure
+    4.  [CLOUD] cloud_session.verify_graph_context
+    5.  [STATE] cloud_session.persist_status
+    6.  [UI]    cloud_session.display_status
+    ROLLBACK  cloud_session.clear_tokens, cloud_session.set_disconnected
+    ATOMIC    true
+    TIMEOUT   30s
+    RETRY     1
+
+  FLOW registry_write
+    1.  [UI]   registry_entry.validate_fields
+    2.  [CORE] cim_session.resolve
+    3.  [CORE] registry_entry.invoke_set
+    4.  [UI]   registry_entry.display_result
+    ROLLBACK  registry_entry.log_failure
+    ATOMIC    false
+    TIMEOUT   10s
+    RETRY     0
+
+  FLOW rdp_toggle
+    1.  [UI]   computer.validate
+    2.  [CORE] cim_session.resolve
+    3.  [CORE] computer.set_rdp_registry
+    4.  [CORE] computer.set_firewall_rule
+    5.  [UI]   computer.display_result
+    ROLLBACK  computer.revert_rdp_registry
+    ATOMIC    true
+    TIMEOUT   15s
+    RETRY     0
+
+  FLOW ad_lookup
+    1.  [UI]   computer.validate_computername
+    2.  [CORE] ad_computer.query
+    3.  [CORE] ad_user.query
+    4.  [UI]   ad_computer.display_result
+    ATOMIC    false
+    TIMEOUT   15s
+    RETRY     1
+
+OBSERVABILITY
+  flow cloud_connect
+    level:         critical
+    must-log:      tenant_id, connection_result, timestamp
+    must-not-log:  client_secret, token, client_id
+    metrics:       cloud_connect_success_total, cloud_connect_failure_total
+
+  flow registry_write
+    level:         standard
+    must-log:      computer_name, registry_hive, registry_path, registry_value_name, action_result
+    must-not-log:  registry_value_data
+    metrics:       registry_write_total, registry_write_failure_total
+
+  flow rdp_toggle
+    level:         standard
+    must-log:      computer_name, rdp_action, action_result
+    must-not-log:  credentials
+    metrics:       rdp_toggle_total
+
+  flow ad_lookup
+    level:         standard
+    must-log:      computer_name, ad_filter, result_count
+    must-not-log:  ad_user_samaccountname
+    metrics:       ad_lookup_total, ad_lookup_failure_total
+
+CHANGELOG
+  1.1.0
+    ADDED entities: ad_computer, ad_user, ad_group
+    ADDED transforms: computer -> ad_computer, ad_user, ad_group : read
+    ADDED vocabulary: AdFilter
+    ADDED flow: ad_lookup
+    ADDED classify: ad_user.samaccountname pii, ad_user.distinguishedname internal
+    ADDED dep.system: rsat-ad-ds
+    CHANGED rdp_toggle: split into separate registry step and firewall step
+    CHANGED core: use-rsat-ad-module added to CAN
+
+  1.0.0
+    ADDED initial spec for LazyWinAdmin 2026 edition
+    ADDED entities: computer, service, software, hardware, network_adapter, registry_entry, local_user, local_group, entra_user, entra_group, intune_device, azure_resource, cloud_session, cim_session
+    ADDED layers: UI, CORE, CLOUD, STATE with explicit CALLS restrictions
+    ADDED flows: cloud_connect, registry_write, rdp_toggle
+    ADDED classify: credential for cloud_session.client_secret and cloud_session.token, pii for entra_user and local_user identity fields, sensitive for registry_entry.value and local_user.sid, internal for hardware.serial_number
+    ADDED vocabulary: 21 canonical names covering all identifiers identified as misused or abbreviated in the codebase
