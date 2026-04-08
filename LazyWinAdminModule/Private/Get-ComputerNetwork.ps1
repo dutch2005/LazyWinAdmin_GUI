@@ -17,7 +17,8 @@ function Get-ComputerNetwork {
     process {
         $CimSession = $null
         try {
-            $CimSession = New-CimSession -ComputerName $ComputerName -ErrorAction Stop
+            $isLocal    = $ComputerName -iin @('localhost', '127.0.0.1', $env:COMPUTERNAME)
+            $CimSession = if ($isLocal) { New-CimSession -ErrorAction Stop } else { New-CimSession -ComputerName $ComputerName -ErrorAction Stop }
 
             $filter   = if ($OnlyIPEnabled) { "IPEnabled = True" } else { $null }
             $adapters = Get-CimInstance -CimSession $CimSession -ClassName Win32_NetworkAdapterConfiguration `

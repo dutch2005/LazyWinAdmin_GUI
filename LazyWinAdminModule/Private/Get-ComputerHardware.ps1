@@ -15,7 +15,8 @@ function Get-ComputerHardware {
     process {
         $CimSession = $null
         try {
-            $CimSession = New-CimSession -ComputerName $ComputerName -ErrorAction Stop
+            $isLocal    = $ComputerName -iin @('localhost', '127.0.0.1', $env:COMPUTERNAME)
+            $CimSession = if ($isLocal) { New-CimSession -ErrorAction Stop } else { New-CimSession -ComputerName $ComputerName -ErrorAction Stop }
 
             $cs   = Get-CimInstance -CimSession $CimSession -ClassName Win32_ComputerSystem    -ErrorAction Stop
             $os   = Get-CimInstance -CimSession $CimSession -ClassName Win32_OperatingSystem   -ErrorAction Stop

@@ -7,8 +7,10 @@ function Get-ComputerUptime {
 
     process {
         try {
-            # Replaced deprecated Get-WmiObject with Get-CimInstance (uses WSMan/WinRM)
-            $cim = Get-CimInstance -ClassName Win32_OperatingSystem -ComputerName $ComputerName -ErrorAction Stop
+            $isLocal   = $ComputerName -iin @('localhost', '127.0.0.1', $env:COMPUTERNAME)
+            $cimParams = @{ ClassName = "Win32_OperatingSystem"; ErrorAction = "Stop" }
+            if (-not $isLocal) { $cimParams.ComputerName = $ComputerName }
+            $cim = Get-CimInstance @cimParams
             
             # CIM natively returns a DateTime object for LastBootUpTime, no need to convert like WMI
             if ($cim -and $cim.LastBootUpTime) {

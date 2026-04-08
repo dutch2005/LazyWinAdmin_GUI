@@ -11,7 +11,10 @@ function Get-ComputerLocalUser {
 
     process {
         try {
-            $users = Get-CimInstance -ClassName Win32_UserAccount -Filter "LocalAccount = True" -ComputerName $ComputerName -ErrorAction Stop
+            $isLocal   = $ComputerName -iin @('localhost', '127.0.0.1', $env:COMPUTERNAME)
+            $cimParams = @{ ClassName = "Win32_UserAccount"; Filter = "LocalAccount = True"; ErrorAction = "Stop" }
+            if (-not $isLocal) { $cimParams.ComputerName = $ComputerName }
+            $users = Get-CimInstance @cimParams
             return $users | Select-Object Name, FullName, Disabled, Lockout, PasswordRequired, PasswordExpires, SID, Status
         }
         catch {

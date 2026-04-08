@@ -71,6 +71,38 @@ function Start-LazyWinAdmin {
         $btnGetAzureSummary  = $window.FindName("btnGetAzureSummary")
         $lvAzureResources    = $window.FindName("lvAzureResources")
 
+        # Intune Scripts controls
+        $btnGetIntuneScripts         = $window.FindName("btnGetIntuneScripts")
+        $txtIntuneScriptSearch       = $window.FindName("txtIntuneScriptSearch")
+        $txtIntuneScriptDownloadPath = $window.FindName("txtIntuneScriptDownloadPath")
+        $btnDownloadIntuneScripts    = $window.FindName("btnDownloadIntuneScripts")
+        $lvIntuneScripts             = $window.FindName("lvIntuneScripts")
+
+        # Device Compliance controls
+        $btnCheckCompliance  = $window.FindName("btnCheckCompliance")
+        $lvComplianceStatus  = $window.FindName("lvComplianceStatus")
+        $btnFixLocation      = $window.FindName("btnFixLocation")
+        $btnFixOutlookImages = $window.FindName("btnFixOutlookImages")
+        $btnRemoveOneDrive   = $window.FindName("btnRemoveOneDrive")
+        $txtUpdateHoursStart = $window.FindName("txtUpdateHoursStart")
+        $txtUpdateHoursEnd   = $window.FindName("txtUpdateHoursEnd")
+        $btnFixUpdateHours   = $window.FindName("btnFixUpdateHours")
+        $txtComplianceOutput = $window.FindName("txtComplianceOutput")
+
+        # Exchange controls
+        $txtExchangeUpn         = $window.FindName("txtExchangeUpn")
+        $btnConnectExchange     = $window.FindName("btnConnectExchange")
+        $lblExchangeStatus      = $window.FindName("lblExchangeStatus")
+        $btnGetMailboxPerms     = $window.FindName("btnGetMailboxPerms")
+        $txtExchangeViewUser    = $window.FindName("txtExchangeViewUser")
+        $lvMailboxPerms         = $window.FindName("lvMailboxPerms")
+        $txtExchangeSourceUser  = $window.FindName("txtExchangeSourceUser")
+        $txtExchangeTargetUser  = $window.FindName("txtExchangeTargetUser")
+        $btnMirrorMailboxPerms  = $window.FindName("btnMirrorMailboxPerms")
+        $txtExchangeMailbox     = $window.FindName("txtExchangeMailbox")
+        $txtExchangeGrantUser   = $window.FindName("txtExchangeGrantUser")
+        $btnGrantMailboxPerms   = $window.FindName("btnGrantMailboxPerms")
+
         $btnRegRead        = $window.FindName("btnRegRead")
         $btnRegWrite       = $window.FindName("btnRegWrite")
         $btnRegDelete      = $window.FindName("btnRegDelete")
@@ -154,6 +186,8 @@ function Start-LazyWinAdmin {
 
         $SetBusy = {
             param([bool]$isBusy)
+            # Track busy state in SyncHash so event-thread code can read it without touching UI
+            $state.SyncHash.IsBusy = $isBusy
             if ($window.Dispatcher.CheckAccess()) {
                 $pbBusy.IsIndeterminate = $isBusy
                 $lblStatus.Text = if ($isBusy) { "Working..." } else { "Ready" }
@@ -186,6 +220,16 @@ function Start-LazyWinAdmin {
             if ([string]::IsNullOrWhiteSpace($txtComputerName.Text)) {
                 $lblStatus.Text = "[!] No computer name — enter a target in the Computer Name field."
                 $AppendOutput.Invoke("[!] Action blocked: enter a Computer Name before running this action.")
+                return $false
+            }
+            return $true
+        }
+
+        # Checks that Exchange Online is connected.
+        # Must be called before any button handler that calls Exchange cmdlets.
+        $RequireExchangeSession = {
+            if (-not $state.SyncHash.ExchangeConnected) {
+                $lblStatus.Text = "[!] Exchange not connected — use the Exchange › Connection tab first."
                 return $false
             }
             return $true
@@ -229,19 +273,13 @@ function Start-LazyWinAdmin {
         function Invoke-AsyncAction {
             param(
                 [scriptblock]$ScriptBlock,
-                [hashtable]$Parameters         = @{},
+                [hashtable]$Parameters             = @{},
                 [scriptblock]$OnCompleted,
                 [scriptblock]$InitializationScript = {}
             )
 
             $SetBusy.Invoke($true)
 
-            # -RunspacePool is intentionally omitted here.
-            # The RunspacePool object on $state exists for future cross-call CIM session
-            # wiring (see state_lazywinadmin.speq: cim_session PARTIAL) but passing it to
-            # Start-ThreadJob causes a parameter-not-found error in PS 7 because the inbox
-            # stub loaded by auto-discovery does not expose that named parameter.
-            # Start-ThreadJob manages its own internal runspace allocation without it.
             try {
                 $job = Start-ThreadJob `
                            -InitializationScript $InitializationScript `
@@ -252,44 +290,37 @@ function Start-LazyWinAdmin {
                 }
             }
             catch {
-                # Start-ThreadJob itself failed (e.g. runspace quota, bad script reference).
-                # This catch block runs on the UI thread (called from a button click handler),
-                # so update the UI directly — no Dispatcher.Invoke needed.
-                $lblStatus.Text = "[!] Could not start background job: $_"
+                # Runs on UI thread — update directly, no Dispatcher.Invoke needed.
+                $lblStatus.Text         = "[!] Could not start background job: $_"
                 $pbBusy.IsIndeterminate = $false
+                $state.SyncHash.IsBusy  = $false
                 return
             }
 
-            # All values needed inside Dispatcher.Invoke are captured into locals here.
-            # This avoids $Event lifetime issues when the [action] delegate executes
-            # on the WPF UI thread after the event-handler scope has returned.
+            # When the job finishes, enqueue the result for the DispatcherTimer to process
+            # on the WPF UI thread.  This avoids Dispatcher.Invoke/InvokeAsync entirely,
+            # eliminating all re-entrant DispatcherFrame and cross-thread closure issues.
             Register-ObjectEvent -InputObject $job -EventName StateChanged -MessageData @{
                 Job      = $job
-                Window   = $window
+                Queue    = $state.SyncHash.UIQueue
                 Callback = $OnCompleted
                 BusyFn   = $SetBusy
             } -Action {
                 $jobState = $Event.SourceArgs[0].JobStateInfo.State
                 if ($jobState -notin 'Completed', 'Failed', 'Stopped') { return }
 
-                $res       = Receive-Job -Job $Event.MessageData.Job -ErrorAction SilentlyContinue
-                $callback  = $Event.MessageData.Callback
-                $busyFn    = $Event.MessageData.BusyFn
-                $evtWindow = $Event.MessageData.Window
-                $evtJob    = $Event.MessageData.Job
-                $evtSrc    = $EventSubscriber.SourceIdentifier
+                $res    = Receive-Job -Job $Event.MessageData.Job -ErrorAction SilentlyContinue
+                $evtSrc = $EventSubscriber.SourceIdentifier
+                $evtJob = $Event.MessageData.Job
 
-                # InvokeAsync: fire-and-forget marshal to the UI thread.
-                # Non-blocking — does not push a nested DispatcherFrame on the event thread.
-                # Once on the UI thread, $callback and $busyFn hit CheckAccess()=$true
-                # and execute directly, so no further Invoke nesting occurs.
-                $evtWindow.Dispatcher.InvokeAsync([action]{
-                    & $callback $res
-                    $busyFn.Invoke($false)
-                }) | Out-Null
+                $Event.MessageData.Queue.Enqueue([PSCustomObject]@{
+                    Callback = $Event.MessageData.Callback
+                    Result   = $res
+                    BusyFn   = $Event.MessageData.BusyFn
+                })
 
-                Unregister-Event -SourceIdentifier $evtSrc    -ErrorAction SilentlyContinue
-                Remove-Job       -Job $evtJob -Force           -ErrorAction SilentlyContinue
+                Unregister-Event -SourceIdentifier $evtSrc -ErrorAction SilentlyContinue
+                Remove-Job       -Job $evtJob -Force        -ErrorAction SilentlyContinue
             } | Out-Null
         }
 
@@ -644,6 +675,192 @@ function Start-LazyWinAdmin {
                 }
         })
 
+        # --- INTUNE SCRIPTS HANDLERS ---
+        $btnGetIntuneScripts.Add_Click({
+            if (-not ($RequireCloudSession.Invoke())) { return }
+            $search = $txtIntuneScriptSearch.Text
+            Invoke-AsyncAction `
+                -InitializationScript ([scriptblock]::Create(". '$PrivatePath\Get-IntuneManagementScript.ps1'")) `
+                -Parameters  @{ s = $search } `
+                -ScriptBlock { Get-IntuneManagementScript -Search $s } `
+                -OnCompleted {
+                    param($data)
+                    $lvIntuneScripts.Items.Clear()
+                    if ($data) {
+                        $data | ForEach-Object { $lvIntuneScripts.Items.Add($_) }
+                        $AppendOutput.Invoke("[Intune Scripts] $($data.Count) script(s) listed.")
+                    } else {
+                        $AppendOutput.Invoke("[Intune Scripts] No scripts found or not connected to Graph.")
+                    }
+                }
+        })
+
+        $btnDownloadIntuneScripts.Add_Click({
+            if (-not ($RequireCloudSession.Invoke())) { return }
+            $search       = $txtIntuneScriptSearch.Text
+            $downloadPath = $txtIntuneScriptDownloadPath.Text
+            Invoke-AsyncAction `
+                -InitializationScript ([scriptblock]::Create(". '$PrivatePath\Get-IntuneManagementScript.ps1'")) `
+                -Parameters  @{ s = $search; dp = $downloadPath } `
+                -ScriptBlock { Get-IntuneManagementScript -Search $s -DownloadPath $dp } `
+                -OnCompleted {
+                    param($data)
+                    $lvIntuneScripts.Items.Clear()
+                    if ($data) {
+                        $data | ForEach-Object { $lvIntuneScripts.Items.Add($_) }
+                        $AppendOutput.Invoke("[Intune Scripts] $($data.Count) script(s) downloaded to $downloadPath.")
+                    } else {
+                        $AppendOutput.Invoke("[Intune Scripts] No scripts found or not connected to Graph.")
+                    }
+                }
+        })
+
+        # --- DEVICE COMPLIANCE HANDLERS ---
+        $btnCheckCompliance.Add_Click({
+            Invoke-AsyncAction `
+                -InitializationScript ([scriptblock]::Create(". '$PrivatePath\Get-DeviceComplianceStatus.ps1'")) `
+                -ScriptBlock { Get-DeviceComplianceStatus } `
+                -OnCompleted {
+                    param($data)
+                    $lvComplianceStatus.Items.Clear()
+                    $data | ForEach-Object { $lvComplianceStatus.Items.Add($_) }
+                }
+        })
+
+        $btnFixLocation.Add_Click({
+            Invoke-AsyncAction `
+                -InitializationScript ([scriptblock]::Create(". '$PrivatePath\Set-DeviceComplianceItem.ps1'")) `
+                -ScriptBlock { Set-DeviceComplianceItem -Item 'LocationServices' } `
+                -OnCompleted {
+                    param($res)
+                    $txtComplianceOutput.Text = $res
+                    if ($res -match '^Error:') { $AdminHint.Invoke($env:COMPUTERNAME) }
+                }
+        })
+
+        $btnFixOutlookImages.Add_Click({
+            Invoke-AsyncAction `
+                -InitializationScript ([scriptblock]::Create(". '$PrivatePath\Set-DeviceComplianceItem.ps1'")) `
+                -ScriptBlock { Set-DeviceComplianceItem -Item 'OutlookExternalImages' } `
+                -OnCompleted {
+                    param($res)
+                    $txtComplianceOutput.Text = $res
+                }
+        })
+
+        $btnRemoveOneDrive.Add_Click({
+            Invoke-AsyncAction `
+                -InitializationScript ([scriptblock]::Create(". '$PrivatePath\Set-DeviceComplianceItem.ps1'")) `
+                -ScriptBlock { Set-DeviceComplianceItem -Item 'RemoveOneDrive' } `
+                -OnCompleted {
+                    param($res)
+                    $txtComplianceOutput.Text = $res
+                    if ($res -match '^Error:') { $AdminHint.Invoke($env:COMPUTERNAME) }
+                }
+        })
+
+        $btnFixUpdateHours.Add_Click({
+            $startHour = 0
+            $endHour   = 0
+            if (-not [int]::TryParse($txtUpdateHoursStart.Text, [ref]$startHour) -or
+                -not [int]::TryParse($txtUpdateHoursEnd.Text,   [ref]$endHour)   -or
+                $startHour -lt 0 -or $startHour -gt 23 -or
+                $endHour   -lt 0 -or $endHour   -gt 23) {
+                $txtComplianceOutput.Text = "[!] Start and End hours must be integers between 0 and 23."
+                return
+            }
+            Invoke-AsyncAction `
+                -InitializationScript ([scriptblock]::Create(". '$PrivatePath\Set-DeviceComplianceItem.ps1'")) `
+                -Parameters  @{ sh = $startHour; eh = $endHour } `
+                -ScriptBlock { Set-DeviceComplianceItem -Item 'WindowsUpdateActiveHours' -ActiveHoursStart $sh -ActiveHoursEnd $eh } `
+                -OnCompleted {
+                    param($res)
+                    $txtComplianceOutput.Text = $res
+                    if ($res -match '^Error:') { $AdminHint.Invoke($env:COMPUTERNAME) }
+                }
+        })
+
+        # --- EXCHANGE HANDLERS ---
+        $btnConnectExchange.Add_Click({
+            $upn = $txtExchangeUpn.Text
+            Invoke-AsyncAction `
+                -InitializationScript ([scriptblock]::Create(". '$PrivatePath\Connect-ExchangeSession.ps1'")) `
+                -Parameters  @{ u = $upn } `
+                -ScriptBlock { Connect-ExchangeSession -UserPrincipalName $u } `
+                -OnCompleted {
+                    param($res)
+                    $connected = $res -match '^\[OK\]'
+                    $state.SyncHash.ExchangeConnected = $connected
+                    $lblExchangeStatus.Text       = $res
+                    $lblExchangeStatus.Foreground  = if ($connected) {
+                        [System.Windows.Media.Brushes]::Green
+                    } else {
+                        [System.Windows.Media.Brushes]::Red
+                    }
+                    $lblStatus.Text = if ($connected) { "Exchange: connected" } else { "Exchange: not connected" }
+                }
+        })
+
+        $btnGetMailboxPerms.Add_Click({
+            if (-not ($RequireExchangeSession.Invoke())) { return }
+            $upn = $txtExchangeViewUser.Text
+            if ([string]::IsNullOrWhiteSpace($upn)) {
+                $lblStatus.Text = "[!] Enter a User Principal Name to look up."
+                return
+            }
+            Invoke-AsyncAction `
+                -InitializationScript ([scriptblock]::Create(". '$PrivatePath\Get-ExchangeMailboxPermission.ps1'")) `
+                -Parameters  @{ u = $upn } `
+                -ScriptBlock { Get-ExchangeMailboxPermission -UserPrincipalName $u } `
+                -OnCompleted {
+                    param($data)
+                    $lvMailboxPerms.Items.Clear()
+                    if ($data) {
+                        $data | ForEach-Object { $lvMailboxPerms.Items.Add($_) }
+                    } else {
+                        $AppendOutput.Invoke("[Exchange] No shared mailbox permissions found for $upn.")
+                    }
+                }
+        })
+
+        $btnMirrorMailboxPerms.Add_Click({
+            if (-not ($RequireExchangeSession.Invoke())) { return }
+            $src = $txtExchangeSourceUser.Text
+            $tgt = $txtExchangeTargetUser.Text
+            if ([string]::IsNullOrWhiteSpace($src) -or [string]::IsNullOrWhiteSpace($tgt)) {
+                $lblStatus.Text = "[!] Enter both source and target UPNs for mirror."
+                return
+            }
+            Invoke-AsyncAction `
+                -InitializationScript ([scriptblock]::Create(". '$PrivatePath\Set-ExchangeMailboxPermission.ps1'")) `
+                -Parameters  @{ src = $src; tgt = $tgt } `
+                -ScriptBlock { Set-ExchangeMailboxPermission -Action Mirror -SourceUser $src -TargetUser $tgt } `
+                -OnCompleted {
+                    param($res)
+                    $AppendOutput.Invoke("[Exchange Mirror] $res")
+                    $lblStatus.Text = $res
+                }
+        })
+
+        $btnGrantMailboxPerms.Add_Click({
+            if (-not ($RequireExchangeSession.Invoke())) { return }
+            $mb   = $txtExchangeMailbox.Text
+            $user = $txtExchangeGrantUser.Text
+            if ([string]::IsNullOrWhiteSpace($mb) -or [string]::IsNullOrWhiteSpace($user)) {
+                $lblStatus.Text = "[!] Enter both a mailbox address and a user UPN."
+                return
+            }
+            Invoke-AsyncAction `
+                -InitializationScript ([scriptblock]::Create(". '$PrivatePath\Set-ExchangeMailboxPermission.ps1'")) `
+                -Parameters  @{ mb = $mb; u = $user } `
+                -ScriptBlock { Set-ExchangeMailboxPermission -Action Grant -Mailbox $mb -User $u } `
+                -OnCompleted {
+                    param($res)
+                    $AppendOutput.Invoke("[Exchange Grant] $res")
+                    $lblStatus.Text = $res
+                }
+        })
+
         # --- CLOUD AUTH HANDLER ---
         $btnCloudLogin.Add_Click({
             Invoke-AsyncAction `
@@ -689,6 +906,22 @@ function Start-LazyWinAdmin {
                     $lblStatus.Text = if ($connected) { "Cloud: connected" } else { "Cloud: not connected" }
                 }
         })
+
+        # DispatcherTimer — drains the UI callback queue on the WPF thread every 50 ms.
+        # Background jobs enqueue their results via Register-ObjectEvent actions.
+        # The timer dequeues and calls OnCompleted callbacks here, on the UI thread,
+        # with full access to all WPF controls — no Dispatcher.Invoke needed in callbacks.
+        $uiTimer          = [System.Windows.Threading.DispatcherTimer]::new()
+        $uiTimer.Interval = [TimeSpan]::FromMilliseconds(50)
+        $uiTimer.Add_Tick({
+            $workItem = $null
+            while ($state.SyncHash.UIQueue.TryDequeue([ref]$workItem)) {
+                try   { & $workItem.Callback $workItem.Result }
+                catch { $AppendOutput.Invoke("[!] UI callback error: $_") }
+                finally { $workItem.BusyFn.Invoke($false) }
+            }
+        })
+        $uiTimer.Start()
 
         $window.ShowDialog() | Out-Null
     }

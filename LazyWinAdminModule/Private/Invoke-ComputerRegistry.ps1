@@ -40,7 +40,10 @@ function Invoke-ComputerRegistry {
             }
             $hDef = $hives[$Hive]
 
-            $reg = Get-CimInstance -ComputerName $ComputerName -Namespace "root\default" -ClassName StdRegProv -ErrorAction Stop
+            $isLocal   = $ComputerName -iin @('localhost', '127.0.0.1', $env:COMPUTERNAME)
+            $regParams = @{ Namespace = "root\default"; ClassName = "StdRegProv"; ErrorAction = "Stop" }
+            if (-not $isLocal) { $regParams.ComputerName = $ComputerName }
+            $reg = Get-CimInstance @regParams
 
             switch ($Action) {
                 "Get" {

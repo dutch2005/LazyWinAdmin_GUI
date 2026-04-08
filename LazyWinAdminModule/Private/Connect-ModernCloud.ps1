@@ -18,7 +18,7 @@ function Connect-ModernCloud {
     try {
         if ($Interactive) {
             Write-Verbose "Triggering interactive login..."
-            Connect-MgGraph -Scopes "User.ReadBasic.All", "Group.Read.All", "DeviceManagementManagedDevices.Read.All"
+            Connect-MgGraph -Scopes "User.ReadBasic.All", "Group.Read.All", "DeviceManagementManagedDevices.Read.All", "DeviceManagementConfiguration.Read.All"
         }
         elseif ($ClientId -and $ClientSecret) {
             Write-Verbose "Connecting via Service Principal..."

@@ -15,6 +15,8 @@ function Get-ComputerService {
 
     process {
         try {
+            $isLocal = $ComputerName -iin @('localhost', '127.0.0.1', $env:COMPUTERNAME)
+
             $filter = ""
             if ($Name) {
                 $filter = "Name = '$Name'"
@@ -24,11 +26,11 @@ function Get-ComputerService {
             }
 
             $params = @{
-                ClassName = "Win32_Service"
-                ComputerName = $ComputerName
+                ClassName   = "Win32_Service"
                 ErrorAction = "Stop"
             }
-            if ($filter) { $params.Filter = $filter }
+            if ($filter)    { $params.Filter       = $filter       }
+            if (-not $isLocal) { $params.ComputerName = $ComputerName }
 
             $services = Get-CimInstance @params
             

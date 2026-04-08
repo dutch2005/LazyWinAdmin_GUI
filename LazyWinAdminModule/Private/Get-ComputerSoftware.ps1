@@ -17,9 +17,12 @@ function Get-ComputerSoftware {
 
     process {
         try {
-            $hive = [UInt32]2147483650  # HKLM
+            $hive    = [UInt32]2147483650  # HKLM
+            $isLocal = $ComputerName -iin @('localhost', '127.0.0.1', $env:COMPUTERNAME)
 
-            $reg = Get-CimInstance -ComputerName $ComputerName -Namespace "root\default" -ClassName StdRegProv -ErrorAction Stop
+            $regParams = @{ Namespace = "root\default"; ClassName = "StdRegProv"; ErrorAction = "Stop" }
+            if (-not $isLocal) { $regParams.ComputerName = $ComputerName }
+            $reg = Get-CimInstance @regParams
 
             $uninstallPaths = @(
                 "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",

@@ -11,7 +11,10 @@ function Get-ComputerLocalGroup {
 
     process {
         try {
-            $groups = Get-CimInstance -ClassName Win32_Group -Filter "LocalAccount = True" -ComputerName $ComputerName -ErrorAction Stop
+            $isLocal   = $ComputerName -iin @('localhost', '127.0.0.1', $env:COMPUTERNAME)
+            $cimParams = @{ ClassName = "Win32_Group"; Filter = "LocalAccount = True"; ErrorAction = "Stop" }
+            if (-not $isLocal) { $cimParams.ComputerName = $ComputerName }
+            $groups = Get-CimInstance @cimParams
             return $groups | Select-Object Name, Caption, SID, Status
         }
         catch {
