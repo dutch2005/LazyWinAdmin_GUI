@@ -135,20 +135,34 @@ function Start-LazyWinAdmin {
         $txtComputerName.Text = $env:COMPUTERNAME
 
         # --- UI HELPERS ---
+        # CheckAccess() returns $true when already on the UI thread — execute directly.
+        # From a background / event thread it returns $false — marshal via Dispatcher.Invoke.
+        # Skipping the Invoke when already on the UI thread prevents re-entrant
+        # DispatcherFrame pushes that cause the application to freeze.
         $AppendOutput = {
             param($text)
-            $window.Dispatcher.Invoke([action]{
+            if ($window.Dispatcher.CheckAccess()) {
                 $txtOutput.AppendText("$text`n")
                 $txtOutput.ScrollToEnd()
-            })
+            } else {
+                $window.Dispatcher.Invoke([action]{
+                    $txtOutput.AppendText("$text`n")
+                    $txtOutput.ScrollToEnd()
+                })
+            }
         }
 
         $SetBusy = {
             param([bool]$isBusy)
-            $window.Dispatcher.Invoke([action]{
+            if ($window.Dispatcher.CheckAccess()) {
                 $pbBusy.IsIndeterminate = $isBusy
                 $lblStatus.Text = if ($isBusy) { "Working..." } else { "Ready" }
-            })
+            } else {
+                $window.Dispatcher.Invoke([action]{
+                    $pbBusy.IsIndeterminate = $isBusy
+                    $lblStatus.Text = if ($isBusy) { "Working..." } else { "Ready" }
+                })
+            }
         }
 
         # --- PRE-FLIGHT GUARDS ---
@@ -239,13 +253,10 @@ function Start-LazyWinAdmin {
             }
             catch {
                 # Start-ThreadJob itself failed (e.g. runspace quota, bad script reference).
-                # Reset busy state and surface a safe message — do not re-throw into the WPF
-                # dispatcher (re-throwing here kills ShowDialog).
-                $errText = "[!] Could not start background job: $_"
-                $window.Dispatcher.Invoke([action]{
-                    $lblStatus.Text = $errText
-                    $pbBusy.IsIndeterminate = $false
-                })
+                # This catch block runs on the UI thread (called from a button click handler),
+                # so update the UI directly — no Dispatcher.Invoke needed.
+                $lblStatus.Text = "[!] Could not start background job: $_"
+                $pbBusy.IsIndeterminate = $false
                 return
             }
 
@@ -268,10 +279,14 @@ function Start-LazyWinAdmin {
                 $evtJob    = $Event.MessageData.Job
                 $evtSrc    = $EventSubscriber.SourceIdentifier
 
-                $evtWindow.Dispatcher.Invoke([action]{
+                # InvokeAsync: fire-and-forget marshal to the UI thread.
+                # Non-blocking — does not push a nested DispatcherFrame on the event thread.
+                # Once on the UI thread, $callback and $busyFn hit CheckAccess()=$true
+                # and execute directly, so no further Invoke nesting occurs.
+                $evtWindow.Dispatcher.InvokeAsync([action]{
                     & $callback $res
                     $busyFn.Invoke($false)
-                })
+                }) | Out-Null
 
                 Unregister-Event -SourceIdentifier $evtSrc    -ErrorAction SilentlyContinue
                 Remove-Job       -Job $evtJob -Force           -ErrorAction SilentlyContinue
