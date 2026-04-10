@@ -143,7 +143,7 @@ LazyWinAdminModule/
 │   └── MainView.xaml          # WPF layout (11 tabs)
 └── Tests/
     ├── Integrity.Tests.ps1    # File structure, manifest, XAML, ApplicationState
-    ├── Functions.Tests.ps1    # All private functions (212 tests, 0 failures)
+    ├── Functions.Tests.ps1    # All private functions (306 tests, 0 failures)
     └── Run-Tests.ps1          # Test runner with summary output
 ```
 
@@ -180,7 +180,7 @@ pwsh -NoProfile -File .\LazyWinAdminModule\Tests\Run-Tests.ps1 -Output Detailed
 pwsh -NoProfile -File .\LazyWinAdminModule\Tests\Run-Tests.ps1 -Suite Integrity
 ```
 
-**212 tests, 0 failures.** Requires Pester 5.0+ (auto-installed by the runner if missing).
+**306 tests, 0 failures.** Requires Pester 5.0+ (auto-installed by the runner if missing).
 
 ---
 
@@ -197,6 +197,16 @@ pwsh -NoProfile -File .\LazyWinAdminModule\Tests\Run-Tests.ps1 -Suite Integrity
 ---
 
 ## Version history
+
+### v1.2.1 — 2026 (Code quality pass)
+- **Complete documentation** — all 23 private functions now have full `.SYNOPSIS`, `.DESCRIPTION`, `.PARAMETER`, `.OUTPUTS`, and `.EXAMPLE` comment blocks
+- **Input validation** — `Connect-ModernCloud` guards against Interactive/SP mode mixing, SP mode incompleteness, and invalid TenantId format; `Get-ExchangeMailboxPermission` validates UPN format before querying Exchange
+- **OData injection hardening** — single quotes in search terms are now escaped in `Get-EntraIdentity` and `Get-IntuneDevice` before building `$filter` strings
+- **`Get-ComputerRegistryValue` local routing fix** — applied the same `$isLocal` pattern used everywhere else; localhost no longer routes through WinRM
+- **`Get-DeviceComplianceStatus` null safety** — null-conditional property access prevents spurious `Error` status when registry keys are absent; `Get-WmiObject` replaced with `Get-CimInstance` for UWF check
+- **`Set-ExchangeMailboxPermission`** — fixed invalid PS syntax (`return if …`); RemoveOneDrive now tracks uninstaller exit code and returns accurate status
+- **94 new tests** — `Test-ComputerPort`, `Connect-ModernCloud`, `Connect-ExchangeSession`, `Get-DeviceComplianceStatus`, `Set-DeviceComplianceItem`, `Get-ExchangeMailboxPermission`, `Set-ExchangeMailboxPermission`, `Get-IntuneManagementScript`
+- 306 Pester v5 tests, 0 failures (up from 212)
 
 ### v1.2.0 — 2026
 - **Device Compliance tab** — check and remediate Location Services, OneDrive, Outlook external images, Windows Update active hours (dynamic), UWF state. Runs locally, no network required.
