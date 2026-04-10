@@ -2,7 +2,22 @@
 
 A complete modernisation of the classic LazyWinAdmin (2012) PowerShell GUI tool, rebuilt from scratch as a native **PowerShell 7.4+ WPF module**. Manages Windows workstations and servers through a clean tabbed interface with async operations, cloud integration, and a full Pester v5 test suite.
 
-![LazyWinAdmin 2026](/Media/lwa-v0.4-main01.png)
+![LazyWinAdmin v1.3.0 — main view](/Media/lwa-v1.3-main.png)
+
+<details>
+<summary>More screenshots (v1.3.0)</summary>
+
+| Services tab | Device Compliance tab |
+|---|---|
+| ![Services](/Media/lwa-v1.3-services.png) | ![Compliance](/Media/lwa-v1.3-compliance.png) |
+
+| Governance & Compliance | Cloud Auth |
+|---|---|
+| ![Governance](/Media/lwa-v1.3-governance.png) | ![Cloud Auth](/Media/lwa-v1.3-cloud-auth.png) |
+
+</details>
+
+> **Before/after:** the original 2012 WinForms interface is preserved in [`Media/lwa-v0.4-main01.png`](/Media/lwa-v0.4-main01.png).
 
 ---
 
