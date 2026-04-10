@@ -47,15 +47,31 @@
                 <Grid Margin="10">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                         <Button Name="btnGetServices" Content="List All Services" Width="120" Padding="6" Background="#E8F0FE"/>
                         <Button Name="btnGetStoppedAuto" Content="Stopped (Auto)" Width="120" Margin="10,0,0,0" Padding="6"/>
                         <TextBlock Text="Search Name:" VerticalAlignment="Center" Margin="20,0,10,0"/>
                         <TextBox Name="txtServiceSearch" Width="150" VerticalAlignment="Center" Padding="6"/>
+                        <TextBlock Name="lblServicesCount" Text="" VerticalAlignment="Center" Margin="20,0,0,0" Foreground="#5F6368" FontStyle="Italic"/>
                     </StackPanel>
-                    <ListView Name="lvServices" Grid.Row="1" Background="White">
+                    <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="0,0,0,6">
+                        <Button Name="btnStartService" Content="Start Selected" Width="110" Padding="5" Background="#CEEAD6">
+                            <Button.ToolTip>Start the selected service — requires Administrator rights</Button.ToolTip>
+                        </Button>
+                        <Button Name="btnStopService" Content="Stop Selected" Width="110" Margin="8,0,0,0" Padding="5" Background="#FAD2CF">
+                            <Button.ToolTip>Stop the selected service — requires Administrator rights</Button.ToolTip>
+                        </Button>
+                        <Button Name="btnRestartService" Content="Restart Selected" Width="120" Margin="8,0,0,0" Padding="5" Background="#FFF3E0">
+                            <Button.ToolTip>Restart the selected service — requires Administrator rights</Button.ToolTip>
+                        </Button>
+                        <Button Name="btnExportServices" Content="Export CSV" Width="90" Margin="20,0,0,0" Padding="5" Background="#F1F3F4">
+                            <Button.ToolTip>Save the current service list to a CSV file</Button.ToolTip>
+                        </Button>
+                    </StackPanel>
+                    <ListView Name="lvServices" Grid.Row="2" Background="White">
                         <ListView.View>
                             <GridView>
                                 <GridViewColumn Header="Name"         DisplayMemberBinding="{Binding Name}"        Width="150"/>
@@ -80,6 +96,10 @@
                         <Button Name="btnGetSoftware" Content="Fetch Installed Software" Width="180" Padding="6" Background="#E8F0FE"/>
                         <TextBlock Text="Search:" VerticalAlignment="Center" Margin="20,0,10,0"/>
                         <TextBox Name="txtSoftwareSearch" Width="200" VerticalAlignment="Center" Padding="6"/>
+                        <TextBlock Name="lblSoftwareCount" Text="" VerticalAlignment="Center" Margin="20,0,0,0" Foreground="#5F6368" FontStyle="Italic"/>
+                        <Button Name="btnExportSoftware" Content="Export CSV" Width="90" Margin="20,0,0,0" Padding="5" Background="#F1F3F4">
+                            <Button.ToolTip>Save the software inventory to a CSV file</Button.ToolTip>
+                        </Button>
                     </StackPanel>
                     <ListView Name="lvSoftware" Grid.Row="1" Background="White">
                         <ListView.View>
@@ -160,6 +180,10 @@
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                         <Button Name="btnGetNetwork" Content="Fetch Network Adapters" Width="180" Padding="6" Background="#E8F0FE"/>
                         <CheckBox Name="chkOnlyIPEnabled" Content="Only IP Enabled" VerticalAlignment="Center" Margin="20,0,0,0" IsChecked="True"/>
+                        <TextBlock Name="lblNetworkCount" Text="" VerticalAlignment="Center" Margin="20,0,0,0" Foreground="#5F6368" FontStyle="Italic"/>
+                        <Button Name="btnExportNetwork" Content="Export CSV" Width="90" Margin="20,0,0,0" Padding="5" Background="#F1F3F4">
+                            <Button.ToolTip>Save network adapter data to a CSV file</Button.ToolTip>
+                        </Button>
                     </StackPanel>
                     <ListView Name="lvNetwork" Grid.Row="1" Background="White">
                         <ListView.View>
@@ -267,6 +291,10 @@
                                 <Button Name="btnGetIntuneDevices" Content="List Managed Devices" Width="150" Padding="6" Background="#E8F0FE"/>
                                 <TextBlock Text="Search Device/User:" VerticalAlignment="Center" Margin="20,0,10,0"/>
                                 <TextBox Name="txtIntuneSearch" Width="200" VerticalAlignment="Center" Padding="6"/>
+                                <TextBlock Name="lblIntuneDevicesCount" Text="" VerticalAlignment="Center" Margin="20,0,0,0" Foreground="#5F6368" FontStyle="Italic"/>
+                                <Button Name="btnExportIntuneDevices" Content="Export CSV" Width="90" Margin="20,0,0,0" Padding="5" Background="#F1F3F4">
+                                    <Button.ToolTip>Save Intune device list to a CSV file</Button.ToolTip>
+                                </Button>
                             </StackPanel>
                             <ListView Name="lvIntuneDevices" Grid.Row="1" Background="White">
                                 <ListView.View>
@@ -421,6 +449,10 @@
                                     <TextBox Name="txtExchangeViewUser" Width="280" Padding="5" VerticalAlignment="Center"/>
                                     <Button Name="btnGetMailboxPerms" Content="List Access" Width="110"
                                             Margin="10,0,0,0" Padding="6" Background="#E8F0FE"/>
+                                    <TextBlock Name="lblMailboxPermsCount" Text="" VerticalAlignment="Center" Margin="15,0,0,0" Foreground="#5F6368" FontStyle="Italic"/>
+                                    <Button Name="btnExportMailboxPerms" Content="Export CSV" Width="90" Margin="10,0,0,0" Padding="5" Background="#F1F3F4">
+                                        <Button.ToolTip>Save mailbox permissions to a CSV file</Button.ToolTip>
+                                    </Button>
                                 </StackPanel>
                             </GroupBox>
 

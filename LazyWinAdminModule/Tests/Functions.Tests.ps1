@@ -1276,3 +1276,134 @@ Describe 'Set-ComputerRDP' {
         }
     }
 }
+
+# ─────────────────────────────────────────────────────────────────────────────
+Describe 'Invoke-ComputerServiceControl' {
+
+    Context 'Parameter validation' {
+        It 'Requires -ComputerName' {
+            { Invoke-ComputerServiceControl -ServiceName 'spooler' -Action 'Stop' } |
+                Should -Throw
+        }
+        It 'Requires -ServiceName' {
+            { Invoke-ComputerServiceControl -ComputerName 'localhost' -Action 'Stop' } |
+                Should -Throw
+        }
+        It 'Requires -Action' {
+            { Invoke-ComputerServiceControl -ComputerName 'localhost' -ServiceName 'spooler' } |
+                Should -Throw
+        }
+        It 'Rejects invalid -Action value' {
+            { Invoke-ComputerServiceControl -ComputerName 'localhost' -ServiceName 'spooler' -Action 'Pause' } |
+                Should -Throw
+        }
+    }
+
+    Context 'Service not found' {
+        BeforeEach {
+            Mock Get-CimInstance { $null }
+        }
+        It "Returns [!] when service name is not found on target" {
+            $result = Invoke-ComputerServiceControl -ComputerName 'localhost' -ServiceName 'nonexistent' -Action 'Start'
+            $result | Should -BeLike '*not found*'
+        }
+    }
+
+    Context 'Start action' {
+        BeforeAll {
+            Mock Get-CimInstance { [PSCustomObject]@{ Name = 'spooler' } }
+            Mock Invoke-CimMethod { [PSCustomObject]@{ ReturnValue = 0 } }
+        }
+        It 'Returns [OK] ... Started ... on success' {
+            $result = Invoke-ComputerServiceControl -ComputerName 'localhost' -ServiceName 'spooler' -Action 'Start'
+            $result | Should -Match '^\[OK\].*spooler.*Started'
+        }
+        It 'Calls StartService CIM method' {
+            Mock Invoke-CimMethod { [PSCustomObject]@{ ReturnValue = 0 } }
+            Invoke-ComputerServiceControl -ComputerName 'localhost' -ServiceName 'spooler' -Action 'Start' | Out-Null
+            Should -Invoke Invoke-CimMethod -Times 1 -ParameterFilter { $MethodName -eq 'StartService' }
+        }
+    }
+
+    Context 'Stop action' {
+        BeforeAll {
+            Mock Get-CimInstance { [PSCustomObject]@{ Name = 'spooler' } }
+            Mock Invoke-CimMethod { [PSCustomObject]@{ ReturnValue = 0 } }
+        }
+        It 'Returns [OK] ... Stopped ... on success' {
+            $result = Invoke-ComputerServiceControl -ComputerName 'localhost' -ServiceName 'spooler' -Action 'Stop'
+            $result | Should -Match '^\[OK\].*spooler.*Stopped'
+        }
+        It 'Calls StopService CIM method' {
+            Mock Invoke-CimMethod { [PSCustomObject]@{ ReturnValue = 0 } }
+            Invoke-ComputerServiceControl -ComputerName 'localhost' -ServiceName 'spooler' -Action 'Stop' | Out-Null
+            Should -Invoke Invoke-CimMethod -Times 1 -ParameterFilter { $MethodName -eq 'StopService' }
+        }
+    }
+
+    Context 'Restart action' {
+        BeforeAll {
+            Mock Get-CimInstance { [PSCustomObject]@{ Name = 'spooler' } }
+            Mock Invoke-CimMethod { [PSCustomObject]@{ ReturnValue = 0 } }
+            Mock Start-Sleep { }
+        }
+        It 'Returns [OK] ... Restarted ... on success' {
+            $result = Invoke-ComputerServiceControl -ComputerName 'localhost' -ServiceName 'spooler' -Action 'Restart'
+            $result | Should -Match '^\[OK\].*spooler.*Restarted'
+        }
+        It 'Calls StopService then StartService in order' {
+            $script:svcControlCalls = [System.Collections.Generic.List[string]]::new()
+            Mock Invoke-CimMethod {
+                $script:svcControlCalls.Add($MethodName)
+                [PSCustomObject]@{ ReturnValue = 0 }
+            }
+            Mock Start-Sleep { }
+            Invoke-ComputerServiceControl -ComputerName 'localhost' -ServiceName 'spooler' -Action 'Restart' | Out-Null
+            $script:svcControlCalls[0] | Should -Be 'StopService'
+            $script:svcControlCalls[1] | Should -Be 'StartService'
+        }
+        It 'Returns [!] if Stop returns non-zero during Restart' {
+            Mock Invoke-CimMethod { [PSCustomObject]@{ ReturnValue = 5 } }
+            $result = Invoke-ComputerServiceControl -ComputerName 'localhost' -ServiceName 'spooler' -Action 'Restart'
+            $result | Should -BeLike '*Stop returned code 5*'
+        }
+    }
+
+    Context 'Non-zero CIM return code' {
+        BeforeAll {
+            Mock Get-CimInstance { [PSCustomObject]@{ Name = 'spooler' } }
+            Mock Invoke-CimMethod { [PSCustomObject]@{ ReturnValue = 2 } }
+        }
+        It 'Returns [!] with return code when action fails' {
+            $result = Invoke-ComputerServiceControl -ComputerName 'localhost' -ServiceName 'spooler' -Action 'Start'
+            $result | Should -BeLike '*returned code 2*'
+        }
+    }
+
+    Context 'Error path — CIM throws' {
+        BeforeEach {
+            Mock Get-CimInstance { throw 'CIM connection error' }
+        }
+        It "Returns 'Error: ...' on CIM exception" {
+            $result = Invoke-ComputerServiceControl -ComputerName 'localhost' -ServiceName 'spooler' -Action 'Start'
+            $result | Should -BeLike 'Error:*'
+        }
+    }
+
+    Context 'Local routing — $isLocal detection' {
+        BeforeAll {
+            Mock Get-CimInstance { [PSCustomObject]@{ Name = 'spooler' } }
+            Mock Invoke-CimMethod { [PSCustomObject]@{ ReturnValue = 0 } }
+        }
+        It 'Omits ComputerName from Get-CimInstance for localhost' {
+            Invoke-ComputerServiceControl -ComputerName 'localhost' -ServiceName 'spooler' -Action 'Start' | Out-Null
+            Should -Invoke Get-CimInstance -Times 1 -ParameterFilter {
+                -not $PSBoundParameters.ContainsKey('ComputerName')
+            }
+        }
+        It 'Passes ComputerName to Get-CimInstance for remote targets' {
+            Invoke-ComputerServiceControl -ComputerName 'REMOTEPC01' -ServiceName 'spooler' -Action 'Start' | Out-Null
+            Should -Invoke Get-CimInstance -Times 1 -ParameterFilter { $ComputerName -eq 'REMOTEPC01' }
+        }
+    }
+}

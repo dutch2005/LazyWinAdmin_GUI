@@ -50,11 +50,16 @@ Start-LazyWinAdmin
 ### Services tab
 - List all services or filter to stopped-but-auto-start services
 - Search by service name
+- **Start / Stop / Restart** the selected service *(requires admin)* *(new in v1.3.0)*
+- **Export CSV** — saves the current list to a file *(new in v1.3.0)*
+- Result count displayed after each query *(new in v1.3.0)*
+- Right-click any row → **Copy Row to Clipboard** *(new in v1.3.0)*
 
 ### Software Inventory tab
 - Enumerates installed software via **StdRegProv registry enumeration** (never `Win32_Product` which triggers MSI consistency repair)
 - Deduplicates across 32-bit and 64-bit uninstall keys
 - Optional search/filter
+- **Export CSV** + result count *(new in v1.3.0)*
 
 ### Hardware Inventory tab
 - Model, manufacturer, serial number, CPU, RAM, OS via CIM *(requires admin for WMI hardware classes)*
@@ -64,6 +69,7 @@ Start-LazyWinAdmin
 ### Network tab
 - All network adapters with IP, MAC, DHCP status, default gateway
 - Optional filter: IP-enabled adapters only
+- **Export CSV** + adapter count *(new in v1.3.0)*
 
 ### Identity tab — Local Accounts
 - Local users (no password hash exposure — `Password` property intentionally excluded)
@@ -99,7 +105,7 @@ Requires `ExchangeOnlineManagement` module and a one-time sign-in via the **Exch
 - **Grant Permissions** — grants FullAccess + SendAs on a specific mailbox to a user
 
 ### Governance & Compliance tab
-- **Intune** — list managed devices with compliance state, OS, model, serial
+- **Intune** — list managed devices with compliance state, OS, model, serial; **Export CSV** + device count *(count new in v1.3.0)*
 - **Intune Scripts** *(new in v1.2.0)* — browse and optionally download all scripts deployed via Intune (`deviceManagement/deviceManagementScripts`). Uses `Invoke-MgGraphRequest` against the beta endpoint — no deprecated `Microsoft.Graph.Intune` needed.
 - **Azure Resources** — resource type summary via `Search-AzGraph` (not `Get-AzResource`)
 
@@ -132,18 +138,18 @@ Click **Restart as Admin** in the status bar to relaunch elevated. Features that
 
 ```
 LazyWinAdminModule/
-├── LazyWinAdminModule.psd1     # Module manifest (v1.2.0, requires PS 7.4+)
+├── LazyWinAdminModule.psd1     # Module manifest (v1.3.0, requires PS 7.4+)
 ├── LazyWinAdminModule.psm1     # Root module — dot-sources all Private/Public files
 ├── Classes/
 │   └── ApplicationState.ps1   # LazyWinAdminState class: SyncHash, RunspacePool, CimSessions, UIQueue
-├── Private/                   # 22 private functions (CIM, Graph, Az, AD, Exchange, Compliance)
+├── Private/                   # 24 private functions (CIM, Graph, Az, AD, Exchange, Compliance)
 ├── Public/
 │   └── Start-LazyWinAdmin.ps1 # WPF window, async dispatch, all button handlers
 ├── UI/
 │   └── MainView.xaml          # WPF layout (11 tabs)
 └── Tests/
     ├── Integrity.Tests.ps1    # File structure, manifest, XAML, ApplicationState
-    ├── Functions.Tests.ps1    # All private functions (212 tests, 0 failures)
+    ├── Functions.Tests.ps1    # All private functions (228 tests, 0 failures)
     └── Run-Tests.ps1          # Test runner with summary output
 ```
 
@@ -180,7 +186,7 @@ pwsh -NoProfile -File .\LazyWinAdminModule\Tests\Run-Tests.ps1 -Output Detailed
 pwsh -NoProfile -File .\LazyWinAdminModule\Tests\Run-Tests.ps1 -Suite Integrity
 ```
 
-**212 tests, 0 failures.** Requires Pester 5.0+ (auto-installed by the runner if missing).
+**228 tests, 0 failures.** Requires Pester 5.0+ (auto-installed by the runner if missing).
 
 ---
 
@@ -197,6 +203,16 @@ pwsh -NoProfile -File .\LazyWinAdminModule\Tests\Run-Tests.ps1 -Suite Integrity
 ---
 
 ## Version history
+
+### v1.3.0 — 2026 (2026 refactor & value-add pass)
+- **Service control** — Start, Stop, and Restart the selected service directly from the Services tab via new CIM-based `Invoke-ComputerServiceControl` private function *(requires admin)*
+- **Export to CSV** — "Export CSV" button on Services, Software, Network, Intune Devices, and Mailbox Permissions tabs; opens SaveFileDialog, writes UTF-8 CSV
+- **Result count labels** — all major list views now show "N item(s)" after each query (Services, Software, Network, Intune Devices, Mailbox Permissions)
+- **Status bar clock** — live `HH:mm:ss` display in the status bar (second DispatcherTimer, 1 s tick)
+- **Ping refactored** — now uses `Test-ComputerPort` (private function) instead of inline `Test-NetConnection`, consistent with the rest of the codebase
+- **Copy to Clipboard** — right-click any row in any ListView to copy the tab-separated values to the clipboard (context menu added to all 12 list views in code)
+- **16 new Pester tests** for `Invoke-ComputerServiceControl` (parameter validation, Start/Stop/Restart, non-zero return codes, error path, local routing)
+- 228 Pester v5 tests, 0 failures (up from 212)
 
 ### v1.2.0 — 2026
 - **Device Compliance tab** — check and remediate Location Services, OneDrive, Outlook external images, Windows Update active hours (dynamic), UWF state. Runs locally, no network required.

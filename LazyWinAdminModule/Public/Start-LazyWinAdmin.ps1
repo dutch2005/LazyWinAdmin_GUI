@@ -130,6 +130,22 @@ function Start-LazyWinAdmin {
         $lblAdminStatus    = $window.FindName("lblAdminStatus")
         $btnRestartAdmin   = $window.FindName("btnRestartAdmin")
         $pbBusy            = $window.FindName("pbBusy")
+        $lblTime           = $window.FindName("lblTime")
+
+        # Service control and export controls (v1.3.0)
+        $lblServicesCount       = $window.FindName("lblServicesCount")
+        $btnStartService        = $window.FindName("btnStartService")
+        $btnStopService         = $window.FindName("btnStopService")
+        $btnRestartService      = $window.FindName("btnRestartService")
+        $btnExportServices      = $window.FindName("btnExportServices")
+        $lblSoftwareCount       = $window.FindName("lblSoftwareCount")
+        $btnExportSoftware      = $window.FindName("btnExportSoftware")
+        $lblNetworkCount        = $window.FindName("lblNetworkCount")
+        $btnExportNetwork       = $window.FindName("btnExportNetwork")
+        $lblIntuneDevicesCount  = $window.FindName("lblIntuneDevicesCount")
+        $btnExportIntuneDevices = $window.FindName("btnExportIntuneDevices")
+        $lblMailboxPermsCount   = $window.FindName("lblMailboxPermsCount")
+        $btnExportMailboxPerms  = $window.FindName("btnExportMailboxPerms")
 
         # --- ADMIN ELEVATION CHECK ---
         # Detect whether this process is running with local administrator rights.
@@ -336,6 +352,7 @@ function Start-LazyWinAdmin {
                     param($data)
                     $lvIntuneDevices.Items.Clear()
                     $data | ForEach-Object { $lvIntuneDevices.Items.Add($_) }
+                    $lblIntuneDevicesCount.Text = "$($lvIntuneDevices.Items.Count) device(s)"
                 }
         })
 
@@ -418,13 +435,14 @@ function Start-LazyWinAdmin {
             if (-not ($RequireComputerName.Invoke())) { return }
             $comp = $txtComputerName.Text
             Invoke-AsyncAction `
+                -InitializationScript ([scriptblock]::Create(". '$PrivatePath\Test-ComputerPort.ps1'")) `
                 -Parameters  @{ t = $comp } `
                 -ScriptBlock {
                     # Test WinRM port 5985 — ICMP ping alone does not confirm remote management
                     # is available. This is the actual transport CIM uses.
-                    $tcpTest = Test-NetConnection -ComputerName $t -Port 5985 -WarningAction SilentlyContinue
-                    if ($tcpTest.TcpTestSucceeded) { "[OK] $t online (WinRM port 5985 reachable)" }
-                    else                           { "[!] $t — WinRM port 5985 not reachable"     }
+                    $result = Test-ComputerPort -ComputerName $t -Port 5985 -TimeoutMs 3000
+                    if ($result -eq 'Open') { "[OK] $t online (WinRM port 5985 reachable)" }
+                    else                    { "[!] $t — WinRM port 5985 not reachable ($result)" }
                 } `
                 -OnCompleted {
                     param($res) $AppendOutput.Invoke($res)
@@ -484,6 +502,7 @@ function Start-LazyWinAdmin {
                     param($data)
                     $lvServices.Items.Clear()
                     $data | ForEach-Object { $lvServices.Items.Add($_) }
+                    $lblServicesCount.Text = "$($lvServices.Items.Count) service(s)"
                 }
         })
 
@@ -498,6 +517,70 @@ function Start-LazyWinAdmin {
                     param($data)
                     $lvServices.Items.Clear()
                     $data | ForEach-Object { $lvServices.Items.Add($_) }
+                    $lblServicesCount.Text = "$($lvServices.Items.Count) service(s)"
+                }
+        })
+
+        $btnStartService.Add_Click({
+            if (-not ($RequireComputerName.Invoke())) { return }
+            $selected = $lvServices.SelectedItem
+            if ($null -eq $selected) {
+                $lblStatus.Text = "[!] Select a service from the list first."
+                return
+            }
+            $comp    = $txtComputerName.Text
+            $svcName = $selected.Name
+            Invoke-AsyncAction `
+                -InitializationScript ([scriptblock]::Create(". '$PrivatePath\Invoke-ComputerServiceControl.ps1'")) `
+                -Parameters  @{ computerName = $comp; serviceName = $svcName; action = 'Start' } `
+                -ScriptBlock { Invoke-ComputerServiceControl -ComputerName $computerName -ServiceName $serviceName -Action $action } `
+                -OnCompleted {
+                    param($res)
+                    $AppendOutput.Invoke("[Service] $res")
+                    $lblStatus.Text = $res
+                    if ($res -match '^Error:') { $AdminHint.Invoke($comp) }
+                }
+        })
+
+        $btnStopService.Add_Click({
+            if (-not ($RequireComputerName.Invoke())) { return }
+            $selected = $lvServices.SelectedItem
+            if ($null -eq $selected) {
+                $lblStatus.Text = "[!] Select a service from the list first."
+                return
+            }
+            $comp    = $txtComputerName.Text
+            $svcName = $selected.Name
+            Invoke-AsyncAction `
+                -InitializationScript ([scriptblock]::Create(". '$PrivatePath\Invoke-ComputerServiceControl.ps1'")) `
+                -Parameters  @{ computerName = $comp; serviceName = $svcName; action = 'Stop' } `
+                -ScriptBlock { Invoke-ComputerServiceControl -ComputerName $computerName -ServiceName $serviceName -Action $action } `
+                -OnCompleted {
+                    param($res)
+                    $AppendOutput.Invoke("[Service] $res")
+                    $lblStatus.Text = $res
+                    if ($res -match '^Error:') { $AdminHint.Invoke($comp) }
+                }
+        })
+
+        $btnRestartService.Add_Click({
+            if (-not ($RequireComputerName.Invoke())) { return }
+            $selected = $lvServices.SelectedItem
+            if ($null -eq $selected) {
+                $lblStatus.Text = "[!] Select a service from the list first."
+                return
+            }
+            $comp    = $txtComputerName.Text
+            $svcName = $selected.Name
+            Invoke-AsyncAction `
+                -InitializationScript ([scriptblock]::Create(". '$PrivatePath\Invoke-ComputerServiceControl.ps1'")) `
+                -Parameters  @{ computerName = $comp; serviceName = $svcName; action = 'Restart' } `
+                -ScriptBlock { Invoke-ComputerServiceControl -ComputerName $computerName -ServiceName $serviceName -Action $action } `
+                -OnCompleted {
+                    param($res)
+                    $AppendOutput.Invoke("[Service] $res")
+                    $lblStatus.Text = $res
+                    if ($res -match '^Error:') { $AdminHint.Invoke($comp) }
                 }
         })
 
@@ -514,6 +597,7 @@ function Start-LazyWinAdmin {
                     param($data)
                     $lvSoftware.Items.Clear()
                     $data | ForEach-Object { $lvSoftware.Items.Add($_) }
+                    $lblSoftwareCount.Text = "$($lvSoftware.Items.Count) application(s)"
                 }
         })
 
@@ -566,6 +650,7 @@ function Start-LazyWinAdmin {
                     param($data)
                     $lvNetwork.Items.Clear()
                     $data | ForEach-Object { $lvNetwork.Items.Add($_) }
+                    $lblNetworkCount.Text = "$($lvNetwork.Items.Count) adapter(s)"
                 }
         })
 
@@ -817,7 +902,9 @@ function Start-LazyWinAdmin {
                     $lvMailboxPerms.Items.Clear()
                     if ($data) {
                         $data | ForEach-Object { $lvMailboxPerms.Items.Add($_) }
+                        $lblMailboxPermsCount.Text = "$($lvMailboxPerms.Items.Count) mailbox(es)"
                     } else {
+                        $lblMailboxPermsCount.Text = "0 mailbox(es)"
                         $AppendOutput.Invoke("[Exchange] No shared mailbox permissions found for $upn.")
                     }
                 }
@@ -907,6 +994,69 @@ function Start-LazyWinAdmin {
                 }
         })
 
+        # --- EXPORT CSV HELPER ---
+        # Opens a SaveFileDialog and writes all ListView items to a UTF-8 CSV file.
+        # Runs synchronously on the UI thread — no async needed (file dialog is modal).
+        $ExportListViewToCsv = {
+            param([System.Windows.Controls.ListView]$lv, [string]$defaultName)
+            if ($lv.Items.Count -eq 0) {
+                $lblStatus.Text = "[!] No data to export — run a query first."
+                return
+            }
+            $dialog            = [Microsoft.Win32.SaveFileDialog]::new()
+            $dialog.Filter     = "CSV Files (*.csv)|*.csv"
+            $dialog.FileName   = $defaultName
+            $dialog.DefaultExt = ".csv"
+            if ($dialog.ShowDialog() -eq $true) {
+                try {
+                    $lv.Items | Export-Csv -Path $dialog.FileName -NoTypeInformation -Encoding UTF8 -Force
+                    $lblStatus.Text = "Exported $($lv.Items.Count) row(s) to $($dialog.FileName)"
+                    $AppendOutput.Invoke("[Export] Saved $($lv.Items.Count) row(s) to $($dialog.FileName)")
+                }
+                catch {
+                    $lblStatus.Text = "[!] Export failed: $($_.Exception.Message)"
+                }
+            }
+        }
+
+        $btnExportServices.Add_Click({
+            $ExportListViewToCsv.Invoke($lvServices, "services_$($txtComputerName.Text)_$(Get-Date -Format yyyyMMdd).csv")
+        })
+        $btnExportSoftware.Add_Click({
+            $ExportListViewToCsv.Invoke($lvSoftware, "software_$($txtComputerName.Text)_$(Get-Date -Format yyyyMMdd).csv")
+        })
+        $btnExportNetwork.Add_Click({
+            $ExportListViewToCsv.Invoke($lvNetwork, "network_$($txtComputerName.Text)_$(Get-Date -Format yyyyMMdd).csv")
+        })
+        $btnExportIntuneDevices.Add_Click({
+            $ExportListViewToCsv.Invoke($lvIntuneDevices, "intune_devices_$(Get-Date -Format yyyyMMdd).csv")
+        })
+        $btnExportMailboxPerms.Add_Click({
+            $ExportListViewToCsv.Invoke($lvMailboxPerms, "mailbox_perms_$(Get-Date -Format yyyyMMdd).csv")
+        })
+
+        # --- CLIPBOARD CONTEXT MENUS ---
+        # Right-click any ListView row → "Copy Row to Clipboard" (tab-separated values).
+        # Uses PlacementTarget from the ContextMenu to avoid closure variable capture issues.
+        foreach ($lv in @($lvServices, $lvSoftware, $lvNetwork, $lvLocalAccounts,
+                           $lvEntraIdentity, $lvAdResults, $lvIntuneDevices, $lvIntuneScripts,
+                           $lvHwDisks, $lvComplianceStatus, $lvMailboxPerms, $lvAzureResources)) {
+            $ctxMenu  = [System.Windows.Controls.ContextMenu]::new()
+            $copyItem = [System.Windows.Controls.MenuItem]::new()
+            $copyItem.Header = "Copy Row to Clipboard"
+            $copyItem.Add_Click({
+                $listView = $this.Parent.PlacementTarget
+                if ($null -ne $listView.SelectedItem) {
+                    $values = $listView.SelectedItem.PSObject.Properties |
+                              Where-Object { $_.MemberType -eq 'NoteProperty' } |
+                              ForEach-Object { $_.Value }
+                    [System.Windows.Clipboard]::SetText(($values -join "`t"))
+                }
+            })
+            $ctxMenu.Items.Add($copyItem) | Out-Null
+            $lv.ContextMenu = $ctxMenu
+        }
+
         # DispatcherTimer — drains the UI callback queue on the WPF thread every 50 ms.
         # Background jobs enqueue their results via Register-ObjectEvent actions.
         # The timer dequeues and calls OnCompleted callbacks here, on the UI thread,
@@ -922,6 +1072,12 @@ function Start-LazyWinAdmin {
             }
         })
         $uiTimer.Start()
+
+        # Clock timer — updates the status bar time display every second.
+        $clockTimer          = [System.Windows.Threading.DispatcherTimer]::new()
+        $clockTimer.Interval = [TimeSpan]::FromSeconds(1)
+        $clockTimer.Add_Tick({ $lblTime.Text = (Get-Date).ToString('HH:mm:ss') })
+        $clockTimer.Start()
 
         $window.ShowDialog() | Out-Null
     }
