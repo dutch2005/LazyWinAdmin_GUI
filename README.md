@@ -1,185 +1,247 @@
-# LazyWinAdmin_GUI
-LazyWinAdmin is a project released in 2012, a PowerShell Script that generates a GUI/WinForms loaded with tons of functions.
-This utility is very helpful for anyone managing workstations or servers. I hope this help you in your day to day tasks.
+# LazyWinAdmin — Modernized 2026 Edition
 
-The Form was created using Sapien Powershell Studio 2012.
+A complete modernisation of the classic LazyWinAdmin (2012) PowerShell GUI tool, rebuilt from scratch as a native **PowerShell 7.4+ WPF module**. Manages Windows workstations and servers through a clean tabbed interface with async operations, cloud integration, and a full Pester v5 test suite.
 
-![alt text](/Media/lwa-v0.4-main01.png "LazyWinAdmin")
+![LazyWinAdmin 2026](/Media/lwa-v0.4-main01.png)
+
+---
 
 ## Requirements
- * Powershell 2.0
- * Permission on the targeted System(s)
 
-## Optional tools
- * External Tools
-  * SystemInfo.exe
-  * DriverQuery
-  * AdExplorer -  http://technet.microsoft.com/en-us/sysinternals/bb963907.aspx
-  * PSExec - http://technet.microsoft.com/en-us/sysinternals/bb897553.aspx
-  * PAExec - http://www.poweradmin.com/PAExec/
-  * WMIExplorer.ps1 - http://gallery.technet.microsoft.com/scriptcenter/89c759b7-20b4-49e8-98a8-3c8fbdb2dd69
- * Scripts
-  * sydi-server.vbs - http://sydiproject.com/products/sydi-server/
-  * WmiExplorer.ps1
+| Requirement | Details |
+|---|---|
+| PowerShell | 7.4 or newer |
+| OS | Windows 10 / 11 / Server 2019+ |
+| .NET | Included with PS 7.4+ |
+| Microsoft Graph modules | `Microsoft.Graph.Authentication`, `.Users`, `.Groups`, `.DeviceManagement` |
+| Azure modules | `Az.Accounts`, `Az.ResourceGraph` |
+| Exchange (optional) | `ExchangeOnlineManagement` — required for the Exchange tab |
+| RSAT (optional) | `Rsat.ActiveDirectory` — required for the Active Directory tab |
 
-## Contributions
-You are welcome to contribute. Refer to the License for details.
+---
 
+## Quick Start
 
-## Version History
+```powershell
+# Install required modules (first time only)
+Install-Module Microsoft.Graph.Authentication, Microsoft.Graph.Users, `
+    Microsoft.Graph.Groups, Microsoft.Graph.DeviceManagement, `
+    Az.Accounts, Az.ResourceGraph -Scope CurrentUser
+
+# Optional: Exchange tab
+Install-Module ExchangeOnlineManagement -Scope CurrentUser
+
+# Import and launch
+Import-Module .\LazyWinAdminModule\LazyWinAdminModule.psd1 -Force
+Start-LazyWinAdmin
 ```
-2011.06.29
-	-Added link to Powershell ISE
-2011.06.26
-	-RDP Check/Enable/Disable Added
-2011.06.24
-	-Added Application List, PSRemoting, Inventory Buttons moved in TOOLS
-	-Services - AutoNotStarted - Check if all the services with StartMode AUTOMATIC are actually Running
-	-Services - Auto - Removed ProcessID in results
-2011.06.30
-	-Fixed the Problems with Start/Stop Service buttons
-	-Add AutoComplete (Append and Suggest) (need to fill the computers.txt)
-	-Add AutoDisable Buttons/TabControl if not Server Entered
-	-Add Get-USB - Report all the USB device on the Computer
-2011.08.11
-	-Correct Compmgmt.msc button
-2011.08.15
-	-Title bar with current username and domain
-	-Change font from Microsoft Sans cherif to Trebuchet MS
-	-Scroll to bottom when text is changed
-	-ADD more logs to buttons
-2011.08.30
-	-ADD ErrorProvider on TextBox ComputerName
-2011.08.31
-	-SYDI Works (only .DOC for now)
-	-ADD the tool SysInternals AdExplorer
-2011.10.02
-	-FIX Query/Stop/Start Service buttons
-	-ADD Descriptions in logs RichTextBox for Query/Stop/Start Service buttons
-	-CHANGE Button :80 to HTTP
-	-ADD FTP, TELNET, HTTPS buttons
-2011.10.04
-	-FIX some problem with Uptime Button
-	-FIX Modified The Service Query/start/stop
-	-ADD Restart Service Button
-	-ADD TextBox with AutoCompletion on some Services i added
-2011.10.06
-	-ERROR AutoCompletion in the TEXTBOX of Services seems to make the thing crash :-(
-2011.10.23
-	-REMOVE AutoCompletion in Service Tab, in ServiceName TextBox
-	-ADD Get Local Hosts File (Menu: LocalHost/Hosts File)
-	-ADD Get Remote Hosts File (in General Tab,need permission on remote c$)
-	-REMOVE Computers.txt auto-completion, seems buggy :-(
-	-ADD Active Directory Form
-	-ADD IP Calculator Form
-2011.11.24
-	-FIX ENTER-PSSESSION button.
-2011.12.05
-	-REPLACED some function by button with icons below Computername
-	-MOVED the TEST-PSSESSION button to TOOL tab
-	-ADD the TEST-PSSESSION inside the ENTER-PSSESSION button. (2 in 1 :)
-2011.12.26
-	-MODIFY Inventory button and output (add more info)
-	-MODIFY IpConfig to use the one from BSonPosh module
-2011.12.28
-	-ADD button IPCONFIG, DISK USAGE
-2012.01.06
-	-ADD START COMMANDS in General Tab
-	-ADD SYDI option (dropdown) to choose DOC or XML format.
-	-ADD Combobox in TOOLS Tab, and ADD the present tools in combobox
-	-REMOVE Buttons in TOOLS tab (the ones placed in Combobox)
-	-FIX the ContextMenuStrip on TextBox SERVERNAME.
-	-ADD option of type for SYDI (DOC or XML)
-2012.01.29
-	-FIX the names of all the variables (for Winforms controls only)
-	-ADD Qwinsta and Rwinsta to contextmenu of computername textbox
-	-FIX SYDI (DOC and XML now work) auto-save on Desktop of Current User
-	-FIX "Installed Applications" show the full names of each application,vendors and versions.
-2012.01.31
-	-ADD Connectivity Testing Button (Remote registry, ping, RPC, RDP, WsMan)
-	-ADD another more info to ipconfig button
-2012.02.02
-	-ADD Invoke-item in SYDI to open the Explorer
-2012.04.09
-	-Remove Button Test PsRemoting
-	-Moved "Generate a Password" under AdminArsenal Menu
-	-Delete Menu TOOLS
-	-Change the size of Author Form (smaller)
-2012.04.10
-	-Redesign a bit the interface
-	-Add a few tabs (Software, Other Powershell script, external tools)
-	-Add a Panel for basic connectivity test and properties
-	-Correct Logs RichTextBox, fix error "Property ENABLED does not exist"
-	-Add some colors to the Connectivity Panel (OK: green, FAIL: red, other: blue)
-	-Add PAExec and PSexec in the TOOLS directory, Button are in the tab "External tools".
-	 by default, it will launch a CMD.exe
-	-Moved all the external tools (tools that are not Powershell) under "External Tools"
-2012.04.14
-	-Add ActiveDirectory Tab
-	-Add GPUpdate function, Tab "Active Directory"
-	-Remove EMAIL options
-	-Remove NOTEPAD button (export of richtextbox)
-	-Add EXPORT RTF button (open in wordpad)
-	-Comment all the "Clear-RichTextBox" function use
-	-Rename the COPY button (close to the richtextbox) to ClipBoard
-	-Move EXIT button to the bottom.
-	-Remove PASTE button
-2012.04.17
-	-MODIFY Function Add-Logs (Alias, Add the return to line)
-	-MODIFY Function Add-RichTextBox (Alias, Add the return to line
-	-FIX the ComputersList Load.
-	-Clean some variable and add comments of the mainform script.
-	-ADD a SCRIPTS folder with the variable: $ScriptsPath
-2012.04.18
-	-Upgraded my PrimalForms 2011 to PowerShell Studio 2012
-	-Remove the ListBox from the Beta and readd the buttons
-2012.04.20
-	-Ability to Maximize the windows (i used WinForm Docking/Move Front,Back)
-2012.05.12
-	-Cleaning Some code
-	-Fixes some bugs
-	-Remove unused Functions
-	-Checking if tools are present when the form load, disable buttons if not present.
-	-Add MotherBoard,PageFile Settings, System Type buttons
-	-AD KMS Information, FSMO
-2012.05.16
-	-Adding functions BackgroundJobs for long process(not used yet)
-2012.05.17
-	-Renaming a couple of buttons and add ToolTip Info for each.
-	-Modify Ipconfig button under Network, only one result come out now
-	-Remove the ROUTE PRINT button form Network, kept only ROUTE TABLE
-	-Add a button to show Process CommandLine Argument (command line used to launch each process)
-	-Modify Button CommandLine with Out-String Width = $richtextbox.width
-	-Modify Button Shares with Out-String Width = $richtextbox.width
-	-CTRL+Scroll in the RichTextBox is working now
-	-Richtextbox dont overlap on middle bar anymore (middle bar=buttons exit,copy clipboard...)
-	-Add Button to change and set local Computer Description
-	-Add Button to change and set Active Directory Computer Description
-2012.05.28
-	-Getting ready for a public open source version
-	-Remove and move a couple of function, tabs and unused buttons
-	-Add Tip info on most of the button (pass over button help)
-	-Add WindowsUpdate.log and ReportingEvents.log Button
-	-Fix Open C$ button
-	-Icons added to the main functions
-	-OnLoad of the Form, the script will test the path of the scrtips and External tools
-	 if not present, the script will disable the buttons
-	-Load of Computers.txt works with an Export to PS1 (not with Export to EXE)
-2012.05.30
-	-Corrected color of the check buttons
-	-Corrected the Restart and Shutdown button to have a prompt.
-	-Corrected MsINFO32.exe check (during the load of the form)
-2012.06.06
-	-Changed some Icons
-	-Add confirmation on EXIT Button
-2012.06.07
-	-Press Enter on ComputerTxtBox will ping the machine
-	-Modified the CHECK, now the full OS information is returned
-2012.06.10
-	-Fixed the directory issue (scripts tools)
-2012.06.13
-	-Renamed the forms
-	-Removed the form "LocalHost Current information"
-	-Fix Qwinsta and Rwinsta, if and else based on 32 or 64bits now
-	-Align the CHECK textboxes
+
+> **Tip:** Some features (hardware inventory, RDP toggle, registry writes) require local Administrator rights. The status bar shows your elevation level and offers a **Restart as Admin** button when needed.
+
+---
+
+## Features
+
+### System & Network tab
+- **Ping** — tests WinRM port 5985 reachability (the actual transport used by CIM)
+- **Get Uptime** — last boot time formatted as `D Days H Hours M Minutes S Seconds`
+- **Enable / Disable RDP** — toggles `fDenyTSConnections` registry key and Windows Firewall rule group *(requires admin)*
+
+### Services tab
+- List all services or filter to stopped-but-auto-start services
+- Search by service name
+- **Start / Stop / Restart** the selected service *(requires admin)* *(new in v1.3.0)*
+- **Export CSV** — saves the current list to a file *(new in v1.3.0)*
+- Result count displayed after each query *(new in v1.3.0)*
+- Right-click any row → **Copy Row to Clipboard** *(new in v1.3.0)*
+
+### Software Inventory tab
+- Enumerates installed software via **StdRegProv registry enumeration** (never `Win32_Product` which triggers MSI consistency repair)
+- Deduplicates across 32-bit and 64-bit uninstall keys
+- Optional search/filter
+- **Export CSV** + result count *(new in v1.3.0)*
+
+### Hardware Inventory tab
+- Model, manufacturer, serial number, CPU, RAM, OS via CIM *(requires admin for WMI hardware classes)*
+- Motherboard product, serial, version
+- Disk inventory with size/free/percent
+
+### Network tab
+- All network adapters with IP, MAC, DHCP status, default gateway
+- Optional filter: IP-enabled adapters only
+- **Export CSV** + adapter count *(new in v1.3.0)*
+
+### Identity tab — Local Accounts
+- Local users (no password hash exposure — `Password` property intentionally excluded)
+- Local groups
+
+### Identity tab — Entra ID (Cloud)
+- Users and groups from **Microsoft Entra ID** via Microsoft Graph
+- OData injection guard on search terms
+- Requires cloud authentication (Cloud Auth tab)
+
+### Identity tab — Active Directory
+- Computer, user, and group queries via RSAT
+- LDAP injection guard on AdFilter
+- `SamAccountName` excluded from user results (PII protection)
+- Requires RSAT ActiveDirectory module
+
+### Device Compliance tab *(new in v1.2.0)*
+Reads and remediates local device compliance settings — no network required:
+
+| Check | Remediation |
+|---|---|
+| Location Services | Re-enables the `lfsvc` service and clears policy overrides |
+| OneDrive | Uninstalls OneDrive client cleanly (process + registry + files) |
+| Outlook External Images | Sets the registry flag that blocks automatic external image loading |
+| Windows Update active hours | Writes configurable start/end hours to HKLM (dynamic — enter any 0-23 value) |
+| UWF (Unified Write Filter) | Reports current UWF state (read-only — no remediation needed) |
+
+### Exchange tab *(new in v1.2.0)*
+Requires `ExchangeOnlineManagement` module and a one-time sign-in via the **Exchange › Connection** sub-tab.
+
+- **View Mailbox Permissions** — lists all shared mailboxes a user has FullAccess or SendAs on
+- **Mirror Permissions** — copies all mailbox permissions from a source user to a target user
+- **Grant Permissions** — grants FullAccess + SendAs on a specific mailbox to a user
+
+### Governance & Compliance tab
+- **Intune** — list managed devices with compliance state, OS, model, serial; **Export CSV** + device count *(count new in v1.3.0)*
+- **Intune Scripts** *(new in v1.2.0)* — browse and optionally download all scripts deployed via Intune (`deviceManagement/deviceManagementScripts`). Uses `Invoke-MgGraphRequest` against the beta endpoint — no deprecated `Microsoft.Graph.Intune` needed.
+- **Azure Resources** — resource type summary via `Search-AzGraph` (not `Get-AzResource`)
+
+### Registry tab
+- Read, write, and delete registry values via StdRegProv CIM
+- Supports String, DWord, QWord, ExpandString, MultiString
+- Hives: HKLM, HKCU, HKU, HKCR *(writes to HKLM require admin)*
+
+### Cloud Auth tab
+- Interactive sign-in via **Microsoft Graph** (`Connect-MgGraph`)
+- Service principal sign-in (Tenant ID + Client ID + Client Secret)
+- Connection state tracked in `$state.SyncHash.CloudConnected` — cloud feature buttons blocked with a friendly message when not authenticated
+
+---
+
+## Admin elevation
+
+The status bar always shows your elevation level:
+
+| Status | Meaning |
+|---|---|
+| `Administrator` (green) | Full functionality available |
+| `(!) Standard User` (amber) | Hardware, RDP, and registry writes may fail |
+
+Click **Restart as Admin** in the status bar to relaunch elevated. Features that fail due to insufficient rights display a clear hint in the output box.
+
+---
+
+## Architecture
+
 ```
+LazyWinAdminModule/
+├── LazyWinAdminModule.psd1     # Module manifest (v1.3.0, requires PS 7.4+)
+├── LazyWinAdminModule.psm1     # Root module — dot-sources all Private/Public files
+├── Classes/
+│   └── ApplicationState.ps1   # LazyWinAdminState class: SyncHash, RunspacePool, CimSessions, UIQueue
+├── Private/                   # 24 private functions (CIM, Graph, Az, AD, Exchange, Compliance)
+├── Public/
+│   └── Start-LazyWinAdmin.ps1 # WPF window, async dispatch, all button handlers
+├── UI/
+│   └── MainView.xaml          # WPF layout (11 tabs)
+└── Tests/
+    ├── Integrity.Tests.ps1    # File structure, manifest, XAML, ApplicationState
+    ├── Functions.Tests.ps1    # All private functions (228 tests, 0 failures)
+    └── Run-Tests.ps1          # Test runner with summary output
+```
+
+### Async pattern
+
+All button actions run in background thread jobs via `Start-ThreadJob`. Completed results are enqueued into a `ConcurrentQueue` by a `Register-ObjectEvent` handler, then dequeued by a `DispatcherTimer` (50 ms tick) running on the WPF UI thread. This eliminates all cross-thread delegate issues and ensures the UI never blocks — even when multiple jobs complete simultaneously.
+
+> **v1.1.x note:** Earlier versions used `Dispatcher.InvokeAsync([action]{…})` which proved fragile under certain runspace/closure conditions. The ConcurrentQueue pattern replaces it entirely.
+
+### Local CIM routing *(fixed in v1.2.0)*
+
+In PowerShell 7+, `Get-CimInstance -ComputerName localhost` routes through WSMan (WinRM) even for the local machine. If WinRM is not running, CIM jobs stall for the full connection timeout (30 s), saturate the `Start-ThreadJob` pool (5 slots), and freeze the UI. All CIM-based private functions now detect a local target and omit `-ComputerName` entirely, using a direct in-process CIM session instead.
+
+### Pre-flight guards
+
+| Guard | Blocks |
+|---|---|
+| `$RequireComputerName` | Any CIM operation when the computer name field is empty |
+| `$RequireCloudSession` | Any Graph/Azure operation when not authenticated |
+| `$RequireExchangeSession` | Any Exchange operation when Exchange is not connected |
+
+---
+
+## Running the tests
+
+```powershell
+# Summary output
+pwsh -NoProfile -File .\LazyWinAdminModule\Tests\Run-Tests.ps1
+
+# Detailed output
+pwsh -NoProfile -File .\LazyWinAdminModule\Tests\Run-Tests.ps1 -Output Detailed
+
+# Single suite
+pwsh -NoProfile -File .\LazyWinAdminModule\Tests\Run-Tests.ps1 -Suite Integrity
+```
+
+**228 tests, 0 failures.** Requires Pester 5.0+ (auto-installed by the runner if missing).
+
+---
+
+## Dev launch configurations
+
+`.claude/launch.json` contains three configurations:
+
+| Name | Command |
+|---|---|
+| LazyWinAdmin GUI | `pwsh` → `Import-Module … ; Start-LazyWinAdmin` |
+| Pester Tests (Detailed) | `pwsh -File Run-Tests.ps1 -Output Detailed` |
+| Pester Tests (Normal) | `pwsh -File Run-Tests.ps1` |
+
+---
+
+## Version history
+
+### v1.3.0 — 2026 (2026 refactor & value-add pass)
+- **Service control** — Start, Stop, and Restart the selected service directly from the Services tab via new CIM-based `Invoke-ComputerServiceControl` private function *(requires admin)*
+- **Export to CSV** — "Export CSV" button on Services, Software, Network, Intune Devices, and Mailbox Permissions tabs; opens SaveFileDialog, writes UTF-8 CSV
+- **Result count labels** — all major list views now show "N item(s)" after each query (Services, Software, Network, Intune Devices, Mailbox Permissions)
+- **Status bar clock** — live `HH:mm:ss` display in the status bar (second DispatcherTimer, 1 s tick)
+- **Ping refactored** — now uses `Test-ComputerPort` (private function) instead of inline `Test-NetConnection`, consistent with the rest of the codebase
+- **Copy to Clipboard** — right-click any row in any ListView to copy the tab-separated values to the clipboard (context menu added to all 12 list views in code)
+- **16 new Pester tests** for `Invoke-ComputerServiceControl` (parameter validation, Start/Stop/Restart, non-zero return codes, error path, local routing)
+- 228 Pester v5 tests, 0 failures (up from 212)
+
+### v1.2.0 — 2026
+- **Device Compliance tab** — check and remediate Location Services, OneDrive, Outlook external images, Windows Update active hours (dynamic), UWF state. Runs locally, no network required.
+- **Exchange tab** — view, mirror, and grant mailbox permissions via Exchange Online. Requires `ExchangeOnlineManagement` module. Auth tracked separately from Graph (`$state.SyncHash.ExchangeConnected`).
+- **Intune Scripts sub-tab** — browse and download all Intune-deployed scripts via `deviceManagement/deviceManagementScripts` beta endpoint.
+- **CIM local routing fix** — all 10 CIM-based private functions now detect localhost targets and skip `-ComputerName`, eliminating WinRM dependency and the associated UI freeze.
+- **Async architecture fix** — replaced `Dispatcher.InvokeAsync([action]{…})` with `ConcurrentQueue` + `DispatcherTimer` (50 ms tick). Event handlers only enqueue; UI thread only dequeues. No cross-thread delegate issues possible.
+- **`$RequireExchangeSession` guard** — Exchange operations blocked with a clear message when Exchange is not connected.
+- 212 Pester v5 tests, 0 failures (up from 178)
+
+### v1.1.0 — 2026 (Modernized Edition)
+- Complete rewrite as a PowerShell 7.4+ WPF module
+- Async UI via `Start-ThreadJob` + `Register-ObjectEvent` — no blocking
+- Cloud integration: Entra ID (users/groups), Intune devices, Azure Resource Graph
+- Active Directory support (RSAT)
+- Admin elevation detection with Restart as Admin button
+- Registry CRUD via StdRegProv (no `Win32_Product`)
+- Pre-flight guards for cloud auth and computer name
+- OData/LDAP injection protection on all search inputs
+- 178 Pester v5 tests, 0 failures
+- `.claude/launch.json` dev launch configurations
+
+### v0.4 — 2012 (Original)
+- PowerShell 2.0 WinForms GUI built with Sapien PowerShell Studio 2012
+- On-premises only: services, software, hardware, network, AD, RDP, registry
+- See legacy source in `LazyWinAdmin/` and `Sources/`
+
+---
+
+## Contributing
+
+Contributions are welcome. See [LICENSE](LICENSE) for details.
