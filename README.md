@@ -15,6 +15,7 @@ A complete modernisation of the classic LazyWinAdmin (2012) PowerShell GUI tool,
 | .NET | Included with PS 7.4+ |
 | Microsoft Graph modules | `Microsoft.Graph.Authentication`, `.Users`, `.Groups`, `.DeviceManagement` |
 | Azure modules | `Az.Accounts`, `Az.ResourceGraph` |
+| Exchange (optional) | `ExchangeOnlineManagement` — required for the Exchange tab |
 | RSAT (optional) | `Rsat.ActiveDirectory` — required for the Active Directory tab |
 
 ---
@@ -26,6 +27,9 @@ A complete modernisation of the classic LazyWinAdmin (2012) PowerShell GUI tool,
 Install-Module Microsoft.Graph.Authentication, Microsoft.Graph.Users, `
     Microsoft.Graph.Groups, Microsoft.Graph.DeviceManagement, `
     Az.Accounts, Az.ResourceGraph -Scope CurrentUser
+
+# Optional: Exchange tab
+Install-Module ExchangeOnlineManagement -Scope CurrentUser
 
 # Import and launch
 Import-Module .\LazyWinAdminModule\LazyWinAdminModule.psd1 -Force
@@ -76,8 +80,27 @@ Start-LazyWinAdmin
 - `SamAccountName` excluded from user results (PII protection)
 - Requires RSAT ActiveDirectory module
 
+### Device Compliance tab *(new in v1.2.0)*
+Reads and remediates local device compliance settings — no network required:
+
+| Check | Remediation |
+|---|---|
+| Location Services | Re-enables the `lfsvc` service and clears policy overrides |
+| OneDrive | Uninstalls OneDrive client cleanly (process + registry + files) |
+| Outlook External Images | Sets the registry flag that blocks automatic external image loading |
+| Windows Update active hours | Writes configurable start/end hours to HKLM (dynamic — enter any 0-23 value) |
+| UWF (Unified Write Filter) | Reports current UWF state (read-only — no remediation needed) |
+
+### Exchange tab *(new in v1.2.0)*
+Requires `ExchangeOnlineManagement` module and a one-time sign-in via the **Exchange › Connection** sub-tab.
+
+- **View Mailbox Permissions** — lists all shared mailboxes a user has FullAccess or SendAs on
+- **Mirror Permissions** — copies all mailbox permissions from a source user to a target user
+- **Grant Permissions** — grants FullAccess + SendAs on a specific mailbox to a user
+
 ### Governance & Compliance tab
 - **Intune** — list managed devices with compliance state, OS, model, serial
+- **Intune Scripts** *(new in v1.2.0)* — browse and optionally download all scripts deployed via Intune (`deviceManagement/deviceManagementScripts`). Uses `Invoke-MgGraphRequest` against the beta endpoint — no deprecated `Microsoft.Graph.Intune` needed.
 - **Azure Resources** — resource type summary via `Search-AzGraph` (not `Get-AzResource`)
 
 ### Registry tab
@@ -109,24 +132,30 @@ Click **Restart as Admin** in the status bar to relaunch elevated. Features that
 
 ```
 LazyWinAdminModule/
-├── LazyWinAdminModule.psd1     # Module manifest (v1.1.0, requires PS 7.4+)
+├── LazyWinAdminModule.psd1     # Module manifest (v1.2.0, requires PS 7.4+)
 ├── LazyWinAdminModule.psm1     # Root module — dot-sources all Private/Public files
 ├── Classes/
-│   └── ApplicationState.ps1   # LazyWinAdminState class: SyncHash, RunspacePool, CimSessions
-├── Private/                   # 16 private functions (CIM, Graph, Az, AD)
+│   └── ApplicationState.ps1   # LazyWinAdminState class: SyncHash, RunspacePool, CimSessions, UIQueue
+├── Private/                   # 22 private functions (CIM, Graph, Az, AD, Exchange, Compliance)
 ├── Public/
 │   └── Start-LazyWinAdmin.ps1 # WPF window, async dispatch, all button handlers
 ├── UI/
-│   └── MainView.xaml          # WPF layout
+│   └── MainView.xaml          # WPF layout (11 tabs)
 └── Tests/
     ├── Integrity.Tests.ps1    # File structure, manifest, XAML, ApplicationState
-    ├── Functions.Tests.ps1    # All 16 private functions (178 tests, 0 failures)
+    ├── Functions.Tests.ps1    # All private functions (212 tests, 0 failures)
     └── Run-Tests.ps1          # Test runner with summary output
 ```
 
 ### Async pattern
 
-All button actions run in background thread jobs via `Start-ThreadJob`. Results are marshalled back to the WPF UI thread using `Register-ObjectEvent` on the job's `StateChanged` event and `Dispatcher.Invoke`. The UI never blocks.
+All button actions run in background thread jobs via `Start-ThreadJob`. Completed results are enqueued into a `ConcurrentQueue` by a `Register-ObjectEvent` handler, then dequeued by a `DispatcherTimer` (50 ms tick) running on the WPF UI thread. This eliminates all cross-thread delegate issues and ensures the UI never blocks — even when multiple jobs complete simultaneously.
+
+> **v1.1.x note:** Earlier versions used `Dispatcher.InvokeAsync([action]{…})` which proved fragile under certain runspace/closure conditions. The ConcurrentQueue pattern replaces it entirely.
+
+### Local CIM routing *(fixed in v1.2.0)*
+
+In PowerShell 7+, `Get-CimInstance -ComputerName localhost` routes through WSMan (WinRM) even for the local machine. If WinRM is not running, CIM jobs stall for the full connection timeout (30 s), saturate the `Start-ThreadJob` pool (5 slots), and freeze the UI. All CIM-based private functions now detect a local target and omit `-ComputerName` entirely, using a direct in-process CIM session instead.
 
 ### Pre-flight guards
 
@@ -134,6 +163,7 @@ All button actions run in background thread jobs via `Start-ThreadJob`. Results 
 |---|---|
 | `$RequireComputerName` | Any CIM operation when the computer name field is empty |
 | `$RequireCloudSession` | Any Graph/Azure operation when not authenticated |
+| `$RequireExchangeSession` | Any Exchange operation when Exchange is not connected |
 
 ---
 
@@ -150,7 +180,7 @@ pwsh -NoProfile -File .\LazyWinAdminModule\Tests\Run-Tests.ps1 -Output Detailed
 pwsh -NoProfile -File .\LazyWinAdminModule\Tests\Run-Tests.ps1 -Suite Integrity
 ```
 
-**178 tests, 0 failures.** Requires Pester 5.0+ (auto-installed by the runner if missing).
+**212 tests, 0 failures.** Requires Pester 5.0+ (auto-installed by the runner if missing).
 
 ---
 
@@ -167,6 +197,15 @@ pwsh -NoProfile -File .\LazyWinAdminModule\Tests\Run-Tests.ps1 -Suite Integrity
 ---
 
 ## Version history
+
+### v1.2.0 — 2026
+- **Device Compliance tab** — check and remediate Location Services, OneDrive, Outlook external images, Windows Update active hours (dynamic), UWF state. Runs locally, no network required.
+- **Exchange tab** — view, mirror, and grant mailbox permissions via Exchange Online. Requires `ExchangeOnlineManagement` module. Auth tracked separately from Graph (`$state.SyncHash.ExchangeConnected`).
+- **Intune Scripts sub-tab** — browse and download all Intune-deployed scripts via `deviceManagement/deviceManagementScripts` beta endpoint.
+- **CIM local routing fix** — all 10 CIM-based private functions now detect localhost targets and skip `-ComputerName`, eliminating WinRM dependency and the associated UI freeze.
+- **Async architecture fix** — replaced `Dispatcher.InvokeAsync([action]{…})` with `ConcurrentQueue` + `DispatcherTimer` (50 ms tick). Event handlers only enqueue; UI thread only dequeues. No cross-thread delegate issues possible.
+- **`$RequireExchangeSession` guard** — Exchange operations blocked with a clear message when Exchange is not connected.
+- 212 Pester v5 tests, 0 failures (up from 178)
 
 ### v1.1.0 — 2026 (Modernized Edition)
 - Complete rewrite as a PowerShell 7.4+ WPF module

@@ -13,11 +13,18 @@ class LazyWinAdminState {
 
     LazyWinAdminState() {
         $this.SyncHash = [hashtable]::Synchronized(@{})
-        $this.SyncHash.Logs           = [System.Collections.ArrayList]::new()
-        $this.SyncHash.IsBusy         = $false
+        $this.SyncHash.Logs             = [System.Collections.ArrayList]::new()
+        $this.SyncHash.IsBusy           = $false
         # Set to $true by the cloud-auth OnCompleted handler once [OK] is returned.
         # Read by $RequireCloudSession guard in button handlers before dispatching async work.
-        $this.SyncHash.CloudConnected = $false
+        $this.SyncHash.CloudConnected   = $false
+        # Set to $true by the Exchange OnCompleted handler after a successful connection.
+        # Read by $RequireExchangeSession guard.
+        $this.SyncHash.ExchangeConnected = $false
+        # Thread-safe queue drained by the DispatcherTimer on the WPF UI thread.
+        # Register-ObjectEvent actions enqueue completed job results here instead of
+        # calling Dispatcher.InvokeAsync, avoiding all cross-thread delegate issues.
+        $this.SyncHash.UIQueue          = [System.Collections.Concurrent.ConcurrentQueue[object]]::new()
 
         $this.CimSessions = [hashtable]::Synchronized(@{})
 

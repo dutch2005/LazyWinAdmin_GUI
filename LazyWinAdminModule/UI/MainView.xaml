@@ -15,6 +15,7 @@
         </StackPanel>
 
         <TabControl Grid.Row="1" Background="Transparent" BorderThickness="0">
+
             <!-- TAB 1: CORE SYSTEM -->
             <TabItem Header="System &amp; Network">
                 <Grid Margin="10">
@@ -35,7 +36,7 @@
                         </Button>
                     </StackPanel>
                     <GroupBox Grid.Row="1" Header="System Output" Padding="5">
-                        <TextBox Name="txtOutput" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" 
+                        <TextBox Name="txtOutput" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
                                  FontFamily="Consolas" Background="#FFFFFF" Padding="10"/>
                     </GroupBox>
                 </Grid>
@@ -57,11 +58,11 @@
                     <ListView Name="lvServices" Grid.Row="1" Background="White">
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}" Width="150"/>
+                                <GridViewColumn Header="Name"         DisplayMemberBinding="{Binding Name}"        Width="150"/>
                                 <GridViewColumn Header="Display Name" DisplayMemberBinding="{Binding DisplayName}" Width="250"/>
-                                <GridViewColumn Header="Status" DisplayMemberBinding="{Binding State}" Width="80"/>
-                                <GridViewColumn Header="Start Mode" DisplayMemberBinding="{Binding StartMode}" Width="100"/>
-                                <GridViewColumn Header="Account" DisplayMemberBinding="{Binding StartName}" Width="150"/>
+                                <GridViewColumn Header="Status"       DisplayMemberBinding="{Binding State}"       Width="80"/>
+                                <GridViewColumn Header="Start Mode"   DisplayMemberBinding="{Binding StartMode}"   Width="100"/>
+                                <GridViewColumn Header="Account"      DisplayMemberBinding="{Binding StartName}"   Width="150"/>
                             </GridView>
                         </ListView.View>
                     </ListView>
@@ -83,9 +84,9 @@
                     <ListView Name="lvSoftware" Grid.Row="1" Background="White">
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}" Width="350"/>
-                                <GridViewColumn Header="Version" DisplayMemberBinding="{Binding Version}" Width="150"/>
-                                <GridViewColumn Header="Vendor" DisplayMemberBinding="{Binding Vendor}" Width="250"/>
+                                <GridViewColumn Header="Name"         DisplayMemberBinding="{Binding Name}"        Width="350"/>
+                                <GridViewColumn Header="Version"      DisplayMemberBinding="{Binding Version}"     Width="150"/>
+                                <GridViewColumn Header="Vendor"       DisplayMemberBinding="{Binding Vendor}"      Width="250"/>
                                 <GridViewColumn Header="Install Date" DisplayMemberBinding="{Binding InstallDate}" Width="150"/>
                             </GridView>
                         </ListView.View>
@@ -106,7 +107,6 @@
                             <Button.ToolTip>Requires local Administrator rights — WMI classes Win32_PhysicalMemory and Win32_DiskDrive are restricted to admins</Button.ToolTip>
                         </Button>
                     </StackPanel>
-                    
                     <GroupBox Header="System Summary" Grid.Row="1" Margin="0,0,0,10" Padding="10">
                         <UniformGrid Columns="2">
                             <StackPanel Margin="5">
@@ -135,15 +135,14 @@
                             </StackPanel>
                         </UniformGrid>
                     </GroupBox>
-
                     <GroupBox Header="Disk Space" Grid.Row="2" Padding="5">
                         <ListView Name="lvHwDisks">
                             <ListView.View>
                                 <GridView>
-                                    <GridViewColumn Header="Drive" DisplayMemberBinding="{Binding DeviceID}" Width="60"/>
-                                    <GridViewColumn Header="Total (GB)" DisplayMemberBinding="{Binding SizeGB}" Width="100"/>
-                                    <GridViewColumn Header="Free (GB)" DisplayMemberBinding="{Binding FreeGB}" Width="100"/>
-                                    <GridViewColumn Header="Free (%)" DisplayMemberBinding="{Binding PercentFree}" Width="80"/>
+                                    <GridViewColumn Header="Drive"      DisplayMemberBinding="{Binding DeviceID}"    Width="60"/>
+                                    <GridViewColumn Header="Total (GB)" DisplayMemberBinding="{Binding SizeGB}"      Width="100"/>
+                                    <GridViewColumn Header="Free (GB)"  DisplayMemberBinding="{Binding FreeGB}"      Width="100"/>
+                                    <GridViewColumn Header="Free (%)"   DisplayMemberBinding="{Binding PercentFree}" Width="80"/>
                                 </GridView>
                             </ListView.View>
                         </ListView>
@@ -165,11 +164,11 @@
                     <ListView Name="lvNetwork" Grid.Row="1" Background="White">
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn Header="Description" DisplayMemberBinding="{Binding Description}" Width="250"/>
-                                <GridViewColumn Header="IP Address" DisplayMemberBinding="{Binding IPAddress}" Width="200"/>
-                                <GridViewColumn Header="MAC Address" DisplayMemberBinding="{Binding MACAddress}" Width="130"/>
-                                <GridViewColumn Header="DHCP" DisplayMemberBinding="{Binding DHCPEnabled}" Width="60"/>
-                                <GridViewColumn Header="Gateway" DisplayMemberBinding="{Binding DefaultIPGateway}" Width="150"/>
+                                <GridViewColumn Header="Description" DisplayMemberBinding="{Binding Description}"      Width="250"/>
+                                <GridViewColumn Header="IP Address"  DisplayMemberBinding="{Binding IPAddress}"        Width="200"/>
+                                <GridViewColumn Header="MAC Address" DisplayMemberBinding="{Binding MACAddress}"       Width="130"/>
+                                <GridViewColumn Header="DHCP"        DisplayMemberBinding="{Binding DHCPEnabled}"      Width="60"/>
+                                <GridViewColumn Header="Gateway"     DisplayMemberBinding="{Binding DefaultIPGateway}" Width="150"/>
                             </GridView>
                         </ListView.View>
                     </ListView>
@@ -186,17 +185,17 @@
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                <Button Name="btnGetLocalUsers" Content="List Local Users" Width="130" Padding="6" Background="#E8F0FE"/>
+                                <Button Name="btnGetLocalUsers"  Content="List Local Users"  Width="130" Padding="6" Background="#E8F0FE"/>
                                 <Button Name="btnGetLocalGroups" Content="List Local Groups" Width="130" Margin="10,0,0,0" Padding="6"/>
                             </StackPanel>
                             <ListView Name="lvLocalAccounts" Grid.Row="1" Background="White">
                                 <ListView.View>
                                     <GridView>
-                                        <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}" Width="150"/>
-                                        <GridViewColumn Header="Full Name / Caption" DisplayMemberBinding="{Binding FullName}" Width="250"/>
-                                        <GridViewColumn Header="Disabled" DisplayMemberBinding="{Binding Disabled}" Width="80"/>
-                                        <GridViewColumn Header="Status" DisplayMemberBinding="{Binding Status}" Width="100"/>
-                                        <GridViewColumn Header="SID" DisplayMemberBinding="{Binding SID}" Width="200"/>
+                                        <GridViewColumn Header="Name"              DisplayMemberBinding="{Binding Name}"     Width="150"/>
+                                        <GridViewColumn Header="Full Name/Caption" DisplayMemberBinding="{Binding FullName}" Width="250"/>
+                                        <GridViewColumn Header="Disabled"          DisplayMemberBinding="{Binding Disabled}" Width="80"/>
+                                        <GridViewColumn Header="Status"            DisplayMemberBinding="{Binding Status}"   Width="100"/>
+                                        <GridViewColumn Header="SID"               DisplayMemberBinding="{Binding SID}"      Width="200"/>
                                     </GridView>
                                 </ListView.View>
                             </ListView>
@@ -209,7 +208,7 @@
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                <Button Name="btnGetEntraUsers" Content="Fetch Entra Users" Width="130" Padding="6" Background="#E8F0FE"/>
+                                <Button Name="btnGetEntraUsers"  Content="Fetch Entra Users"  Width="130" Padding="6" Background="#E8F0FE"/>
                                 <Button Name="btnGetEntraGroups" Content="Fetch Entra Groups" Width="130" Margin="10,0,0,0" Padding="6"/>
                                 <TextBlock Text="Search:" VerticalAlignment="Center" Margin="20,0,10,0"/>
                                 <TextBox Name="txtEntraSearch" Width="200" VerticalAlignment="Center" Padding="6"/>
@@ -217,17 +216,15 @@
                             <ListView Name="lvEntraIdentity" Grid.Row="1" Background="White">
                                 <ListView.View>
                                     <GridView>
-                                        <GridViewColumn Header="Display Name" DisplayMemberBinding="{Binding DisplayName}" Width="200"/>
+                                        <GridViewColumn Header="Display Name"     DisplayMemberBinding="{Binding DisplayName}"      Width="200"/>
                                         <GridViewColumn Header="UPN / Description" DisplayMemberBinding="{Binding UserPrincipalName}" Width="300"/>
-                                        <GridViewColumn Header="ID" DisplayMemberBinding="{Binding Id}" Width="250"/>
-                                        <GridViewColumn Header="Mail" DisplayMemberBinding="{Binding Mail}" Width="200"/>
+                                        <GridViewColumn Header="ID"               DisplayMemberBinding="{Binding Id}"               Width="250"/>
+                                        <GridViewColumn Header="Mail"             DisplayMemberBinding="{Binding Mail}"             Width="200"/>
                                     </GridView>
                                 </ListView.View>
                             </ListView>
                         </Grid>
                     </TabItem>
-
-                    <!-- Active Directory sub-tab — requires RSAT (rsat-ad-ds) on the running machine -->
                     <TabItem Header="Active Directory">
                         <Grid Margin="10">
                             <Grid.RowDefinitions>
@@ -244,11 +241,11 @@
                             <ListView Name="lvAdResults" Grid.Row="1" Background="White">
                                 <ListView.View>
                                     <GridView>
-                                        <GridViewColumn Header="Name"        DisplayMemberBinding="{Binding Name}"              Width="180"/>
-                                        <GridViewColumn Header="DN / UPN"    DisplayMemberBinding="{Binding DistinguishedName}" Width="350"/>
-                                        <GridViewColumn Header="Enabled"     DisplayMemberBinding="{Binding Enabled}"           Width="70"/>
-                                        <GridViewColumn Header="Last Logon"  DisplayMemberBinding="{Binding LastLogonDate}"     Width="150"/>
-                                        <GridViewColumn Header="OS / Dept"   DisplayMemberBinding="{Binding OperatingSystem}"   Width="200"/>
+                                        <GridViewColumn Header="Name"       DisplayMemberBinding="{Binding Name}"              Width="180"/>
+                                        <GridViewColumn Header="DN / UPN"   DisplayMemberBinding="{Binding DistinguishedName}" Width="350"/>
+                                        <GridViewColumn Header="Enabled"    DisplayMemberBinding="{Binding Enabled}"           Width="70"/>
+                                        <GridViewColumn Header="Last Logon" DisplayMemberBinding="{Binding LastLogonDate}"     Width="150"/>
+                                        <GridViewColumn Header="OS / Dept"  DisplayMemberBinding="{Binding OperatingSystem}"   Width="200"/>
                                     </GridView>
                                 </ListView.View>
                             </ListView>
@@ -257,7 +254,7 @@
                 </TabControl>
             </TabItem>
 
-            <!-- TAB 4: GOVERNANCE & COMPLIANCE -->
+            <!-- TAB 7: GOVERNANCE & COMPLIANCE -->
             <TabItem Header="Governance &amp; Compliance">
                 <TabControl Background="Transparent" BorderThickness="0" Margin="5">
                     <TabItem Header="Intune Devices">
@@ -274,12 +271,12 @@
                             <ListView Name="lvIntuneDevices" Grid.Row="1" Background="White">
                                 <ListView.View>
                                     <GridView>
-                                        <GridViewColumn Header="Device Name" DisplayMemberBinding="{Binding DeviceName}" Width="180"/>
-                                        <GridViewColumn Header="Primary User" DisplayMemberBinding="{Binding UserPrincipalName}" Width="220"/>
-                                        <GridViewColumn Header="Compliance" DisplayMemberBinding="{Binding ComplianceState}" Width="100"/>
-                                        <GridViewColumn Header="OS" DisplayMemberBinding="{Binding OS}" Width="100"/>
-                                        <GridViewColumn Header="Model" DisplayMemberBinding="{Binding Model}" Width="150"/>
-                                        <GridViewColumn Header="Serial" DisplayMemberBinding="{Binding SerialNumber}" Width="150"/>
+                                        <GridViewColumn Header="Device Name"   DisplayMemberBinding="{Binding DeviceName}"        Width="180"/>
+                                        <GridViewColumn Header="Primary User"  DisplayMemberBinding="{Binding UserPrincipalName}" Width="220"/>
+                                        <GridViewColumn Header="Compliance"    DisplayMemberBinding="{Binding ComplianceState}"   Width="100"/>
+                                        <GridViewColumn Header="OS"            DisplayMemberBinding="{Binding OS}"               Width="100"/>
+                                        <GridViewColumn Header="Model"         DisplayMemberBinding="{Binding Model}"            Width="150"/>
+                                        <GridViewColumn Header="Serial"        DisplayMemberBinding="{Binding SerialNumber}"      Width="150"/>
                                     </GridView>
                                 </ListView.View>
                             </ListView>
@@ -297,8 +294,40 @@
                             <ListView Name="lvAzureResources" Grid.Row="1" Background="White">
                                 <ListView.View>
                                     <GridView>
-                                        <GridViewColumn Header="Resource Type" DisplayMemberBinding="{Binding Name}" Width="400"/>
-                                        <GridViewColumn Header="Instance Count" DisplayMemberBinding="{Binding Count}" Width="150"/>
+                                        <GridViewColumn Header="Resource Type"   DisplayMemberBinding="{Binding Name}"  Width="400"/>
+                                        <GridViewColumn Header="Instance Count"  DisplayMemberBinding="{Binding Count}" Width="150"/>
+                                    </GridView>
+                                </ListView.View>
+                            </ListView>
+                        </Grid>
+                    </TabItem>
+                    <TabItem Header="Intune Scripts">
+                        <Grid Margin="10">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <StackPanel Margin="0,0,0,10">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <Button Name="btnGetIntuneScripts" Content="List Scripts" Width="120" Padding="6" Background="#E8F0FE"/>
+                                    <TextBlock Text="Search:" VerticalAlignment="Center" Margin="20,0,10,0"/>
+                                    <TextBox Name="txtIntuneScriptSearch" Width="200" VerticalAlignment="Center" Padding="6"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Download folder:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <TextBox Name="txtIntuneScriptDownloadPath" Width="260" VerticalAlignment="Center" Padding="6" Text="C:\temp\IntuneScripts"/>
+                                    <Button Name="btnDownloadIntuneScripts" Content="Download All Listed" Width="150" Margin="10,0,0,0" Padding="6" Background="#E6F4EA">
+                                        <Button.ToolTip>Downloads script content from the listed results to the specified folder</Button.ToolTip>
+                                    </Button>
+                                </StackPanel>
+                            </StackPanel>
+                            <ListView Name="lvIntuneScripts" Grid.Row="1" Background="White">
+                                <ListView.View>
+                                    <GridView>
+                                        <GridViewColumn Header="Display Name"  DisplayMemberBinding="{Binding DisplayName}" Width="250"/>
+                                        <GridViewColumn Header="File Name"     DisplayMemberBinding="{Binding FileName}"    Width="200"/>
+                                        <GridViewColumn Header="Run As"        DisplayMemberBinding="{Binding RunAs}"       Width="100"/>
+                                        <GridViewColumn Header="Last Modified" DisplayMemberBinding="{Binding Modified}"   Width="180"/>
                                     </GridView>
                                 </ListView.View>
                             </ListView>
@@ -307,11 +336,147 @@
                 </TabControl>
             </TabItem>
 
-            <!-- TAB 5: REGISTRY -->
+            <!-- TAB 8: DEVICE COMPLIANCE (local) -->
+            <TabItem Header="Device Compliance">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <Button Name="btnCheckCompliance" Content="Check Compliance Status" Width="190" Padding="6" Background="#E8F0FE"/>
+                    </StackPanel>
+
+                    <ListView Name="lvComplianceStatus" Grid.Row="1" Background="White" Margin="0,0,0,10">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Item"        DisplayMemberBinding="{Binding Item}"        Width="200"/>
+                                <GridViewColumn Header="Status"      DisplayMemberBinding="{Binding Status}"      Width="140"/>
+                                <GridViewColumn Header="Description" DisplayMemberBinding="{Binding Description}" Width="500"/>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+
+                    <GroupBox Header="Remediate" Grid.Row="2" Padding="10">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <Button Name="btnFixLocation" Content="Enable Location Services" Width="190" Padding="6" Background="#E8F0FE">
+                                    <Button.ToolTip>Clears location policies and sets consent to Allow — requires Administrator</Button.ToolTip>
+                                </Button>
+                                <Button Name="btnFixOutlookImages" Content="Enable Outlook Images" Width="180" Margin="10,0,0,0" Padding="6" Background="#E8F0FE">
+                                    <Button.ToolTip>Sets BlockExtContent=0 in HKCU — no Administrator required</Button.ToolTip>
+                                </Button>
+                                <Button Name="btnRemoveOneDrive" Content="Remove OneDrive" Width="150" Margin="10,0,0,0" Padding="6" Background="#FAD2CF">
+                                    <Button.ToolTip>Uninstalls OneDrive and removes registry/file artifacts — requires Administrator</Button.ToolTip>
+                                </Button>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Windows Update Active Hours —" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                <TextBlock Text="Start (0-23):" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                <TextBox Name="txtUpdateHoursStart" Width="45" Padding="4" Text="8" VerticalAlignment="Center"/>
+                                <TextBlock Text="End (0-23):" VerticalAlignment="Center" Margin="10,0,5,0"/>
+                                <TextBox Name="txtUpdateHoursEnd" Width="45" Padding="4" Text="18" VerticalAlignment="Center"/>
+                                <Button Name="btnFixUpdateHours" Content="Set Active Hours" Width="140" Margin="10,0,0,0" Padding="6" Background="#E8F0FE">
+                                    <Button.ToolTip>Sets Windows Update active hours in HKLM — requires Administrator</Button.ToolTip>
+                                </Button>
+                            </StackPanel>
+                            <TextBlock Name="txtComplianceOutput" Text="" Margin="0,10,0,0"
+                                       FontFamily="Consolas" FontSize="12" TextWrapping="Wrap" Foreground="#3C4043"/>
+                        </StackPanel>
+                    </GroupBox>
+                </Grid>
+            </TabItem>
+
+            <!-- TAB 9: EXCHANGE -->
+            <TabItem Header="Exchange">
+                <TabControl Background="Transparent" BorderThickness="0" Margin="5">
+                    <TabItem Header="Connection">
+                        <Grid Margin="10">
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Width="450">
+                                <TextBlock Text="Exchange Online" FontSize="20" FontWeight="Bold"
+                                           HorizontalAlignment="Center" Margin="0,0,0,20"/>
+                                <TextBlock Text="User Principal Name (optional — leave blank for interactive sign-in):"
+                                           TextWrapping="Wrap" Margin="0,0,0,5"/>
+                                <TextBox Name="txtExchangeUpn" Padding="6" Margin="0,0,0,15"/>
+                                <Button Name="btnConnectExchange" Content="Connect to Exchange Online"
+                                        Padding="12" FontSize="14" Background="#2F2F2F" Foreground="White"/>
+                                <TextBlock Name="lblExchangeStatus" Text="Not Connected"
+                                           HorizontalAlignment="Center" Margin="0,10,0,0" Foreground="#D93025"/>
+                            </StackPanel>
+                        </Grid>
+                    </TabItem>
+                    <TabItem Header="Mailbox Permissions">
+                        <Grid Margin="10">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <GroupBox Header="View User's Mailbox Access" Padding="8">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="User UPN:" VerticalAlignment="Center" Margin="0,0,10,0" Width="80"/>
+                                    <TextBox Name="txtExchangeViewUser" Width="280" Padding="5" VerticalAlignment="Center"/>
+                                    <Button Name="btnGetMailboxPerms" Content="List Access" Width="110"
+                                            Margin="10,0,0,0" Padding="6" Background="#E8F0FE"/>
+                                </StackPanel>
+                            </GroupBox>
+
+                            <ListView Name="lvMailboxPerms" Grid.Row="1" Margin="0,5,0,5" Background="White">
+                                <ListView.View>
+                                    <GridView>
+                                        <GridViewColumn Header="Mailbox"      DisplayMemberBinding="{Binding Mailbox}"      Width="270"/>
+                                        <GridViewColumn Header="Display Name" DisplayMemberBinding="{Binding DisplayName}"  Width="200"/>
+                                        <GridViewColumn Header="Full Access"  DisplayMemberBinding="{Binding FullAccess}"   Width="90"/>
+                                        <GridViewColumn Header="Send As"      DisplayMemberBinding="{Binding SendAs}"       Width="80"/>
+                                    </GridView>
+                                </ListView.View>
+                            </ListView>
+
+                            <GroupBox Header="Manage Permissions" Grid.Row="2" Padding="8">
+                                <UniformGrid Columns="2">
+                                    <StackPanel Margin="5">
+                                        <TextBlock Text="Mirror Permissions (e.g. offboarding / role handover)"
+                                                   FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                            <TextBlock Text="Copy from:" VerticalAlignment="Center" Width="75"/>
+                                            <TextBox Name="txtExchangeSourceUser" Width="195" Padding="4"/>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                            <TextBlock Text="Copy to:" VerticalAlignment="Center" Width="75"/>
+                                            <TextBox Name="txtExchangeTargetUser" Width="195" Padding="4"/>
+                                        </StackPanel>
+                                        <Button Name="btnMirrorMailboxPerms" Content="Mirror All Permissions"
+                                                Padding="6" Background="#E8F0FE"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="5">
+                                        <TextBlock Text="Grant on Specific Mailbox"
+                                                   FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                            <TextBlock Text="Mailbox:" VerticalAlignment="Center" Width="75"/>
+                                            <TextBox Name="txtExchangeMailbox" Width="195" Padding="4"/>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                            <TextBlock Text="Grant to:" VerticalAlignment="Center" Width="75"/>
+                                            <TextBox Name="txtExchangeGrantUser" Width="195" Padding="4"/>
+                                        </StackPanel>
+                                        <Button Name="btnGrantMailboxPerms" Content="Grant FullAccess + SendAs"
+                                                Padding="6" Background="#E6F4EA"/>
+                                    </StackPanel>
+                                </UniformGrid>
+                            </GroupBox>
+                        </Grid>
+                    </TabItem>
+                </TabControl>
+            </TabItem>
+
+            <!-- TAB 10: REGISTRY -->
             <TabItem Header="Registry">
                 <Grid Margin="10">
                     <StackPanel>
-                        <TextBlock Text="Quick Registry Read" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                        <TextBlock Text="Registry Editor" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
                         <UniformGrid Columns="2">
                             <StackPanel Margin="5">
                                 <TextBlock Text="Value Name:"/>
@@ -343,27 +508,30 @@
                         <TextBlock Text="Key Path:" Margin="5,10,0,0"/>
                         <TextBox Name="txtRegPath" Margin="5" Padding="6" Text="SOFTWARE\Microsoft\Windows\CurrentVersion"/>
                         <StackPanel Orientation="Horizontal" Margin="5,10,5,0">
-                            <Button Name="btnRegRead" Content="Read Value" Width="120" Padding="8" Background="#E8F0FE"/>
-                            <Button Name="btnRegWrite" Content="Write Value" Width="120" Margin="10,0,0,0" Padding="8" Background="#E6F4EA">
+                            <Button Name="btnRegRead"   Content="Read Value"       Width="120" Padding="8" Background="#E8F0FE"/>
+                            <Button Name="btnRegWrite"  Content="Write Value"      Width="120" Margin="10,0,0,0" Padding="8" Background="#E6F4EA">
                                 <Button.ToolTip>Writing to HKLM requires Administrator rights</Button.ToolTip>
                             </Button>
                             <Button Name="btnRegDelete" Content="Delete Value/Key" Width="120" Margin="10,0,0,0" Padding="8" Background="#FCE8E6">
                                 <Button.ToolTip>Deleting from HKLM requires Administrator rights</Button.ToolTip>
                             </Button>
                         </StackPanel>
-                        <TextBlock Name="txtRegResult" Text="Result will appear here..." Margin="5,20,5,0" FontStyle="Italic" Foreground="#5F6368" TextWrapping="Wrap"/>
+                        <TextBlock Name="txtRegResult" Text="Result will appear here..." Margin="5,20,5,0"
+                                   FontStyle="Italic" Foreground="#5F6368" TextWrapping="Wrap"/>
                     </StackPanel>
                 </Grid>
             </TabItem>
 
-            <!-- TAB 6: CLOUD AUTH -->
+            <!-- TAB 11: CLOUD AUTH -->
             <TabItem Header="Cloud Auth">
                 <Grid Margin="10">
                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Width="400">
-                        <TextBlock Text="Modern Authentication" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,20"/>
-                        <Button Name="btnCloudLogin" Content="Sign in with Microsoft" Padding="15" FontSize="16" Background="#2F2F2F" Foreground="White"/>
-                        <TextBlock Name="lblCloudStatus" Text="Not Connected" HorizontalAlignment="Center" Margin="0,10,0,0" Foreground="#D93025"/>
-                        
+                        <TextBlock Text="Modern Authentication" FontSize="20" FontWeight="Bold"
+                                   HorizontalAlignment="Center" Margin="0,0,0,20"/>
+                        <Button Name="btnCloudLogin" Content="Sign in with Microsoft"
+                                Padding="15" FontSize="16" Background="#2F2F2F" Foreground="White"/>
+                        <TextBlock Name="lblCloudStatus" Text="Not Connected"
+                                   HorizontalAlignment="Center" Margin="0,10,0,0" Foreground="#D93025"/>
                         <Expander Header="Advanced (Service Principal)" Margin="0,30,0,0">
                             <StackPanel Margin="10">
                                 <TextBlock Text="Tenant ID:"/>
@@ -378,6 +546,7 @@
                     </StackPanel>
                 </Grid>
             </TabItem>
+
         </TabControl>
 
         <StatusBar Grid.Row="2" Background="#E8EAED" Padding="2">
@@ -389,7 +558,6 @@
                 <TextBlock Name="lblTime" Text=""/>
             </StatusBarItem>
             <Separator/>
-            <!-- Admin elevation indicator — updated at startup; hidden when already elevated -->
             <StatusBarItem>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Name="lblAdminStatus" Text="(!) Standard User" Foreground="#E37400"
@@ -401,7 +569,8 @@
                 </StackPanel>
             </StatusBarItem>
             <StatusBarItem HorizontalAlignment="Right">
-                <ProgressBar Name="pbBusy" Width="150" Height="18" IsIndeterminate="False" BorderThickness="0" Background="#DADCE0" Foreground="#1A73E8"/>
+                <ProgressBar Name="pbBusy" Width="150" Height="18" IsIndeterminate="False"
+                             BorderThickness="0" Background="#DADCE0" Foreground="#1A73E8"/>
             </StatusBarItem>
         </StatusBar>
     </Grid>

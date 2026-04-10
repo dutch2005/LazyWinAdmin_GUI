@@ -6,6 +6,11 @@ function Get-AzureResourceSummary {
         Uses Search-AzGraph (Az.ResourceGraph) for server-side aggregation.
         Avoids Get-AzResource which enumerates all resources client-side and does not scale.
         Requires Az.ResourceGraph module (included in Az).
+    .OUTPUTS
+        System.Object[] — array of PSCustomObject with properties:
+          Name  (System.String)  — Azure resource type, e.g. 'microsoft.compute/virtualmachines'.
+          Count (System.Int64)   — number of resources of that type in the subscription.
+        Returns $null when not connected to Azure or when an error occurs.
     #>
     [CmdletBinding()]
     param ()

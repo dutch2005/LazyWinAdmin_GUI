@@ -83,6 +83,30 @@ Describe 'File Structure' {
         It 'Test-ComputerPort.ps1 exists' {
             Join-Path $script:ModuleRoot 'Private\Test-ComputerPort.ps1' | Should -Exist
         }
+
+        It 'Connect-ExchangeSession.ps1 exists' {
+            Join-Path $script:ModuleRoot 'Private\Connect-ExchangeSession.ps1' | Should -Exist
+        }
+
+        It 'Get-ExchangeMailboxPermission.ps1 exists' {
+            Join-Path $script:ModuleRoot 'Private\Get-ExchangeMailboxPermission.ps1' | Should -Exist
+        }
+
+        It 'Set-ExchangeMailboxPermission.ps1 exists' {
+            Join-Path $script:ModuleRoot 'Private\Set-ExchangeMailboxPermission.ps1' | Should -Exist
+        }
+
+        It 'Get-IntuneManagementScript.ps1 exists' {
+            Join-Path $script:ModuleRoot 'Private\Get-IntuneManagementScript.ps1' | Should -Exist
+        }
+
+        It 'Get-DeviceComplianceStatus.ps1 exists' {
+            Join-Path $script:ModuleRoot 'Private\Get-DeviceComplianceStatus.ps1' | Should -Exist
+        }
+
+        It 'Set-DeviceComplianceItem.ps1 exists' {
+            Join-Path $script:ModuleRoot 'Private\Set-DeviceComplianceItem.ps1' | Should -Exist
+        }
     }
 
     Context 'UI files' {
@@ -210,7 +234,33 @@ Describe 'XAML Validity' {
         @{ ControlName = 'lblCloudStatus'    }
         @{ ControlName = 'lblStatus'         }
         @{ ControlName = 'lblAdminStatus'    }
-        @{ ControlName = 'btnRestartAdmin'   }
+        @{ ControlName = 'btnRestartAdmin'           }
+        @{ ControlName = 'btnGetIntuneScripts'       }
+        @{ ControlName = 'txtIntuneScriptSearch'     }
+        @{ ControlName = 'txtIntuneScriptDownloadPath' }
+        @{ ControlName = 'btnDownloadIntuneScripts'  }
+        @{ ControlName = 'lvIntuneScripts'           }
+        @{ ControlName = 'btnCheckCompliance'        }
+        @{ ControlName = 'lvComplianceStatus'        }
+        @{ ControlName = 'btnFixLocation'            }
+        @{ ControlName = 'btnFixOutlookImages'       }
+        @{ ControlName = 'btnRemoveOneDrive'         }
+        @{ ControlName = 'txtUpdateHoursStart'       }
+        @{ ControlName = 'txtUpdateHoursEnd'         }
+        @{ ControlName = 'btnFixUpdateHours'         }
+        @{ ControlName = 'txtComplianceOutput'       }
+        @{ ControlName = 'txtExchangeUpn'            }
+        @{ ControlName = 'btnConnectExchange'        }
+        @{ ControlName = 'lblExchangeStatus'         }
+        @{ ControlName = 'btnGetMailboxPerms'        }
+        @{ ControlName = 'txtExchangeViewUser'       }
+        @{ ControlName = 'lvMailboxPerms'            }
+        @{ ControlName = 'txtExchangeSourceUser'     }
+        @{ ControlName = 'txtExchangeTargetUser'     }
+        @{ ControlName = 'btnMirrorMailboxPerms'     }
+        @{ ControlName = 'txtExchangeMailbox'        }
+        @{ ControlName = 'txtExchangeGrantUser'      }
+        @{ ControlName = 'btnGrantMailboxPerms'      }
     ) {
         param($ControlName)
         # XPath that finds any element whose local-name attribute (x:Name or Name) equals the control name
@@ -254,6 +304,16 @@ Describe 'ApplicationState Class' {
 
     It 'SyncHash.CloudConnected defaults to $false' {
         $script:State.SyncHash.CloudConnected | Should -BeFalse
+    }
+
+    It 'SyncHash.ExchangeConnected defaults to $false' {
+        $script:State.SyncHash.ExchangeConnected | Should -BeFalse
+    }
+
+    It 'SyncHash.UIQueue is a ConcurrentQueue' {
+        # An empty ConcurrentQueue evaluates as empty when piped — assert on the type directly.
+        ($null -ne $script:State.SyncHash.UIQueue) | Should -BeTrue
+        $script:State.SyncHash.UIQueue.GetType().Name | Should -BeLike 'ConcurrentQueue*'
     }
 
     It 'SyncHash.Logs is an ArrayList' {
