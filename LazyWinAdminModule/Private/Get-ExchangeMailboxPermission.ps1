@@ -7,6 +7,17 @@ function Get-ExchangeMailboxPermission {
         and checks whether the target user holds FullAccess (via Get-MailboxPermission)
         or SendAs (via Get-RecipientPermission). Returns only mailboxes where at
         least one permission is held.
+    .PARAMETER UserPrincipalName
+        UPN of the user to check, e.g. 'user@contoso.com'. Must be in standard
+        UPN format (local-part@domain.tld). Invalid format returns $null with a
+        Write-Warning message.
+    .OUTPUTS
+        System.Object[] — array of PSCustomObject with properties:
+          Mailbox     (System.String)  — primary SMTP address of the shared mailbox.
+          DisplayName (System.String)  — display name of the shared mailbox.
+          FullAccess  (System.Boolean) — $true if the user holds FullAccess.
+          SendAs      (System.Boolean) — $true if the user holds SendAs.
+        Returns $null on UPN validation failure or on error.
     #>
     [CmdletBinding()]
     param (
@@ -15,6 +26,11 @@ function Get-ExchangeMailboxPermission {
     )
 
     try {
+        if ($UserPrincipalName -notmatch '^[^@\s]+@[^@\s]+\.[^@\s]+$') {
+            Write-Warning "UserPrincipalName '$UserPrincipalName' is not a valid UPN format."
+            return $null
+        }
+
         $sharedMailboxes = Get-Mailbox -RecipientTypeDetails SharedMailbox -ErrorAction Stop
 
         $results = foreach ($mailbox in $sharedMailboxes) {

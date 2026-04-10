@@ -12,6 +12,22 @@ function Get-IntuneManagementScript {
     .PARAMETER DownloadPath
         If specified and the path exists, each script's content is base64-decoded
         and written as a .ps1 file under this folder.
+    .OUTPUTS
+        System.Object[] — array of PSCustomObject with properties:
+          Id          (System.String)   — Intune script GUID.
+          DisplayName (System.String)   — friendly name of the script.
+          FileName    (System.String)   — original filename (e.g. 'Deploy-App.ps1').
+          RunAs       (System.String)   — execution context, e.g. 'system' or 'user'.
+          Enforcement (System.String)   — enforcement type reported by Intune.
+          Created     (System.DateTime) — script creation timestamp.
+          Modified    (System.DateTime) — last modification timestamp.
+        Returns $null when not connected to Graph or when an error occurs.
+    .EXAMPLE
+        # List all Intune management scripts
+        Get-IntuneManagementScript
+    .EXAMPLE
+        # Filter scripts by name and download them locally
+        Get-IntuneManagementScript -Search 'Deploy' -DownloadPath 'C:\Temp\IntuneScripts'
     #>
     [CmdletBinding()]
     param (

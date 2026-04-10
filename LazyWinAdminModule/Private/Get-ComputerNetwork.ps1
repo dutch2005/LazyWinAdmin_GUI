@@ -1,10 +1,55 @@
 function Get-ComputerNetwork {
     <#
     .SYNOPSIS
-        Retrieves network adapter configuration from a remote computer using CIM.
+        Retrieves network adapter configuration from a local or remote computer using CIM.
+
     .DESCRIPTION
         Opens a single CimSession and closes it in the finally block.
         Adheres to: cim_session.* ALWAYS reuse-before-create (CONTRACTS)
+
+        Queries Win32_NetworkAdapterConfiguration for all adapters, or only those
+        with IP enabled when -OnlyIPEnabled is specified. Multi-valued properties
+        (IPAddress, IPSubnet, DefaultIPGateway) are joined into comma-separated
+        strings so that the output objects are easily displayable in a grid or table.
+
+        Results are sorted alphabetically by Description so that the presentation
+        order is stable across successive calls.
+
+    .PARAMETER ComputerName
+        The hostname or IP address of the target computer. This parameter is mandatory
+        because the function is typically called from a dispatcher that always supplies
+        the target explicitly.
+
+    .PARAMETER OnlyIPEnabled
+        When set, the CIM query is filtered to Win32_NetworkAdapterConfiguration
+        instances where IPEnabled = True. This excludes virtual adapters,
+        loopback adapters, and other interfaces that have no bound IP stack.
+
+    .OUTPUTS
+        System.Management.Automation.PSCustomObject[]
+        An array of adapter objects sorted by Description, each with the following
+        properties:
+            Description      [string]  — adapter name / friendly description
+            IPAddress        [string]  — comma-separated list of assigned IP addresses
+            IPSubnet         [string]  — comma-separated list of subnet masks
+            DefaultIPGateway [string]  — comma-separated list of gateway addresses
+            MACAddress       [string]  — hardware MAC address
+            DHCPEnabled      [bool]    — whether DHCP is active on this adapter
+            DHCPServer       [string]  — DHCP server address (if applicable)
+            DNSHostName      [string]  — DNS hostname registered by this adapter
+        Returns $null if the CIM query fails.
+
+    .EXAMPLE
+        Get-ComputerNetwork -ComputerName "localhost"
+        Returns all network adapter configurations on the local machine.
+
+    .EXAMPLE
+        Get-ComputerNetwork -ComputerName "SERVER01" -OnlyIPEnabled
+        Returns only IP-enabled adapters on SERVER01.
+
+    .EXAMPLE
+        Get-ComputerNetwork -ComputerName "SERVER01" | Where-Object DHCPEnabled -eq $false
+        Returns adapters that are statically configured on SERVER01.
     #>
     [CmdletBinding()]
     param (

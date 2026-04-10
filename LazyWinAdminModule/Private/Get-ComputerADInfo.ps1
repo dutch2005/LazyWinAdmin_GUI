@@ -7,6 +7,34 @@ function Get-ComputerADInfo {
         running this function. Validates AdFilter input before passing to AD cmdlets.
         Adheres to: ad_computer.* REQUIRES rsat-ad-module (CONTRACTS)
                     ad_user.samaccountname NEVER logged (CLASSIFY: pii)
+    .OUTPUTS
+        Type=Computer — System.Object[] of AD computer objects with properties:
+          Name, DNSHostName, OperatingSystem, OperatingSystemVersion,
+          LastLogonDate, Enabled, Description, DistinguishedName.
+
+        Type=User — System.Object[] of AD user objects with properties:
+          DisplayName, EmailAddress, Department, Title, LastLogonDate,
+          Enabled, DistinguishedName.
+          Note: SamAccountName is intentionally excluded to prevent accidental
+          PII logging in the UI layer.
+
+        Type=Group — System.Object[] of AD group objects with properties:
+          Name, SamAccountName, GroupCategory, GroupScope, Description.
+
+        Returns $null when the ActiveDirectory module is not available, the AdFilter
+        contains invalid characters, or an error occurs.
+    .EXAMPLE
+        # List all computers whose name starts with 'WS-'
+        Get-ComputerADInfo -Type Computer -AdFilter 'WS-*'
+    .EXAMPLE
+        # Find a specific computer by exact name
+        Get-ComputerADInfo -Type Computer -ComputerName 'WS-001'
+    .EXAMPLE
+        # Search for users whose display name or SAM starts with 'john'
+        Get-ComputerADInfo -Type User -AdFilter 'john*'
+    .EXAMPLE
+        # List all AD groups whose name starts with 'IT'
+        Get-ComputerADInfo -Type Group -AdFilter 'IT*'
     #>
     [CmdletBinding()]
     param (

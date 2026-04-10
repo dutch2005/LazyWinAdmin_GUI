@@ -5,6 +5,37 @@ function Invoke-ComputerRegistry {
     .DESCRIPTION
         Uses CIM (StdRegProv) for cross-platform compatibility and performance.
         Adheres to: registry_entry.* REQUIRES hive-valid (CONTRACTS)
+    .PARAMETER Action
+        Registry operation to perform. Valid values: Get, Set, New, Remove.
+        Get — reads the named value (tries String then DWORD).
+        Set — writes the named value using the type specified by -ValueType.
+        New — creates the registry key at -KeyPath (no value written).
+        Remove — deletes either the named value (when -ValueName is provided)
+                 or the entire key (when -ValueName is omitted).
+    .PARAMETER ComputerName
+        Hostname or IP of the target computer. Localhost variants skip the remote
+        CIM session to avoid unnecessary WinRM overhead.
+    .PARAMETER Hive
+        Registry hive abbreviation. Valid values: HKCR, HKCU, HKLM, HKU.
+    .PARAMETER KeyPath
+        Registry key path relative to the hive root, e.g.
+        'SOFTWARE\Microsoft\Windows NT\CurrentVersion'.
+    .PARAMETER ValueName
+        Name of the registry value. Omit (or leave empty) when using Action=New,
+        or when Action=Remove targets the key itself rather than a value.
+    .PARAMETER Value
+        Data to write when Action=Set. Must be compatible with the chosen -ValueType.
+    .PARAMETER ValueType
+        Data type for Set operations. Valid values: String, ExpandString, Binary,
+        DWord, MultiString, QWord. Defaults to String.
+        Note: Binary, ExpandString, and MultiString types are not yet fully
+        implemented and will return $false with a warning.
+    .OUTPUTS
+        Action=Get  — System.String or System.UInt32 (value data), or $null if not found.
+        Action=Set  — System.Boolean ($true on success, $false on failure).
+        Action=New  — System.Boolean ($true on success, $false on failure).
+        Action=Remove — System.Boolean ($true on success, $false on failure).
+        On unhandled exception — $null.
     #>
     [CmdletBinding()]
     param (

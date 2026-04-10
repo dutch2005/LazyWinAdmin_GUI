@@ -6,6 +6,12 @@ function Connect-ExchangeSession {
         Checks for the ExchangeOnlineManagement module, imports it, and initiates
         an interactive connection. Returns a status string — never surfaces
         exception detail or credential fragments to the caller.
+    .PARAMETER UserPrincipalName
+        Optional UPN (e.g. 'admin@contoso.com') used to pre-fill the sign-in dialog.
+        When omitted, the user is prompted to enter credentials interactively.
+    .OUTPUTS
+        System.String — starts with '[OK]' followed by the organisation display name
+        on success, or '[!]' with an error description on failure.
     #>
     [CmdletBinding()]
     param (

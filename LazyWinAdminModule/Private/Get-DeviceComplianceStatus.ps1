@@ -7,6 +7,13 @@ function Get-DeviceComplianceStatus {
         Outlook external image download setting, Windows Update active hours,
         and Unified Write Filter state (Enterprise only).
         All checks are registry/WMI reads — no network required.
+    .OUTPUTS
+        System.Collections.Generic.List[PSCustomObject] — each object has three properties:
+          Item        (System.String) — the compliance check name.
+          Status      (System.String) — check outcome, e.g. Compliant, Non-Compliant,
+                                        Installed, Not Installed, Configured, Not Configured,
+                                        Enabled, Disabled, Feature Not Installed, N/A, Error.
+          Description (System.String) — human-readable detail about the check result.
     #>
     [CmdletBinding()]
     param ()
@@ -20,12 +27,15 @@ function Get-DeviceComplianceStatus {
         $consentPath = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location'
 
         $policyLocked = $false
+        $policyReg    = Get-ItemProperty -Path $policyPath -ErrorAction SilentlyContinue
         foreach ($flag in @('DisableLocation', 'DisableWindowsLocationProvider', 'DisableSensors')) {
-            $v = (Get-ItemProperty -Path $policyPath -ErrorAction SilentlyContinue).$flag
+            $v = if ($null -ne $policyReg) { $policyReg.$flag } else { $null }
             if (($v -as [int]) -eq 1) { $policyLocked = $true }
         }
-        $svcCfg  = (Get-ItemProperty -Path $svcCfgPath  -ErrorAction SilentlyContinue).Status
-        $consent = (Get-ItemProperty -Path $consentPath  -ErrorAction SilentlyContinue).Value
+        $svcReg  = Get-ItemProperty -Path $svcCfgPath  -ErrorAction SilentlyContinue
+        $conReg  = Get-ItemProperty -Path $consentPath  -ErrorAction SilentlyContinue
+        $svcCfg  = if ($null -ne $svcReg) { $svcReg.Status } else { $null }
+        $consent = if ($null -ne $conReg) { $conReg.Value  } else { $null }
 
         $status = if (-not $policyLocked -and ($svcCfg -as [int]) -eq 1 -and $consent -match '^(?i)Allow$') {
             'Compliant'
@@ -54,7 +64,8 @@ function Get-DeviceComplianceStatus {
     # 3. Outlook external image auto-download
     try {
         $regPath = 'HKCU:\Software\Microsoft\Office\16.0\Outlook\Options\Mail'
-        $v       = (Get-ItemProperty -Path $regPath -ErrorAction SilentlyContinue).BlockExtContent
+        $outlookReg = Get-ItemProperty -Path $regPath -ErrorAction SilentlyContinue
+        $v          = if ($null -ne $outlookReg) { $outlookReg.BlockExtContent } else { $null }
         $status  = if ($null -eq $v) { 'Not Configured' } elseif ($v -eq 0) { 'Compliant' } else { 'Blocked' }
         $detail  = "BlockExtContent = $(if ($null -eq $v) { '(not set)' } else { $v })"
     }
@@ -67,8 +78,8 @@ function Get-DeviceComplianceStatus {
     try {
         $regPath = 'HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings'
         $reg     = Get-ItemProperty -Path $regPath -ErrorAction SilentlyContinue
-        $start   = $reg.ActiveHoursStart
-        $end     = $reg.ActiveHoursEnd
+        $start   = if ($null -ne $reg) { $reg.ActiveHoursStart } else { $null }
+        $end     = if ($null -ne $reg) { $reg.ActiveHoursEnd   } else { $null }
         $status  = if ($null -ne $start -and $null -ne $end) { 'Configured' } else { 'Not Configured' }
         $detail  = if ($null -ne $start) { "Active hours: $($start):00 to $($end):00" } else { 'Active hours not set' }
     }
@@ -83,7 +94,7 @@ function Get-DeviceComplianceStatus {
         if ($osCaption -like '*Enterprise*') {
             $feature = Get-WindowsOptionalFeature -Online -FeatureName 'Client-UnifiedWriteFilter' -ErrorAction SilentlyContinue
             if ($feature.State -eq 'Enabled') {
-                $uwf    = Get-WmiObject -Namespace 'root\standardcimv2\embedded' -Class 'UWF_Filter' -ErrorAction SilentlyContinue
+                $uwf    = Get-CimInstance -Namespace 'root\standardcimv2\embedded' -ClassName 'UWF_Filter' -ErrorAction SilentlyContinue
                 $status = if ($uwf.CurrentEnabled) { 'Enabled' } else { 'Disabled' }
                 $detail = 'UWF feature installed; CurrentEnabled = ' + $uwf.CurrentEnabled
             }

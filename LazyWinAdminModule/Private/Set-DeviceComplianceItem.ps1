@@ -10,6 +10,9 @@ function Set-DeviceComplianceItem {
           WindowsUpdateActiveHours — sets ActiveHoursStart/End in HKLM (requires Administrator).
           RemoveOneDrive         — uninstalls OneDrive, cleans registry and files
                                    (requires Administrator).
+    .OUTPUTS
+        System.String — starts with '[OK]' on success or '[!]' on validation error or
+        partial failure. On unhandled exception returns '[!] Remediation failed…'.
     .PARAMETER Item
         The compliance item to remediate.
     .PARAMETER ActiveHoursStart
@@ -84,31 +87,46 @@ function Set-DeviceComplianceItem {
             }
 
             'RemoveOneDrive' {
+                # Stop process first (best-effort)
                 Get-Process -Name OneDrive -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
 
+                # Run uninstallers and track success
+                $uninstallRan = $false
                 foreach ($setup in @(
                     "$env:SystemRoot\System32\OneDriveSetup.exe",
                     "$env:SystemRoot\SysWOW64\OneDriveSetup.exe"
                 )) {
                     if (Test-Path $setup) {
-                        Start-Process -FilePath $setup -ArgumentList '/uninstall' -NoNewWindow -Wait -ErrorAction SilentlyContinue
+                        $proc = Start-Process -FilePath $setup -ArgumentList '/uninstall' -NoNewWindow -Wait -PassThru -ErrorAction SilentlyContinue
+                        if ($proc -and $proc.ExitCode -eq 0) { $uninstallRan = $true }
                     }
                 }
 
-                # File cleanup
-                Remove-Item -Path "$env:LocalAppData\Microsoft\OneDrive" -Recurse -Force -ErrorAction SilentlyContinue
-                Remove-Item -Path "$env:AppData\Microsoft\OneDrive"      -Recurse -Force -ErrorAction SilentlyContinue
-                Remove-Item -Path "$env:ProgramData\Microsoft OneDrive"  -Recurse -Force -ErrorAction SilentlyContinue
-                Remove-Item -Path "C:\OneDriveTemp"                      -Recurse -Force -ErrorAction SilentlyContinue
+                # File cleanup (best-effort)
+                $cleanupPaths = @(
+                    "$env:LocalAppData\Microsoft\OneDrive",
+                    "$env:AppData\Microsoft\OneDrive",
+                    "$env:ProgramData\Microsoft OneDrive",
+                    "C:\OneDriveTemp"
+                )
+                foreach ($p in $cleanupPaths) {
+                    Remove-Item -Path $p -Recurse -Force -ErrorAction SilentlyContinue
+                }
 
-                # Registry cleanup
-                Remove-Item -Path 'HKCU:\Software\Microsoft\OneDrive'              -Recurse -Force -ErrorAction SilentlyContinue
-                Remove-Item -Path 'HKLM:\SOFTWARE\Microsoft\OneDrive'              -Recurse -Force -ErrorAction SilentlyContinue
-                Remove-Item -Path 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\OneDrive'  -Recurse -Force -ErrorAction SilentlyContinue
+                # Registry cleanup (best-effort)
+                foreach ($regPath in @(
+                    'HKCU:\Software\Microsoft\OneDrive',
+                    'HKLM:\SOFTWARE\Microsoft\OneDrive',
+                    'HKLM:\SOFTWARE\WOW6432Node\Microsoft\OneDrive'
+                )) {
+                    Remove-Item -Path $regPath -Recurse -Force -ErrorAction SilentlyContinue
+                }
                 Remove-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' `
                     -Name 'OneDrive' -ErrorAction SilentlyContinue
 
-                return "[OK] OneDrive removed and cleanup complete"
+                $msg = if ($uninstallRan) { "[OK] OneDrive uninstalled and cleanup complete" } `
+                       else { "[!] OneDrive uninstaller not found; file and registry cleanup completed" }
+                return $msg
             }
         }
     }

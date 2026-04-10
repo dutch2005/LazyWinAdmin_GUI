@@ -1,7 +1,8 @@
 function Set-ComputerRDP {
     <#
     .SYNOPSIS
-        Enables or Disables Remote Desktop on a remote computer.
+        Enables or Disables Remote Desktop on a local or remote computer.
+
     .DESCRIPTION
         Implements rdp_toggle FLOW steps 3 and 4 as two distinct CIM operations
         over a single shared CimSession:
@@ -17,6 +18,41 @@ function Set-ComputerRDP {
         Previously both operations were combined in a single SetAllowTSConnections CIM method
         call. Splitting them makes each step independently verifiable and rollback-safe.
         Adheres to: cim_session.* ALWAYS reuse-before-create (CONTRACTS)
+
+        Exception detail (stack traces, error codes) is intentionally not surfaced in the
+        return value to prevent leaking internal state to the UI layer. A generic error
+        string is returned instead, and the full exception is emitted via Write-Warning
+        for capture by the module's logging infrastructure.
+
+    .PARAMETER ComputerName
+        The hostname or IP address of the target computer. Mandatory.
+        The value is also embedded in the success/failure return string so the caller
+        can correlate the result when processing multiple machines.
+
+    .PARAMETER Enabled
+        Boolean flag controlling the desired RDP state.
+            $true  — Enable RDP (sets fDenyTSConnections = 0, enables firewall rules)
+            $false — Disable RDP (sets fDenyTSConnections = 1, disables firewall rules)
+
+    .OUTPUTS
+        System.String
+        "RDP Enabled on <ComputerName>"  — both registry and firewall steps succeeded.
+        "RDP Disabled on <ComputerName>" — both registry and firewall steps succeeded.
+        "Error: RDP operation failed on <ComputerName>" — one or both steps failed;
+            consult the warning stream for the underlying exception message.
+
+    .EXAMPLE
+        Set-ComputerRDP -ComputerName "WORKSTATION42" -Enabled $true
+        Enables Remote Desktop on WORKSTATION42 and returns "RDP Enabled on WORKSTATION42".
+
+    .EXAMPLE
+        Set-ComputerRDP -ComputerName "SERVER01" -Enabled $false
+        Disables Remote Desktop on SERVER01 and returns "RDP Disabled on SERVER01".
+
+    .EXAMPLE
+        $result = Set-ComputerRDP -ComputerName "localhost" -Enabled $true
+        if ($result -like "Error*") { Write-Error $result }
+        Enables RDP on the local machine and checks for failure.
     #>
     [CmdletBinding()]
     param (
@@ -40,7 +76,7 @@ function Set-ComputerRDP {
                                -ClassName StdRegProv -ErrorAction Stop
             $fDenyValue  = if ($Enabled) { [uint32]0 } else { [uint32]1 }
             $regResult   = Invoke-CimMethod -InputObject $reg -MethodName "SetDWORDValue" -Arguments @{
-                hDefKey     = [uint32]2147483650  # HKLM
+                hDefKey     = [uint32]2147483650  # HKLM (HKEY_LOCAL_MACHINE = 0x80000002)
                 sSubKeyName = "SYSTEM\CurrentControlSet\Control\Terminal Server"
                 sValueName  = "fDenyTSConnections"
                 uValue      = $fDenyValue

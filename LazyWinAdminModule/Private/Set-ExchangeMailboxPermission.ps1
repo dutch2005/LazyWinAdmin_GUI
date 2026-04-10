@@ -18,6 +18,18 @@ function Set-ExchangeMailboxPermission {
         Primary SMTP address or alias of the target shared mailbox (Grant only).
     .PARAMETER User
         UPN of the user to grant permissions to (Grant only).
+    .OUTPUTS
+        System.String — starts with '[OK]' on success or '[!]' on validation error or
+        when no permissions were found (Mirror mode). On unhandled exception returns
+        '[!] Operation failed…'.
+    .EXAMPLE
+        # Copy all shared mailbox permissions from a departing employee to their replacement
+        Set-ExchangeMailboxPermission -Action Mirror `
+            -SourceUser 'alice@contoso.com' -TargetUser 'bob@contoso.com'
+    .EXAMPLE
+        # Grant FullAccess and SendAs on a single shared mailbox to a user
+        Set-ExchangeMailboxPermission -Action Grant `
+            -Mailbox 'helpdesk@contoso.com' -User 'carol@contoso.com'
     #>
     [CmdletBinding()]
     param (
@@ -62,10 +74,10 @@ function Set-ExchangeMailboxPermission {
                 }
             }
 
-            return if ($count -gt 0) {
-                "[OK] Mirrored $count permission(s) from $SourceUser to $TargetUser"
+            if ($count -gt 0) {
+                return "[OK] Mirrored $count permission(s) from $SourceUser to $TargetUser"
             } else {
-                "[!] No shared mailbox permissions found for $SourceUser"
+                return "[!] No shared mailbox permissions found for $SourceUser"
             }
         }
         elseif ($Action -eq 'Grant') {
