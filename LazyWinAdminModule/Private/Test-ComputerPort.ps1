@@ -1,4 +1,4 @@
-function Test-ComputerPort {
+﻿function Test-ComputerPort {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
@@ -16,7 +16,7 @@ function Test-ComputerPort {
             $connectTask = $tcpClient.BeginConnect($ComputerName, $Port, $null, $null)
             
             # Non-blocking wait with timeout to prevent hanging the runspace
-            $waitResult = $connectTask.AsyncWaitHandle.WaitOne($TimeoutMs, $false)
+            $connectTask.AsyncWaitHandle.WaitOne($TimeoutMs, $false) | Out-Null
             
             if ($tcpClient.Connected) {
                 $tcpClient.EndConnect($connectTask)

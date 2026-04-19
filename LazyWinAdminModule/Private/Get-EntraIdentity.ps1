@@ -1,4 +1,4 @@
-function Get-EntraIdentity {
+﻿function Get-EntraIdentity {
     <#
     .SYNOPSIS
         Retrieves users or groups from Entra ID using Microsoft Graph.

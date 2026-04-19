@@ -1,0 +1,94 @@
+name: CI — Lint & Test
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  lint-and-test:
+    name: PSScriptAnalyzer + Pester
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module PSScriptAnalyzer -MinimumVersion 1.21.0 -Force -Scope CurrentUser
+
+      - name: Lint — Classes
+        shell: pwsh
+        run: |
+          $issues = Invoke-ScriptAnalyzer `
+            -Path   LazyWinAdminModule/Classes `
+            -Recurse `
+            -Severity Error,Warning `
+            -Settings LazyWinAdminModule/PSScriptAnalyzerSettings.psd1
+          if ($issues.Count -gt 0) {
+            $issues | Format-Table ScriptName,Line,RuleName,Message -AutoSize -Wrap
+            throw "$($issues.Count) lint issue(s) in Classes/"
+          }
+
+      - name: Lint — Private functions
+        shell: pwsh
+        run: |
+          $issues = Invoke-ScriptAnalyzer `
+            -Path   LazyWinAdminModule/Private `
+            -Recurse `
+            -Severity Error,Warning `
+            -Settings LazyWinAdminModule/PSScriptAnalyzerSettings.psd1
+          if ($issues.Count -gt 0) {
+            $issues | Format-Table ScriptName,Line,RuleName,Message -AutoSize -Wrap
+            throw "$($issues.Count) lint issue(s) in Private/"
+          }
+
+      - name: Lint — Public functions
+        shell: pwsh
+        run: |
+          $issues = Invoke-ScriptAnalyzer `
+            -Path   LazyWinAdminModule/Public `
+            -Recurse `
+            -Severity Error,Warning `
+            -Settings LazyWinAdminModule/PSScriptAnalyzerSettings.psd1
+          if ($issues.Count -gt 0) {
+            $issues | Format-Table ScriptName,Line,RuleName,Message -AutoSize -Wrap
+            throw "$($issues.Count) lint issue(s) in Public/"
+          }
+
+      - name: Lint — Test files
+        shell: pwsh
+        run: |
+          $issues = Invoke-ScriptAnalyzer `
+            -Path   LazyWinAdminModule/Tests `
+            -Recurse `
+            -Severity Error,Warning `
+            -ExcludeRule PSAvoidUsingWriteHost,PSAvoidUsingComputerNameHardcoded,PSReviewUnusedParameter,PSAvoidUsingConvertToSecureStringWithPlainText `
+            -Settings LazyWinAdminModule/PSScriptAnalyzerSettings.psd1
+          if ($issues.Count -gt 0) {
+            $issues | Format-Table ScriptName,Line,RuleName,Message -AutoSize -Wrap
+            throw "$($issues.Count) lint issue(s) in Tests/"
+          }
+
+      - name: Install Pester
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module Pester -MinimumVersion 5.0.0 -Force -Scope CurrentUser
+
+      - name: Run tests
+        shell: pwsh
+        run: |
+          Import-Module Pester -MinimumVersion 5.0.0 -Force
+          $cfg = New-PesterConfiguration
+          $cfg.Run.Path         = 'LazyWinAdminModule/Tests'
+          $cfg.Run.PassThru     = $true
+          $cfg.Output.Verbosity = 'Detailed'
+          $result = Invoke-Pester -Configuration $cfg
+          if ($result.FailedCount -gt 0) {
+            throw "$($result.FailedCount) test(s) failed."
+          }

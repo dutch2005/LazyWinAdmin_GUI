@@ -1,4 +1,4 @@
-#Requires -Version 7.4
+﻿#Requires -Version 7.4
 <#
 .SYNOPSIS
     Runner script for the LazyWinAdmin Pester v5 test suite.
@@ -14,6 +14,9 @@
     pwsh -File Run-Tests.ps1 -Verbose
 #>
 
+[System.Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+    'PSAvoidUsingWriteHost', '',
+    Justification = 'Test runner intentionally uses Write-Host for colored console output.')]
 [CmdletBinding()]
 param (
     # Override test output verbosity. Defaults to Detailed.

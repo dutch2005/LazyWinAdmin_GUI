@@ -1,4 +1,4 @@
-function Get-ComputerUptime {
+﻿function Get-ComputerUptime {
     [CmdletBinding()]
     param (
         [Parameter(ValueFromPipeline=$true)]

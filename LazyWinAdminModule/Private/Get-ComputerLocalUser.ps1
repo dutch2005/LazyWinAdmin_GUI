@@ -1,4 +1,4 @@
-function Get-ComputerLocalUser {
+﻿function Get-ComputerLocalUser {
     <#
     .SYNOPSIS
         Retrieves local user accounts from a remote computer using CIM.

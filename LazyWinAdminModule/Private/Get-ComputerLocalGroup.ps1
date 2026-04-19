@@ -1,4 +1,4 @@
-function Get-ComputerLocalGroup {
+﻿function Get-ComputerLocalGroup {
     <#
     .SYNOPSIS
         Retrieves local groups from a remote computer using CIM.

@@ -1,4 +1,4 @@
-function Set-DeviceComplianceItem {
+﻿function Set-DeviceComplianceItem {
     <#
     .SYNOPSIS
         Remediates a local device compliance item.
@@ -19,7 +19,7 @@ function Set-DeviceComplianceItem {
         End of Windows Update active hours, 0–23 (default 18). Used only with
         WindowsUpdateActiveHours.
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param (
         [Parameter(Mandatory=$true)]
         [ValidateSet('LocationServices', 'OutlookExternalImages', 'WindowsUpdateActiveHours', 'RemoveOneDrive')]
@@ -31,6 +31,10 @@ function Set-DeviceComplianceItem {
         [ValidateRange(0, 23)]
         [int]$ActiveHoursEnd = 18
     )
+
+    if (-not $PSCmdlet.ShouldProcess($Item, "Set compliance item")) {
+        return "[!] Skipped by -WhatIf or -Confirm."
+    }
 
     try {
         switch ($Item) {
@@ -60,7 +64,7 @@ function Set-DeviceComplianceItem {
                         Set-ItemProperty -Path $userConsent -Name 'Value' -Value 'Allow' -Type String -Force
                     }
 
-                try { Restart-Service -Name 'lfsvc' -Force -ErrorAction SilentlyContinue } catch {}
+                try { Restart-Service -Name 'lfsvc' -Force -ErrorAction SilentlyContinue } catch { Write-Verbose "Set-DeviceComplianceItem: operation failed: $_" }
 
                 return "[OK] Location Services enabled and consent set to Allow"
             }

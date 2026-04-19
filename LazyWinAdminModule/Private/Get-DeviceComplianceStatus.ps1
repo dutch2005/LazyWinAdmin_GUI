@@ -1,4 +1,4 @@
-function Get-DeviceComplianceStatus {
+﻿function Get-DeviceComplianceStatus {
     <#
     .SYNOPSIS
         Checks local device compliance items and returns a status list.
@@ -83,7 +83,7 @@ function Get-DeviceComplianceStatus {
         if ($osCaption -like '*Enterprise*') {
             $feature = Get-WindowsOptionalFeature -Online -FeatureName 'Client-UnifiedWriteFilter' -ErrorAction SilentlyContinue
             if ($feature.State -eq 'Enabled') {
-                $uwf    = Get-WmiObject -Namespace 'root\standardcimv2\embedded' -Class 'UWF_Filter' -ErrorAction SilentlyContinue
+                $uwf    = Get-CimInstance -Namespace 'root/standardcimv2/embedded' -ClassName 'UWF_Filter' -ErrorAction SilentlyContinue
                 $status = if ($uwf.CurrentEnabled) { 'Enabled' } else { 'Disabled' }
                 $detail = 'UWF feature installed; CurrentEnabled = ' + $uwf.CurrentEnabled
             }

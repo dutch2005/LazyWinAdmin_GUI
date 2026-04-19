@@ -1,4 +1,4 @@
-function Set-ExchangeMailboxPermission {
+﻿function Set-ExchangeMailboxPermission {
     <#
     .SYNOPSIS
         Mirrors or grants mailbox permissions in Exchange Online.
@@ -19,7 +19,7 @@ function Set-ExchangeMailboxPermission {
     .PARAMETER User
         UPN of the user to grant permissions to (Grant only).
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param (
         [Parameter(Mandatory=$true)]
         [ValidateSet('Mirror', 'Grant')]
@@ -33,6 +33,10 @@ function Set-ExchangeMailboxPermission {
         [string]$Mailbox,
         [string]$User
     )
+
+    if (-not $PSCmdlet.ShouldProcess($Mailbox, "Set mailbox permission")) {
+        return "[!] Skipped by -WhatIf or -Confirm."
+    }
 
     try {
         if ($Action -eq 'Mirror') {

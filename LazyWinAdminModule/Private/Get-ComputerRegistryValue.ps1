@@ -1,4 +1,4 @@
-function Get-ComputerRegistryValue {
+﻿function Get-ComputerRegistryValue {
     <#
     .SYNOPSIS
         Retrieves a registry value from a remote computer using CIM (WMI over WinRM).

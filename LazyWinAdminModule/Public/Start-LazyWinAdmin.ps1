@@ -1,9 +1,9 @@
-function Start-LazyWinAdmin {
+﻿function Start-LazyWinAdmin {
     <#
     .SYNOPSIS
         Starts the modernized WPF-based LazyWinAdmin GUI.
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param ()
 
     # Load required assemblies for WPF
@@ -287,6 +287,9 @@ function Start-LazyWinAdmin {
         #      (e.g. key 's' for search) unpacked by Set-Variable, overwriting $s
         #      before & $s could invoke the scriptblock.
         function Invoke-AsyncAction {
+            [Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+                'PSUseUsingScopeModifierInNewRunspaces', '',
+                Justification = '$__p__ and $__action__ are param() in the ScriptBlock; $key is a foreach variable — all declared within the block')]
             param(
                 [scriptblock]$ScriptBlock,
                 [hashtable]$Parameters             = @{},
