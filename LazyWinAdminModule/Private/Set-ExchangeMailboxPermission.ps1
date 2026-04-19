@@ -66,10 +66,10 @@
                 }
             }
 
-            return if ($count -gt 0) {
-                "[OK] Mirrored $count permission(s) from $SourceUser to $TargetUser"
+            if ($count -gt 0) {
+                return "[OK] Mirrored $count permission(s) from $SourceUser to $TargetUser"
             } else {
-                "[!] No shared mailbox permissions found for $SourceUser"
+                return "[!] No shared mailbox permissions found for $SourceUser"
             }
         }
         elseif ($Action -eq 'Grant') {

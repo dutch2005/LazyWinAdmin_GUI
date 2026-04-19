@@ -20,12 +20,15 @@
         $consentPath = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location'
 
         $policyLocked = $false
+        $policyReg = Get-ItemProperty -Path $policyPath -ErrorAction SilentlyContinue
         foreach ($flag in @('DisableLocation', 'DisableWindowsLocationProvider', 'DisableSensors')) {
-            $v = (Get-ItemProperty -Path $policyPath -ErrorAction SilentlyContinue).$flag
+            $v = if ($null -ne $policyReg) { $policyReg.$flag } else { $null }
             if (($v -as [int]) -eq 1) { $policyLocked = $true }
         }
-        $svcCfg  = (Get-ItemProperty -Path $svcCfgPath  -ErrorAction SilentlyContinue).Status
-        $consent = (Get-ItemProperty -Path $consentPath  -ErrorAction SilentlyContinue).Value
+        $svcReg  = Get-ItemProperty -Path $svcCfgPath  -ErrorAction SilentlyContinue
+        $svcCfg  = if ($null -ne $svcReg)  { $svcReg.Status } else { $null }
+        $cstReg  = Get-ItemProperty -Path $consentPath  -ErrorAction SilentlyContinue
+        $consent = if ($null -ne $cstReg)  { $cstReg.Value  } else { $null }
 
         $status = if (-not $policyLocked -and ($svcCfg -as [int]) -eq 1 -and $consent -match '^(?i)Allow$') {
             'Compliant'
@@ -53,10 +56,11 @@
 
     # 3. Outlook external image auto-download
     try {
-        $regPath = 'HKCU:\Software\Microsoft\Office\16.0\Outlook\Options\Mail'
-        $v       = (Get-ItemProperty -Path $regPath -ErrorAction SilentlyContinue).BlockExtContent
-        $status  = if ($null -eq $v) { 'Not Configured' } elseif ($v -eq 0) { 'Compliant' } else { 'Blocked' }
-        $detail  = "BlockExtContent = $(if ($null -eq $v) { '(not set)' } else { $v })"
+        $regPath  = 'HKCU:\Software\Microsoft\Office\16.0\Outlook\Options\Mail'
+        $outlReg  = Get-ItemProperty -Path $regPath -ErrorAction SilentlyContinue
+        $v        = if ($null -ne $outlReg) { $outlReg.BlockExtContent } else { $null }
+        $status   = if ($null -eq $v) { 'Not Configured' } elseif ($v -eq 0) { 'Compliant' } else { 'Blocked' }
+        $detail   = "BlockExtContent = $(if ($null -eq $v) { '(not set)' } else { $v })"
     }
     catch {
         $status = 'Error'; $detail = "Could not read Outlook registry key."
@@ -67,8 +71,8 @@
     try {
         $regPath = 'HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings'
         $reg     = Get-ItemProperty -Path $regPath -ErrorAction SilentlyContinue
-        $start   = $reg.ActiveHoursStart
-        $end     = $reg.ActiveHoursEnd
+        $start   = if ($null -ne $reg) { $reg.ActiveHoursStart } else { $null }
+        $end     = if ($null -ne $reg) { $reg.ActiveHoursEnd   } else { $null }
         $status  = if ($null -ne $start -and $null -ne $end) { 'Configured' } else { 'Not Configured' }
         $detail  = if ($null -ne $start) { "Active hours: $($start):00 to $($end):00" } else { 'Active hours not set' }
     }
@@ -79,13 +83,16 @@
 
     # 5. Unified Write Filter (Enterprise only)
     try {
-        $osCaption = (Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction SilentlyContinue).Caption
+        $osInfo    = Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction SilentlyContinue
+        $osCaption = if ($null -ne $osInfo) { $osInfo.Caption } else { '' }
         if ($osCaption -like '*Enterprise*') {
-            $feature = Get-WindowsOptionalFeature -Online -FeatureName 'Client-UnifiedWriteFilter' -ErrorAction SilentlyContinue
-            if ($feature.State -eq 'Enabled') {
+            $feature     = Get-WindowsOptionalFeature -Online -FeatureName 'Client-UnifiedWriteFilter' -ErrorAction SilentlyContinue
+            $featureState = if ($null -ne $feature) { $feature.State } else { $null }
+            if ($featureState -eq 'Enabled') {
                 $uwf    = Get-CimInstance -Namespace 'root/standardcimv2/embedded' -ClassName 'UWF_Filter' -ErrorAction SilentlyContinue
-                $status = if ($uwf.CurrentEnabled) { 'Enabled' } else { 'Disabled' }
-                $detail = 'UWF feature installed; CurrentEnabled = ' + $uwf.CurrentEnabled
+                $uwfEnabled = if ($null -ne $uwf) { $uwf.CurrentEnabled } else { $null }
+                $status = if ($uwfEnabled) { 'Enabled' } else { 'Disabled' }
+                $detail = 'UWF feature installed; CurrentEnabled = ' + $uwfEnabled
             }
             else {
                 $status = 'Feature Not Installed'
