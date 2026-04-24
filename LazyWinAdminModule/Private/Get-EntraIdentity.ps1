@@ -49,7 +49,8 @@ function Get-EntraIdentity {
             }
         }
         catch {
-            Write-Warning "Error querying Entra ID: $_"
+            Write-Warning "Error querying Entra ID (type: $($_.Exception.GetType().Name))."
+            Write-Verbose "Entra exception detail: $($_.Exception.Message)"
             return $null
         }
     }

@@ -40,7 +40,7 @@ function Get-ComputerNetwork {
             return $results | Sort-Object Description
         }
         catch {
-            Write-Warning "Error retrieving network info on $ComputerName`: $_"
+            Write-Warning "Error retrieving network info on $ComputerName`: $($_.Exception.Message)"
             return $null
         }
         finally {

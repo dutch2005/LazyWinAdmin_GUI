@@ -113,7 +113,7 @@ function Set-DeviceComplianceItem {
         }
     }
     catch {
-        Write-Warning "Compliance remediation failed for '$Item': $_"
+        Write-Warning "Compliance remediation failed for '$Item': $($_.Exception.Message)"
         return "[!] Remediation failed for '$Item'. Some steps may require Administrator rights."
     }
 }

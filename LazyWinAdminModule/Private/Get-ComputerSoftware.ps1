@@ -82,7 +82,7 @@ function Get-ComputerSoftware {
             return $results | Sort-Object Name
         }
         catch {
-            Write-Warning "Error retrieving software on $ComputerName`: $_"
+            Write-Warning "Error retrieving software on $ComputerName`: $($_.Exception.Message)"
             return $null
         }
     }

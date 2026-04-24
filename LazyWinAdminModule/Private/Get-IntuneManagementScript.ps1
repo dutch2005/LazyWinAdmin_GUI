@@ -57,7 +57,8 @@ function Get-IntuneManagementScript {
                     }
                 }
                 catch {
-                    Write-Warning "Could not download script '$($script.displayName)': $_"
+                    Write-Warning "Could not download script '$($script.displayName)' (type: $($_.Exception.GetType().Name))."
+                    Write-Verbose "Intune download exception detail: $($_.Exception.Message)"
                 }
             }
         }
@@ -75,7 +76,8 @@ function Get-IntuneManagementScript {
         }
     }
     catch {
-        Write-Warning "Error querying Intune management scripts: $_"
+        Write-Warning "Error querying Intune management scripts (type: $($_.Exception.GetType().Name))."
+        Write-Verbose "Intune exception detail: $($_.Exception.Message)"
         return $null
     }
 }

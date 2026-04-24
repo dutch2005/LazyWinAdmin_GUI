@@ -70,7 +70,7 @@ function Set-ComputerRDP {
             return "RDP $action on $ComputerName"
         }
         catch {
-            Write-Warning "Error setting RDP status on $ComputerName`: $_"
+            Write-Warning "Error setting RDP status on $ComputerName`: $($_.Exception.Message)"
             # Return generic message — do not surface exception detail to UI layer
             return "Error: RDP operation failed on $ComputerName"
         }

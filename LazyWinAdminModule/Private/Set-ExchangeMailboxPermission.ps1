@@ -83,7 +83,8 @@ function Set-ExchangeMailboxPermission {
         }
     }
     catch {
-        Write-Warning "Exchange permission operation failed: $_"
+        Write-Warning "Exchange permission operation failed (type: $($_.Exception.GetType().Name))."
+        Write-Verbose "Exchange exception detail: $($_.Exception.Message)"
         return "[!] Operation failed. Verify Exchange Online connection and target mailbox/user."
     }
 }

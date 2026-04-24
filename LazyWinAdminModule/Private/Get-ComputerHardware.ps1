@@ -53,7 +53,7 @@ function Get-ComputerHardware {
             }
         }
         catch {
-            Write-Warning "Error retrieving hardware on $ComputerName`: $_"
+            Write-Warning "Error retrieving hardware on $ComputerName`: $($_.Exception.Message)"
             return $null
         }
         finally {

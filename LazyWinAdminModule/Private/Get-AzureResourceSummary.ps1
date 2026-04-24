@@ -24,7 +24,8 @@ function Get-AzureResourceSummary {
             return $results | Select-Object @{ N = 'Name'; E = { $_.ResourceType } }, Count
         }
         catch {
-            Write-Warning "Error querying Azure Resource Graph: $_"
+            Write-Warning "Error querying Azure Resource Graph (type: $($_.Exception.GetType().Name))."
+            Write-Verbose "Azure exception detail: $($_.Exception.Message)"
             return $null
         }
     }
