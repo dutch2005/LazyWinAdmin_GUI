@@ -64,9 +64,10 @@ function Get-ComputerADInfo {
                     $ldapFilter = if ($AdFilter) { "Name -like '$AdFilter'" } `
                                   else { "Name -like '*'" }
 
+                    # SamAccountName is pii — omitted from projection so it never reaches the UI layer
                     return Get-ADGroup -Filter $ldapFilter `
                         -Properties Description, MemberOf -ErrorAction Stop |
-                        Select-Object Name, SamAccountName, GroupCategory, GroupScope, Description
+                        Select-Object Name, GroupCategory, GroupScope, Description
                 }
             }
         }
