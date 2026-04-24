@@ -905,7 +905,7 @@ function Start-LazyWinAdmin {
                         $lblMailboxPermsCount.Text = "$($lvMailboxPerms.Items.Count) mailbox(es)"
                     } else {
                         $lblMailboxPermsCount.Text = "0 mailbox(es)"
-                        $AppendOutput.Invoke("[Exchange] No shared mailbox permissions found for $upn.")
+                        $AppendOutput.Invoke("[Exchange] No shared mailbox permissions found for $(Hide-UpnLocalPart $upn).")
                     }
                 }
         })

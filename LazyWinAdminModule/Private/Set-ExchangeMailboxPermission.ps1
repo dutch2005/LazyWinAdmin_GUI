@@ -62,10 +62,12 @@ function Set-ExchangeMailboxPermission {
                 }
             }
 
+            $srcMasked = Hide-UpnLocalPart $SourceUser
+            $tgtMasked = Hide-UpnLocalPart $TargetUser
             return if ($count -gt 0) {
-                "[OK] Mirrored $count permission(s) from $SourceUser to $TargetUser"
+                "[OK] Mirrored $count permission(s) from $srcMasked to $tgtMasked"
             } else {
-                "[!] No shared mailbox permissions found for $SourceUser"
+                "[!] No shared mailbox permissions found for $srcMasked"
             }
         }
         elseif ($Action -eq 'Grant') {
@@ -79,7 +81,7 @@ function Set-ExchangeMailboxPermission {
             Add-RecipientPermission -Identity $Mailbox -Trustee $User `
                 -AccessRights SendAs -Confirm:$false -ErrorAction Stop | Out-Null
 
-            return "[OK] Granted FullAccess and SendAs on $Mailbox to $User"
+            return "[OK] Granted FullAccess and SendAs on $(Hide-UpnLocalPart $Mailbox) to $(Hide-UpnLocalPart $User)"
         }
     }
     catch {
