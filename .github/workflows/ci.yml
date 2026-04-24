@@ -1,0 +1,126 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: PSScriptAnalyzer
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache PowerShell modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~\Documents\PowerShell\Modules
+            ~\.local\share\powershell\Modules
+          key: psmodules-lint-${{ runner.os }}-${{ hashFiles('LazyWinAdminModule/LazyWinAdminModule.psd1') }}
+
+      - name: Install PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          if (-not (Get-Module -ListAvailable PSScriptAnalyzer)) {
+            Install-Module PSScriptAnalyzer -Scope CurrentUser -Force -SkipPublisherCheck
+          }
+          Import-Module PSScriptAnalyzer
+          (Get-Module PSScriptAnalyzer).Version
+
+      - name: Run PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          $results = Invoke-ScriptAnalyzer `
+            -Path .\LazyWinAdminModule `
+            -Recurse `
+            -Settings .\.github\PSScriptAnalyzerSettings.psd1 `
+            -ReportSummary
+          if ($results) {
+            $results | Format-Table -AutoSize | Out-String | Write-Host
+            $errors = @($results | Where-Object Severity -eq 'Error')
+            if ($errors.Count -gt 0) {
+              Write-Host "::error::PSScriptAnalyzer found $($errors.Count) error-severity issue(s)"
+              exit 1
+            }
+            $warnings = @($results | Where-Object Severity -eq 'Warning')
+            Write-Host "::warning::PSScriptAnalyzer found $($warnings.Count) warning(s) — review before merge"
+          } else {
+            Write-Host "PSScriptAnalyzer: clean"
+          }
+
+  test:
+    name: Pester v5
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Display PowerShell version
+        shell: pwsh
+        run: $PSVersionTable | Format-List
+
+      - name: Cache PowerShell modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~\Documents\PowerShell\Modules
+            ~\.local\share\powershell\Modules
+          key: psmodules-test-${{ runner.os }}-${{ hashFiles('LazyWinAdminModule/LazyWinAdminModule.psd1') }}
+
+      - name: Install module dependencies
+        shell: pwsh
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          $modules = @(
+            @{ Name = 'Pester'; MinimumVersion = '5.0.0' }
+            @{ Name = 'Microsoft.Graph.Authentication' }
+            @{ Name = 'Microsoft.Graph.Users' }
+            @{ Name = 'Microsoft.Graph.Groups' }
+            @{ Name = 'Microsoft.Graph.DeviceManagement' }
+            @{ Name = 'Az.Accounts' }
+            @{ Name = 'Az.ResourceGraph' }
+          )
+          foreach ($m in $modules) {
+            if (-not (Get-Module -ListAvailable -Name $m.Name | Where-Object {
+                if ($m.MinimumVersion) { $_.Version -ge [version]$m.MinimumVersion } else { $true }
+              })) {
+              Write-Host "Installing $($m.Name)..."
+              Install-Module @m -Scope CurrentUser -Force -SkipPublisherCheck -AllowClobber
+            }
+          }
+
+      - name: Import module (smoke test)
+        shell: pwsh
+        run: |
+          Import-Module .\LazyWinAdminModule\LazyWinAdminModule.psd1 -Force -Verbose
+          Get-Command -Module LazyWinAdminModule
+
+      - name: Run Pester suite
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File .\LazyWinAdminModule\Tests\Run-Tests.ps1 -Output Normal
+
+      - name: Upload test artefacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pester-logs
+          path: |
+            **/*.log
+            **/TestResults*.xml
+          if-no-files-found: ignore

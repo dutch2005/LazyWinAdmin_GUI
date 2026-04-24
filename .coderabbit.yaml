@@ -1,0 +1,78 @@
+# CodeRabbit — repository-level configuration.
+# Reference: https://docs.coderabbit.ai/getting-started/configure-coderabbit
+# Install the GitHub App: https://github.com/apps/coderabbitai
+#
+# Acts as a secondary AI reviewer alongside Gemini Code Assist and Kilo Code.
+# Different models catch different blind spots.
+
+language: en-US
+tone_instructions: >
+  You are reviewing a PowerShell 7.4+ WPF desktop module for Windows
+  administration. Prioritise: CIM vs WMI correctness, layer-boundary
+  violations against lazywinadmin.speq, PII / credential leakage in catch
+  blocks and UI output, OData / LDAP injection at the user-input boundary.
+  Keep feedback concrete (file:line) and concise.
+
+early_access: false
+
+reviews:
+  profile: assertive
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: true
+
+  path_filters:
+    - "!LazyWinAdmin/**"       # legacy 2012 code — preserved, not reviewed
+    - "!Sources/**"            # 2012 Sapien PowerShell Studio sources
+    - "!Media/**"              # screenshots
+    - "!.claude/**"
+    - "!.agent/**"
+    - "!.agents/**"
+
+  path_instructions:
+    - path: "LazyWinAdminModule/Public/Start-LazyWinAdmin.ps1"
+      instructions: >
+        This file currently exceeds the 800-line project cap and mixes XAML
+        loading, UI helpers, async dispatch, and all 11 tabs' event handlers.
+        Flag further growth; welcome refactors that split handlers per tab.
+        Be especially alert to `Dispatcher.InvokeAsync` appearing in new code —
+        the project replaced it with a ConcurrentQueue + DispatcherTimer pattern
+        and reintroducing it risks the cross-thread freeze from v1.1.
+
+    - path: "LazyWinAdminModule/Private/**"
+      instructions: >
+        One function per file. CIM helpers must use `New-CimSession` in try,
+        `Remove-CimSession` in finally, and skip `-ComputerName` for localhost.
+        Never `Get-WmiObject`, never `Win32_Product`. Catch blocks must not
+        surface `$_` raw — scrub exceptions before returning.
+
+    - path: "LazyWinAdminModule/Tests/**"
+      instructions: >
+        Pester v5 only. Tests must mock CIM / Graph / AD — do not rely on a
+        live environment. Behavioural assertions preferred over structural.
+
+    - path: "lazywinadmin.speq"
+      instructions: >
+        This is the architectural contract — treat changes to it with extreme
+        scrutiny. Any CHANGELOG bump must be documented. VOCABULARY and
+        CLASSIFY rules are binding across the entire codebase.
+
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
+
+  tools:
+    github-checks:
+      enabled: true
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  learnings:
+    scope: auto
+  issues:
+    scope: auto
