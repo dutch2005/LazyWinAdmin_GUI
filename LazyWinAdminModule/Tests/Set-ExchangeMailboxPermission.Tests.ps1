@@ -40,52 +40,55 @@ BeforeAll {
 
 Describe 'Set-ExchangeMailboxPermission' {
 
-    Context 'Parameter validation' {
+    Context 'Parameter set enforcement' {
 
-        It 'Action parameter is mandatory — throws without it' {
+        # The parameter binder enforces required combinations. Missing or mixed
+        # parameters now throw ParameterBindingException before the function body
+        # runs — no manual validation needed inside the function.
+
+        It 'Throws when called with no parameters (no parameter set resolves)' {
             { Set-ExchangeMailboxPermission } | Should -Throw
         }
 
-        It 'Invalid Action value throws (ValidateSet enforcement)' {
-            { Set-ExchangeMailboxPermission -Action 'Delete' } | Should -Throw
+        It 'Mirror set: throws when only SourceUser is provided (TargetUser missing)' {
+            { Set-ExchangeMailboxPermission -SourceUser 'src@test.com' } | Should -Throw
+        }
+
+        It 'Mirror set: throws when only TargetUser is provided (SourceUser missing)' {
+            { Set-ExchangeMailboxPermission -TargetUser 'tgt@test.com' } | Should -Throw
+        }
+
+        It 'Grant set: throws when only Mailbox is provided (User missing)' {
+            { Set-ExchangeMailboxPermission -Mailbox 'mb@test.com' } | Should -Throw
+        }
+
+        It 'Grant set: throws when only User is provided (Mailbox missing)' {
+            { Set-ExchangeMailboxPermission -User 'user@test.com' } | Should -Throw
+        }
+
+        It 'Throws when mixing Mirror and Grant parameters' {
+            { Set-ExchangeMailboxPermission -SourceUser 'src' -Mailbox 'mb' } | Should -Throw
+        }
+
+        It 'Rejects empty-string SourceUser via ValidateNotNullOrEmpty' {
+            { Set-ExchangeMailboxPermission -SourceUser '' -TargetUser 'tgt' } | Should -Throw
+        }
+
+        It 'Rejects empty-string Mailbox via ValidateNotNullOrEmpty' {
+            { Set-ExchangeMailboxPermission -Mailbox '' -User 'u' } | Should -Throw
         }
     }
 
     Context 'WhatIf support' {
 
-        It 'Returns "[!] Skipped by -WhatIf or -Confirm." when -WhatIf is specified' {
-            $result = Set-ExchangeMailboxPermission -Action 'Grant' -Mailbox 'mb@test.com' -User 'u@test.com' -WhatIf
+        It 'Grant set: -WhatIf returns skip message' {
+            $result = Set-ExchangeMailboxPermission -Mailbox 'mb@test.com' -User 'u@test.com' -WhatIf
             $result | Should -Be '[!] Skipped by -WhatIf or -Confirm.'
         }
 
-        # Validation must run BEFORE ShouldProcess; otherwise -WhatIf would
-        # claim the action would proceed on a call that's actually a no-op.
-        It 'Returns Mirror validation error (not WhatIf-skip) when -WhatIf used with missing SourceUser/TargetUser' {
-            $result = Set-ExchangeMailboxPermission -Action 'Mirror' -WhatIf
-            $result | Should -Be '[!] Mirror requires both SourceUser and TargetUser.'
-        }
-
-        It 'Returns Grant validation error (not WhatIf-skip) when -WhatIf used with missing Mailbox/User' {
-            $result = Set-ExchangeMailboxPermission -Action 'Grant' -WhatIf
-            $result | Should -Be '[!] Grant requires both Mailbox and User.'
-        }
-    }
-
-    Context 'Mirror — missing SourceUser or TargetUser' {
-
-        It 'Returns [!] message when SourceUser is missing' {
-            $result = Set-ExchangeMailboxPermission -Action 'Mirror' -TargetUser 'target@test.com'
-            $result | Should -Be '[!] Mirror requires both SourceUser and TargetUser.'
-        }
-
-        It 'Returns [!] message when TargetUser is missing' {
-            $result = Set-ExchangeMailboxPermission -Action 'Mirror' -SourceUser 'source@test.com'
-            $result | Should -Be '[!] Mirror requires both SourceUser and TargetUser.'
-        }
-
-        It 'Returns [!] message when both SourceUser and TargetUser are missing' {
-            $result = Set-ExchangeMailboxPermission -Action 'Mirror'
-            $result | Should -Be '[!] Mirror requires both SourceUser and TargetUser.'
+        It 'Mirror set: -WhatIf returns skip message' {
+            $result = Set-ExchangeMailboxPermission -SourceUser 'src@test.com' -TargetUser 'tgt@test.com' -WhatIf
+            $result | Should -Be '[!] Skipped by -WhatIf or -Confirm.'
         }
     }
 
@@ -104,7 +107,7 @@ Describe 'Set-ExchangeMailboxPermission' {
         }
 
         It 'Returns [OK] message with count when permissions found' {
-            $result = Set-ExchangeMailboxPermission -Action 'Mirror' -SourceUser 'source@test.com' -TargetUser 'target@test.com'
+            $result = Set-ExchangeMailboxPermission -SourceUser 'source@test.com' -TargetUser 'target@test.com'
             $result | Should -Match '\[OK\]'
             $result | Should -BeLike '*Mirrored*permission*'
         }
@@ -119,22 +122,9 @@ Describe 'Set-ExchangeMailboxPermission' {
         }
 
         It 'Returns [!] no permissions found message' {
-            $result = Set-ExchangeMailboxPermission -Action 'Mirror' -SourceUser 'noone@test.com' -TargetUser 'target@test.com'
+            $result = Set-ExchangeMailboxPermission -SourceUser 'noone@test.com' -TargetUser 'target@test.com'
             $result | Should -Match '\[!\]'
             $result | Should -BeLike '*No shared mailbox permissions found*'
-        }
-    }
-
-    Context 'Grant — missing Mailbox or User' {
-
-        It 'Returns [!] message when Mailbox is missing' {
-            $result = Set-ExchangeMailboxPermission -Action 'Grant' -User 'user@test.com'
-            $result | Should -Be '[!] Grant requires both Mailbox and User.'
-        }
-
-        It 'Returns [!] message when User is missing' {
-            $result = Set-ExchangeMailboxPermission -Action 'Grant' -Mailbox 'mb@test.com'
-            $result | Should -Be '[!] Grant requires both Mailbox and User.'
         }
     }
 
@@ -146,7 +136,7 @@ Describe 'Set-ExchangeMailboxPermission' {
         }
 
         It 'Returns [OK] message confirming grant' {
-            $result = Set-ExchangeMailboxPermission -Action 'Grant' -Mailbox 'mailbox@test.com' -User 'user@test.com'
+            $result = Set-ExchangeMailboxPermission -Mailbox 'mailbox@test.com' -User 'user@test.com'
             $result | Should -Be '[OK] Granted FullAccess and SendAs on mailbox@test.com to user@test.com'
         }
     }
@@ -158,7 +148,7 @@ Describe 'Set-ExchangeMailboxPermission' {
         }
 
         It 'Returns [!] operation failed message when Get-Mailbox throws' {
-            $result = Set-ExchangeMailboxPermission -Action 'Mirror' -SourceUser 'src@test.com' -TargetUser 'tgt@test.com'
+            $result = Set-ExchangeMailboxPermission -SourceUser 'src@test.com' -TargetUser 'tgt@test.com'
             $result | Should -Match '\[!\]'
             $result | Should -BeLike '*Operation failed*'
         }

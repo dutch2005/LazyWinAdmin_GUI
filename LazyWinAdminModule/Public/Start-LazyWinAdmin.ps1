@@ -928,7 +928,7 @@
             Invoke-AsyncAction `
                 -InitializationScript ([scriptblock]::Create(". '$PrivatePath\Set-ExchangeMailboxPermission.ps1'")) `
                 -Parameters  @{ src = $src; tgt = $tgt } `
-                -ScriptBlock { Set-ExchangeMailboxPermission -Action Mirror -SourceUser $src -TargetUser $tgt } `
+                -ScriptBlock { Set-ExchangeMailboxPermission -SourceUser $src -TargetUser $tgt } `
                 -OnCompleted {
                     param($res)
                     $AppendOutput.Invoke("[Exchange Mirror] $res")
@@ -947,7 +947,7 @@
             Invoke-AsyncAction `
                 -InitializationScript ([scriptblock]::Create(". '$PrivatePath\Set-ExchangeMailboxPermission.ps1'")) `
                 -Parameters  @{ mb = $mb; u = $user } `
-                -ScriptBlock { Set-ExchangeMailboxPermission -Action Grant -Mailbox $mb -User $u } `
+                -ScriptBlock { Set-ExchangeMailboxPermission -Mailbox $mb -User $u } `
                 -OnCompleted {
                     param($res)
                     $AppendOutput.Invoke("[Exchange Grant] $res")
