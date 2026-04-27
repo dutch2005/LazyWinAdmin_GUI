@@ -115,6 +115,24 @@ Describe 'Set-DeviceComplianceItem' {
         }
     }
 
+    Context 'LocationServices remediation — lfsvc restart fails' {
+
+        BeforeAll {
+            Mock Test-Path { $true }
+            Mock New-Item { }
+            Mock Set-ItemProperty { }
+            Mock Get-ChildItem { @() }
+            Mock Restart-Service { throw 'Access denied' }
+        }
+
+        It 'Returns [!] partial-success message when lfsvc restart throws (registry applied, restart failed)' {
+            $result = Set-DeviceComplianceItem -Item 'LocationServices'
+            $result | Should -Match '\[!\]'
+            $result | Should -BeLike '*Registry updated*'
+            $result | Should -BeLike "*lfsvc*"
+        }
+    }
+
     Context 'RemoveOneDrive remediation' {
 
         BeforeAll {

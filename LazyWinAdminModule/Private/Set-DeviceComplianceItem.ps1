@@ -64,9 +64,19 @@
                         Set-ItemProperty -Path $userConsent -Name 'Value' -Value 'Allow' -Type String -Force
                     }
 
-                try { Restart-Service -Name 'lfsvc' -Force -ErrorAction Stop } catch { Write-Verbose "Set-DeviceComplianceItem: operation failed: $_" }
+                $serviceRestarted = $true
+                try {
+                    Restart-Service -Name 'lfsvc' -Force -ErrorAction Stop
+                }
+                catch {
+                    $serviceRestarted = $false
+                    Write-Verbose "Set-DeviceComplianceItem: lfsvc restart failed: $_"
+                }
 
-                return "[OK] Location Services enabled and consent set to Allow"
+                if ($serviceRestarted) {
+                    return "[OK] Location Services enabled and consent set to Allow"
+                }
+                return "[!] Registry updated, but 'lfsvc' service restart failed. Reboot or restart the service manually to apply."
             }
 
             'OutlookExternalImages' {
