@@ -34,6 +34,13 @@ Describe 'Set-DeviceComplianceItem' {
             $result = Set-DeviceComplianceItem -Item 'OutlookExternalImages' -WhatIf
             $result | Should -Be '[!] Skipped by -WhatIf or -Confirm.'
         }
+
+        # Validation must run BEFORE ShouldProcess; otherwise -WhatIf would
+        # claim the action would proceed on a call that's actually a no-op.
+        It 'Returns ActiveHours validation error (not WhatIf-skip) when -WhatIf used with equal start/end' {
+            $result = Set-DeviceComplianceItem -Item 'WindowsUpdateActiveHours' -ActiveHoursStart 8 -ActiveHoursEnd 8 -WhatIf
+            $result | Should -Be '[!] Active hours start and end cannot be the same value.'
+        }
     }
 
     Context 'OutlookExternalImages remediation' {

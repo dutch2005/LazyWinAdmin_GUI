@@ -32,6 +32,12 @@
         [int]$ActiveHoursEnd = 18
     )
 
+    # Validate item-specific parameters BEFORE ShouldProcess so -WhatIf
+    # accurately reflects whether the action would actually run.
+    if ($Item -eq 'WindowsUpdateActiveHours' -and $ActiveHoursStart -eq $ActiveHoursEnd) {
+        return "[!] Active hours start and end cannot be the same value."
+    }
+
     if (-not $PSCmdlet.ShouldProcess($Item, "Set compliance item")) {
         return "[!] Skipped by -WhatIf or -Confirm."
     }
@@ -87,9 +93,7 @@
             }
 
             'WindowsUpdateActiveHours' {
-                if ($ActiveHoursStart -eq $ActiveHoursEnd) {
-                    return "[!] Active hours start and end cannot be the same value."
-                }
+                # ActiveHoursStart -eq ActiveHoursEnd already validated above (pre-ShouldProcess)
                 $regPath = 'HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings'
                 if (-not (Test-Path $regPath)) { New-Item -Path $regPath -Force | Out-Null }
                 Set-ItemProperty -Path $regPath -Name 'ActiveHoursStart' -Value $ActiveHoursStart -Type DWord -Force

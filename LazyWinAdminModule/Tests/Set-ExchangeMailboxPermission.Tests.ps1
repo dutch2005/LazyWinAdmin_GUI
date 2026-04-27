@@ -57,6 +57,18 @@ Describe 'Set-ExchangeMailboxPermission' {
             $result = Set-ExchangeMailboxPermission -Action 'Grant' -Mailbox 'mb@test.com' -User 'u@test.com' -WhatIf
             $result | Should -Be '[!] Skipped by -WhatIf or -Confirm.'
         }
+
+        # Validation must run BEFORE ShouldProcess; otherwise -WhatIf would
+        # claim the action would proceed on a call that's actually a no-op.
+        It 'Returns Mirror validation error (not WhatIf-skip) when -WhatIf used with missing SourceUser/TargetUser' {
+            $result = Set-ExchangeMailboxPermission -Action 'Mirror' -WhatIf
+            $result | Should -Be '[!] Mirror requires both SourceUser and TargetUser.'
+        }
+
+        It 'Returns Grant validation error (not WhatIf-skip) when -WhatIf used with missing Mailbox/User' {
+            $result = Set-ExchangeMailboxPermission -Action 'Grant' -WhatIf
+            $result | Should -Be '[!] Grant requires both Mailbox and User.'
+        }
     }
 
     Context 'Mirror — missing SourceUser or TargetUser' {

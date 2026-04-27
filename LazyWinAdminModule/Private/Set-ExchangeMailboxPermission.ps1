@@ -34,6 +34,16 @@
         [string]$User
     )
 
+    # Validate action-specific parameters BEFORE ShouldProcess so -WhatIf
+    # accurately reflects whether the action would actually run. Otherwise
+    # -WhatIf would claim it'd proceed on a doomed call.
+    if ($Action -eq 'Mirror' -and (-not $SourceUser -or -not $TargetUser)) {
+        return "[!] Mirror requires both SourceUser and TargetUser."
+    }
+    if ($Action -eq 'Grant' -and (-not $Mailbox -or -not $User)) {
+        return "[!] Grant requires both Mailbox and User."
+    }
+
     $target = if ($Action -eq 'Mirror') { "$SourceUser -> $TargetUser" } else { $Mailbox }
     if (-not $PSCmdlet.ShouldProcess($target, "Set mailbox permission ($Action)")) {
         return "[!] Skipped by -WhatIf or -Confirm."
@@ -41,10 +51,6 @@
 
     try {
         if ($Action -eq 'Mirror') {
-            if (-not $SourceUser -or -not $TargetUser) {
-                return "[!] Mirror requires both SourceUser and TargetUser."
-            }
-
             $sharedMailboxes = Get-Mailbox -RecipientTypeDetails SharedMailbox -ErrorAction Stop
             $count = 0
 
@@ -74,10 +80,6 @@
             }
         }
         elseif ($Action -eq 'Grant') {
-            if (-not $Mailbox -or -not $User) {
-                return "[!] Grant requires both Mailbox and User."
-            }
-
             Add-MailboxPermission -Identity $Mailbox -User $User `
                 -AccessRights FullAccess -InheritanceType All -AutoMapping:$false `
                 -ErrorAction Stop | Out-Null
