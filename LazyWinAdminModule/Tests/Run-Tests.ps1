@@ -71,10 +71,15 @@ if (-not $allTestFiles) {
     exit 1
 }
 
-$testPaths = switch ($Suite) {
+$testPaths = @(switch ($Suite) {
     'Integrity' { $allTestFiles | Where-Object { $_ -like '*Integrity*' } }
     'Functions' { $allTestFiles | Where-Object { $_ -notlike '*Integrity*' } }
     default     { $allTestFiles }
+})
+
+if (-not $testPaths) {
+    Write-Error "No test files matched Suite '$Suite' in: $TestsDir"
+    exit 1
 }
 
 # ─────────────────────────────────────────────────────────────────────────────

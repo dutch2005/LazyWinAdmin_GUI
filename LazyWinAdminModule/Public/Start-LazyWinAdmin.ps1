@@ -6,6 +6,10 @@
     [CmdletBinding(SupportsShouldProcess = $true)]
     param ()
 
+    if (-not $PSCmdlet.ShouldProcess('LazyWinAdmin GUI', 'Start')) {
+        return
+    }
+
     # Load required assemblies for WPF
     Add-Type -AssemblyName PresentationFramework
     Add-Type -AssemblyName PresentationCore

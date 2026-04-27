@@ -93,7 +93,7 @@ Describe 'Set-ExchangeMailboxPermission' {
 
         It 'Returns [OK] message with count when permissions found' {
             $result = Set-ExchangeMailboxPermission -Action 'Mirror' -SourceUser 'source@test.com' -TargetUser 'target@test.com'
-            $result | Should -BeLike '*[OK]*'
+            $result | Should -Match '\[OK\]'
             $result | Should -BeLike '*Mirrored*permission*'
         }
     }
@@ -108,7 +108,8 @@ Describe 'Set-ExchangeMailboxPermission' {
 
         It 'Returns [!] no permissions found message' {
             $result = Set-ExchangeMailboxPermission -Action 'Mirror' -SourceUser 'noone@test.com' -TargetUser 'target@test.com'
-            $result | Should -BeLike '*[!]*No shared mailbox permissions found*'
+            $result | Should -Match '\[!\]'
+            $result | Should -BeLike '*No shared mailbox permissions found*'
         }
     }
 
@@ -146,7 +147,8 @@ Describe 'Set-ExchangeMailboxPermission' {
 
         It 'Returns [!] operation failed message when Get-Mailbox throws' {
             $result = Set-ExchangeMailboxPermission -Action 'Mirror' -SourceUser 'src@test.com' -TargetUser 'tgt@test.com'
-            $result | Should -BeLike '*[!]*Operation failed*'
+            $result | Should -Match '\[!\]'
+            $result | Should -BeLike '*Operation failed*'
         }
     }
 }

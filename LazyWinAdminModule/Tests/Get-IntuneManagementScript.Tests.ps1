@@ -14,7 +14,10 @@ BeforeAll {
     Get-ChildItem (Join-Path $script:ModuleRoot 'Private') -Filter '*.ps1' | ForEach-Object { . $_.FullName }
     Get-ChildItem (Join-Path $script:ModuleRoot 'Public')  -Filter '*.ps1' | ForEach-Object { . $_.FullName }
 
-    # Stub for Invoke-MgGraphRequest if not present
+    # Stubs for Microsoft Graph cmdlets if Graph module is not installed on CI runner
+    if (-not (Get-Command Get-MgContext -ErrorAction SilentlyContinue)) {
+        function Get-MgContext { param() }
+    }
     if (-not (Get-Command Invoke-MgGraphRequest -ErrorAction SilentlyContinue)) {
         function Invoke-MgGraphRequest { param([string]$Method, [string]$Uri) }
     }

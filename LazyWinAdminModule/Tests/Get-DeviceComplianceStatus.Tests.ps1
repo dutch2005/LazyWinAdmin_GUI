@@ -14,9 +14,17 @@ BeforeAll {
     Get-ChildItem (Join-Path $script:ModuleRoot 'Private') -Filter '*.ps1' | ForEach-Object { . $_.FullName }
     Get-ChildItem (Join-Path $script:ModuleRoot 'Public')  -Filter '*.ps1' | ForEach-Object { . $_.FullName }
 
-    # Stub for Get-WindowsOptionalFeature if not present on test machine
+    # Stub for Get-WindowsOptionalFeature if not present on test machine.
+    # Uses catch-all params to accept any DISM-style arguments future callers may add.
     if (-not (Get-Command Get-WindowsOptionalFeature -ErrorAction SilentlyContinue)) {
-        function Get-WindowsOptionalFeature { param([switch]$Online, [string]$FeatureName) }
+        function Get-WindowsOptionalFeature {
+            [CmdletBinding()]
+            param(
+                [switch]$Online,
+                [string]$FeatureName,
+                [Parameter(ValueFromRemainingArguments)]$Rest
+            )
+        }
     }
 }
 

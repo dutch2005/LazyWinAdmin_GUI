@@ -64,7 +64,7 @@
                         Set-ItemProperty -Path $userConsent -Name 'Value' -Value 'Allow' -Type String -Force
                     }
 
-                try { Restart-Service -Name 'lfsvc' -Force -ErrorAction SilentlyContinue } catch { Write-Verbose "Set-DeviceComplianceItem: operation failed: $_" }
+                try { Restart-Service -Name 'lfsvc' -Force -ErrorAction Stop } catch { Write-Verbose "Set-DeviceComplianceItem: operation failed: $_" }
 
                 return "[OK] Location Services enabled and consent set to Allow"
             }

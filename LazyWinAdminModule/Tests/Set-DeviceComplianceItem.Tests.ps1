@@ -47,7 +47,7 @@ Describe 'Set-DeviceComplianceItem' {
 
         It 'Returns [OK] message confirming Outlook setting was applied' {
             $result = Set-DeviceComplianceItem -Item 'OutlookExternalImages'
-            $result | Should -BeLike '*[OK]*'
+            $result | Should -Match '\[OK\]'
             $result | Should -BeLike '*Outlook external image*'
         }
 
@@ -92,7 +92,7 @@ Describe 'Set-DeviceComplianceItem' {
 
         It 'Returns [OK] message with hours when start and end differ' {
             $result = Set-DeviceComplianceItem -Item 'WindowsUpdateActiveHours' -ActiveHoursStart 8 -ActiveHoursEnd 18
-            $result | Should -BeLike '*[OK]*'
+            $result | Should -Match '\[OK\]'
             $result | Should -BeLike '*8:00 - 18:00*'
         }
     }
@@ -109,8 +109,9 @@ Describe 'Set-DeviceComplianceItem' {
 
         It 'Returns [OK] message confirming Location Services was enabled' {
             $result = Set-DeviceComplianceItem -Item 'LocationServices'
-            $result | Should -BeLike '*[OK]*'
+            $result | Should -Match '\[OK\]'
             $result | Should -BeLike '*Location Services*'
+            Should -Invoke Restart-Service -Times 1 -Exactly -ParameterFilter { $Name -eq 'lfsvc' }
         }
     }
 
@@ -140,7 +141,8 @@ Describe 'Set-DeviceComplianceItem' {
 
         It 'Returns [!] Remediation failed message when Set-ItemProperty throws' {
             $result = Set-DeviceComplianceItem -Item 'OutlookExternalImages'
-            $result | Should -BeLike "*[!]*Remediation failed*"
+            $result | Should -Match '\[!\]'
+            $result | Should -BeLike '*Remediation failed*'
         }
     }
 }

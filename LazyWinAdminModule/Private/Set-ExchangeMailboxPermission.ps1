@@ -34,7 +34,8 @@
         [string]$User
     )
 
-    if (-not $PSCmdlet.ShouldProcess($Mailbox, "Set mailbox permission")) {
+    $target = if ($Action -eq 'Mirror') { "$SourceUser -> $TargetUser" } else { $Mailbox }
+    if (-not $PSCmdlet.ShouldProcess($target, "Set mailbox permission ($Action)")) {
         return "[!] Skipped by -WhatIf or -Confirm."
     }
 

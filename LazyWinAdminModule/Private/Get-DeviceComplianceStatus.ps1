@@ -89,10 +89,10 @@
             $feature     = Get-WindowsOptionalFeature -Online -FeatureName 'Client-UnifiedWriteFilter' -ErrorAction SilentlyContinue
             $featureState = if ($null -ne $feature) { $feature.State } else { $null }
             if ($featureState -eq 'Enabled') {
-                $uwf    = Get-CimInstance -Namespace 'root/standardcimv2/embedded' -ClassName 'UWF_Filter' -ErrorAction SilentlyContinue
+                $uwf        = Get-CimInstance -Namespace 'root/standardcimv2/embedded' -ClassName 'UWF_Filter' -ErrorAction SilentlyContinue
                 $uwfEnabled = if ($null -ne $uwf) { $uwf.CurrentEnabled } else { $null }
-                $status = if ($uwfEnabled) { 'Enabled' } else { 'Disabled' }
-                $detail = 'UWF feature installed; CurrentEnabled = ' + $uwfEnabled
+                $status     = if ($null -eq $uwfEnabled) { 'Error' } elseif ($uwfEnabled) { 'Enabled' } else { 'Disabled' }
+                $detail     = 'UWF feature installed; CurrentEnabled = ' + $(if ($null -eq $uwfEnabled) { 'Unknown' } else { $uwfEnabled })
             }
             else {
                 $status = 'Feature Not Installed'
