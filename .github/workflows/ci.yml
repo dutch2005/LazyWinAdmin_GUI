@@ -21,14 +21,23 @@ jobs:
           Set-PSRepository PSGallery -InstallationPolicy Trusted
           Install-Module PSScriptAnalyzer -MinimumVersion 1.21.0 -Force -Scope CurrentUser
 
+      # NOTE: PSScriptAnalyzer occasionally emits a non-terminating internal
+      # diagnostic ("Reference Position should begin before start Position of
+      # Range") that GitHub Actions' default $ErrorActionPreference='Stop'
+      # promotes to a terminating error. We override to 'Continue' and use
+      # -ErrorAction SilentlyContinue so the analyzer can finish; real findings
+      # still appear in $issues and trigger the Count gate below.
+
       - name: Lint — Classes
         shell: pwsh
         run: |
-          $issues = Invoke-ScriptAnalyzer `
+          $ErrorActionPreference = 'Continue'
+          $issues = @(Invoke-ScriptAnalyzer `
             -Path   LazyWinAdminModule/Classes `
             -Recurse `
             -Severity Error,Warning `
-            -Settings LazyWinAdminModule/PSScriptAnalyzerSettings.psd1
+            -Settings LazyWinAdminModule/PSScriptAnalyzerSettings.psd1 `
+            -ErrorAction SilentlyContinue)
           if ($issues.Count -gt 0) {
             $issues | Format-Table ScriptName,Line,RuleName,Message -AutoSize -Wrap
             throw "$($issues.Count) lint issue(s) in Classes/"
@@ -37,11 +46,13 @@ jobs:
       - name: Lint — Private functions
         shell: pwsh
         run: |
-          $issues = Invoke-ScriptAnalyzer `
+          $ErrorActionPreference = 'Continue'
+          $issues = @(Invoke-ScriptAnalyzer `
             -Path   LazyWinAdminModule/Private `
             -Recurse `
             -Severity Error,Warning `
-            -Settings LazyWinAdminModule/PSScriptAnalyzerSettings.psd1
+            -Settings LazyWinAdminModule/PSScriptAnalyzerSettings.psd1 `
+            -ErrorAction SilentlyContinue)
           if ($issues.Count -gt 0) {
             $issues | Format-Table ScriptName,Line,RuleName,Message -AutoSize -Wrap
             throw "$($issues.Count) lint issue(s) in Private/"
@@ -50,11 +61,13 @@ jobs:
       - name: Lint — Public functions
         shell: pwsh
         run: |
-          $issues = Invoke-ScriptAnalyzer `
+          $ErrorActionPreference = 'Continue'
+          $issues = @(Invoke-ScriptAnalyzer `
             -Path   LazyWinAdminModule/Public `
             -Recurse `
             -Severity Error,Warning `
-            -Settings LazyWinAdminModule/PSScriptAnalyzerSettings.psd1
+            -Settings LazyWinAdminModule/PSScriptAnalyzerSettings.psd1 `
+            -ErrorAction SilentlyContinue)
           if ($issues.Count -gt 0) {
             $issues | Format-Table ScriptName,Line,RuleName,Message -AutoSize -Wrap
             throw "$($issues.Count) lint issue(s) in Public/"
@@ -63,12 +76,14 @@ jobs:
       - name: Lint — Test files
         shell: pwsh
         run: |
-          $issues = Invoke-ScriptAnalyzer `
+          $ErrorActionPreference = 'Continue'
+          $issues = @(Invoke-ScriptAnalyzer `
             -Path   LazyWinAdminModule/Tests `
             -Recurse `
             -Severity Error,Warning `
             -ExcludeRule PSAvoidUsingWriteHost,PSAvoidUsingComputerNameHardcoded,PSReviewUnusedParameter,PSAvoidUsingConvertToSecureStringWithPlainText `
-            -Settings LazyWinAdminModule/PSScriptAnalyzerSettings.psd1
+            -Settings LazyWinAdminModule/PSScriptAnalyzerSettings.psd1 `
+            -ErrorAction SilentlyContinue)
           if ($issues.Count -gt 0) {
             $issues | Format-Table ScriptName,Line,RuleName,Message -AutoSize -Wrap
             throw "$($issues.Count) lint issue(s) in Tests/"
