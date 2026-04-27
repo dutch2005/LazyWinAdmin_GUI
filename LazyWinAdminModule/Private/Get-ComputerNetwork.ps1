@@ -1,4 +1,4 @@
-function Get-ComputerNetwork {
+﻿function Get-ComputerNetwork {
     <#
     .SYNOPSIS
         Retrieves network adapter configuration from a remote computer using CIM.

@@ -1,4 +1,4 @@
-function Get-IntuneDevice {
+﻿function Get-IntuneDevice {
     <#
     .SYNOPSIS
         Retrieves managed devices from Microsoft Intune using Microsoft Graph.

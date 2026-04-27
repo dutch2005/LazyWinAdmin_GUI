@@ -1,4 +1,4 @@
-function Set-DeviceComplianceItem {
+﻿function Set-DeviceComplianceItem {
     <#
     .SYNOPSIS
         Remediates a local device compliance item.
@@ -19,7 +19,7 @@ function Set-DeviceComplianceItem {
         End of Windows Update active hours, 0–23 (default 18). Used only with
         WindowsUpdateActiveHours.
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param (
         [Parameter(Mandatory=$true)]
         [ValidateSet('LocationServices', 'OutlookExternalImages', 'WindowsUpdateActiveHours', 'RemoveOneDrive')]
@@ -31,6 +31,16 @@ function Set-DeviceComplianceItem {
         [ValidateRange(0, 23)]
         [int]$ActiveHoursEnd = 18
     )
+
+    # Validate item-specific parameters BEFORE ShouldProcess so -WhatIf
+    # accurately reflects whether the action would actually run.
+    if ($Item -eq 'WindowsUpdateActiveHours' -and $ActiveHoursStart -eq $ActiveHoursEnd) {
+        return "[!] Active hours start and end cannot be the same value."
+    }
+
+    if (-not $PSCmdlet.ShouldProcess($Item, "Set compliance item")) {
+        return "[!] Skipped by -WhatIf or -Confirm."
+    }
 
     try {
         switch ($Item) {
@@ -60,9 +70,19 @@ function Set-DeviceComplianceItem {
                         Set-ItemProperty -Path $userConsent -Name 'Value' -Value 'Allow' -Type String -Force
                     }
 
-                try { Restart-Service -Name 'lfsvc' -Force -ErrorAction SilentlyContinue } catch {}
+                $serviceRestarted = $true
+                try {
+                    Restart-Service -Name 'lfsvc' -Force -ErrorAction Stop
+                }
+                catch {
+                    $serviceRestarted = $false
+                    Write-Verbose "Set-DeviceComplianceItem: lfsvc restart failed: $_"
+                }
 
-                return "[OK] Location Services enabled and consent set to Allow"
+                if ($serviceRestarted) {
+                    return "[OK] Location Services enabled and consent set to Allow"
+                }
+                return "[!] Registry updated, but 'lfsvc' service restart failed. Reboot or restart the service manually to apply."
             }
 
             'OutlookExternalImages' {
@@ -73,9 +93,7 @@ function Set-DeviceComplianceItem {
             }
 
             'WindowsUpdateActiveHours' {
-                if ($ActiveHoursStart -eq $ActiveHoursEnd) {
-                    return "[!] Active hours start and end cannot be the same value."
-                }
+                # ActiveHoursStart -eq ActiveHoursEnd already validated above (pre-ShouldProcess)
                 $regPath = 'HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings'
                 if (-not (Test-Path $regPath)) { New-Item -Path $regPath -Force | Out-Null }
                 Set-ItemProperty -Path $regPath -Name 'ActiveHoursStart' -Value $ActiveHoursStart -Type DWord -Force

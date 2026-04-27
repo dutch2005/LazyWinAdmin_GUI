@@ -1,4 +1,4 @@
-function Get-IntuneManagementScript {
+﻿function Get-IntuneManagementScript {
     <#
     .SYNOPSIS
         Lists Intune device management scripts and optionally downloads their content.

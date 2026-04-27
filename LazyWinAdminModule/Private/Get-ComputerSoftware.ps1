@@ -1,4 +1,4 @@
-function Get-ComputerSoftware {
+﻿function Get-ComputerSoftware {
     <#
     .SYNOPSIS
         Retrieves installed software from a remote computer via registry enumeration.

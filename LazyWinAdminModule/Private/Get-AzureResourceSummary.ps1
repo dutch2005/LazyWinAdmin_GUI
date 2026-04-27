@@ -1,4 +1,4 @@
-function Get-AzureResourceSummary {
+﻿function Get-AzureResourceSummary {
     <#
     .SYNOPSIS
         Retrieves a summary of Azure resources grouped by type using Azure Resource Graph.

@@ -1,4 +1,4 @@
-function Get-ComputerMotherboard {
+﻿function Get-ComputerMotherboard {
     <#
     .SYNOPSIS
         Retrieves motherboard information from a remote computer using CIM.

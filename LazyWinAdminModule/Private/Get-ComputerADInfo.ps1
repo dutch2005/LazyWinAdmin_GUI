@@ -1,4 +1,4 @@
-function Get-ComputerADInfo {
+﻿function Get-ComputerADInfo {
     <#
     .SYNOPSIS
         Queries Active Directory for computer, user, or group objects.

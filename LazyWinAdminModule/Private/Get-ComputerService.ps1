@@ -1,4 +1,4 @@
-function Get-ComputerService {
+﻿function Get-ComputerService {
     <#
     .SYNOPSIS
         Retrieves service information from a remote computer using CIM.

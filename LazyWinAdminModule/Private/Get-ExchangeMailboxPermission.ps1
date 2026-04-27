@@ -1,4 +1,4 @@
-function Get-ExchangeMailboxPermission {
+﻿function Get-ExchangeMailboxPermission {
     <#
     .SYNOPSIS
         Lists all shared mailboxes a given user has FullAccess or SendAs on.

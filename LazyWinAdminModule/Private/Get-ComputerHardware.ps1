@@ -1,4 +1,4 @@
-function Get-ComputerHardware {
+﻿function Get-ComputerHardware {
     <#
     .SYNOPSIS
         Retrieves hardware information (System, CPU, RAM, Disks) from a remote computer.
