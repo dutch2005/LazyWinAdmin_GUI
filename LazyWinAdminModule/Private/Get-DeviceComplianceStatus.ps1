@@ -92,7 +92,7 @@
                 $uwf        = Get-CimInstance -Namespace 'root/standardcimv2/embedded' -ClassName 'UWF_Filter' -ErrorAction SilentlyContinue
                 $uwfEnabled = if ($null -ne $uwf) { $uwf.CurrentEnabled } else { $null }
                 $status     = if ($null -eq $uwfEnabled) { 'Error' } elseif ($uwfEnabled) { 'Enabled' } else { 'Disabled' }
-                $detail     = 'UWF feature installed; CurrentEnabled = ' + $(if ($null -eq $uwfEnabled) { 'Unknown' } else { $uwfEnabled })
+                $detail     = "UWF feature installed; CurrentEnabled = $(if ($null -eq $uwfEnabled) { 'Unknown' } else { $uwfEnabled })"
             }
             else {
                 $status = 'Feature Not Installed'
