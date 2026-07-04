@@ -69,7 +69,7 @@ BeforeAll {
         function Get-MgContext { }
     }
     if (-not (Get-Command Connect-MgGraph -ErrorAction SilentlyContinue)) {
-        function Connect-MgGraph { param([string[]]$Scopes, [string]$TenantId, [string]$ClientId, $ClientSecretCredential) }
+        function Connect-MgGraph { param([string[]]$Scopes, [string]$TenantId, [string]$ClientId, [pscredential]$ClientSecretCredential) }
     }
     if (-not (Get-Command Get-MgUser -ErrorAction SilentlyContinue)) {
         function Get-MgUser { param([string]$Filter, [int]$Top) }
