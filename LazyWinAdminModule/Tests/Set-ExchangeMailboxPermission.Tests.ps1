@@ -6,6 +6,9 @@
 [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute(
     'PSReviewUnusedParameter', '',
     Justification = 'Mock stub functions declare params to match real signatures.')]
+[System.Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+    'PSUseShouldProcessForStateChangingFunctions', '',
+    Justification = 'Set-Mailbox stub emulates the real Exchange cmdlet name for mocking; it performs no work.')]
 param()
 
 BeforeAll {
