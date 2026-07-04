@@ -16,7 +16,7 @@ BeforeAll {
 
     # Stubs for Exchange cmdlets
     if (-not (Get-Command Get-Mailbox -ErrorAction SilentlyContinue)) {
-        function Get-Mailbox { param([string]$RecipientTypeDetails, [string]$Identity) }
+        function Get-Mailbox { param([string[]]$RecipientTypeDetails, [string]$Identity, $ResultSize) }
     }
     if (-not (Get-Command Get-MailboxPermission -ErrorAction SilentlyContinue)) {
         function Get-MailboxPermission { param([string]$Identity) }
@@ -30,11 +30,22 @@ BeforeAll {
     if (-not (Get-Command Add-RecipientPermission -ErrorAction SilentlyContinue)) {
         function Add-RecipientPermission { param([string]$Identity, [string]$Trustee, [string[]]$AccessRights, [switch]$Confirm) }
     }
+    if (-not (Get-Command Set-Mailbox -ErrorAction SilentlyContinue)) {
+        function Set-Mailbox { param([string]$Identity, $GrantSendOnBehalfTo) }
+    }
 
     $script:FakeMailbox = [PSCustomObject]@{
         Alias              = 'shared-mb'
         PrimarySmtpAddress = 'shared@contoso.com'
         DisplayName        = 'Shared Mailbox'
+    }
+
+    # Mailbox fixture whose Send-on-Behalf delegate list contains the source user.
+    $script:FakeSobMailbox = [PSCustomObject]@{
+        Alias               = 'sob-mb'
+        PrimarySmtpAddress  = 'sob@contoso.com'
+        DisplayName         = 'SOB Mailbox'
+        GrantSendOnBehalfTo = @('source@test.com')
     }
 }
 
@@ -124,7 +135,25 @@ Describe 'Set-ExchangeMailboxPermission' {
         It 'Returns [!] no permissions found message' {
             $result = Set-ExchangeMailboxPermission -SourceUser 'noone@test.com' -TargetUser 'target@test.com'
             $result | Should -Match '\[!\]'
-            $result | Should -BeLike '*No shared mailbox permissions found*'
+            $result | Should -BeLike '*No mailbox permissions found*'
+        }
+    }
+
+    Context 'Mirror — source has Send-on-Behalf' {
+
+        BeforeAll {
+            Mock Get-Mailbox { @($script:FakeSobMailbox) }
+            Mock Get-MailboxPermission { @() }
+            Mock Get-RecipientPermission { @() }
+            Mock Set-Mailbox { }
+        }
+
+        It 'Copies SendOnBehalf to the target via Set-Mailbox' {
+            $result = Set-ExchangeMailboxPermission -SourceUser 'source@test.com' -TargetUser 'target@test.com'
+            $result | Should -Match '\[OK\]'
+            Should -Invoke Set-Mailbox -Times 1 -Exactly -ParameterFilter {
+                $Identity -eq 'sob-mb' -and $GrantSendOnBehalfTo['Add'] -eq 'target@test.com'
+            }
         }
     }
 
@@ -133,11 +162,19 @@ Describe 'Set-ExchangeMailboxPermission' {
         BeforeAll {
             Mock Add-MailboxPermission { }
             Mock Add-RecipientPermission { }
+            Mock Set-Mailbox { }
         }
 
-        It 'Returns [OK] message confirming grant' {
+        It 'Returns [OK] message confirming grant (FullAccess, SendAs and SendOnBehalf)' {
             $result = Set-ExchangeMailboxPermission -Mailbox 'mailbox@test.com' -User 'user@test.com'
-            $result | Should -Be '[OK] Granted FullAccess and SendAs on mailbox@test.com to user@test.com'
+            $result | Should -Be '[OK] Granted FullAccess, SendAs and SendOnBehalf on mailbox@test.com to user@test.com'
+        }
+
+        It 'Grants SendOnBehalf via Set-Mailbox' {
+            Set-ExchangeMailboxPermission -Mailbox 'mailbox@test.com' -User 'user@test.com' | Out-Null
+            Should -Invoke Set-Mailbox -Times 1 -Exactly -ParameterFilter {
+                $Identity -eq 'mailbox@test.com' -and $GrantSendOnBehalfTo['Add'] -eq 'user@test.com'
+            }
         }
     }
 

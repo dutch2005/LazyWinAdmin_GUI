@@ -95,6 +95,7 @@
 
         # Exchange controls
         $txtExchangeUpn         = $window.FindName("txtExchangeUpn")
+        $txtExchangeDelegatedOrg = $window.FindName("txtExchangeDelegatedOrg")
         $btnConnectExchange     = $window.FindName("btnConnectExchange")
         $lblExchangeStatus      = $window.FindName("lblExchangeStatus")
         $btnGetMailboxPerms     = $window.FindName("btnGetMailboxPerms")
@@ -874,11 +875,12 @@
 
         # --- EXCHANGE HANDLERS ---
         $btnConnectExchange.Add_Click({
-            $upn = $txtExchangeUpn.Text
+            $upn   = $txtExchangeUpn.Text
+            $deleg = $txtExchangeDelegatedOrg.Text
             Invoke-AsyncAction `
                 -InitializationScript ([scriptblock]::Create(". '$PrivatePath\Connect-ExchangeSession.ps1'")) `
-                -Parameters  @{ u = $upn } `
-                -ScriptBlock { Connect-ExchangeSession -UserPrincipalName $u } `
+                -Parameters  @{ u = $upn; d = $deleg } `
+                -ScriptBlock { Connect-ExchangeSession -UserPrincipalName $u -DelegatedOrganization $d } `
                 -OnCompleted {
                     param($res)
                     $connected = $res -match '^\[OK\]'
