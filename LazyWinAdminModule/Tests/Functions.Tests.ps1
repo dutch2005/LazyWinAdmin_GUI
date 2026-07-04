@@ -55,6 +55,43 @@ BeforeAll {
         ForEach-Object { . $_.FullName }
     Get-ChildItem (Join-Path $script:ModuleRoot 'Public')   -Filter '*.ps1' |
         ForEach-Object { . $_.FullName }
+
+    # ── Graph / Az cmdlet stubs ──────────────────────────────────────────────
+    # Pester v5 cannot Mock a command that doesn't exist. On a dev box without
+    # the Microsoft.Graph.* / Az.* modules installed, these cmdlets are absent
+    # and every Mock of them throws CommandNotFoundException (17 failures on a
+    # clean machine). Define no-op stubs — matching the parameters the private
+    # functions actually pass — ONLY when the real command is missing, so Mock
+    # has something to attach to. When the real modules are present (e.g. CI),
+    # each guard is false and the real cmdlets are used: identical behaviour to
+    # before. Mirrors the Exchange stub pattern in the Set-/Get-Exchange* tests.
+    if (-not (Get-Command Get-MgContext -ErrorAction SilentlyContinue)) {
+        function Get-MgContext { }
+    }
+    if (-not (Get-Command Connect-MgGraph -ErrorAction SilentlyContinue)) {
+        function Connect-MgGraph { param([string[]]$Scopes, [string]$TenantId, [string]$ClientId, $ClientSecretCredential) }
+    }
+    if (-not (Get-Command Get-MgUser -ErrorAction SilentlyContinue)) {
+        function Get-MgUser { param([string]$Filter, [int]$Top) }
+    }
+    if (-not (Get-Command Get-MgGroup -ErrorAction SilentlyContinue)) {
+        function Get-MgGroup { param([string]$Filter, [int]$Top) }
+    }
+    if (-not (Get-Command Get-MgDeviceManagementManagedDevice -ErrorAction SilentlyContinue)) {
+        function Get-MgDeviceManagementManagedDevice { param([string]$Filter, [int]$Top) }
+    }
+    if (-not (Get-Command Get-AzContext -ErrorAction SilentlyContinue)) {
+        function Get-AzContext { }
+    }
+    if (-not (Get-Command Search-AzGraph -ErrorAction SilentlyContinue)) {
+        function Search-AzGraph { param([string]$Query) }
+    }
+    # Get-AzResource is never called by the code under test — it is mocked only so
+    # tests can assert it is NOT invoked (Search-AzGraph is used instead). The
+    # negative assertion still needs the command to resolve on a clean box.
+    if (-not (Get-Command Get-AzResource -ErrorAction SilentlyContinue)) {
+        function Get-AzResource { param([string]$ResourceType, [string]$Name) }
+    }
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
