@@ -1,4 +1,4 @@
-﻿function Get-ComputerMotherboard {
+function Get-ComputerMotherboard {
     <#
     .SYNOPSIS
         Retrieves motherboard information from a remote computer using CIM.
@@ -15,8 +15,8 @@
     process {
         $CimSession = $null
         try {
-            $isLocal    = $ComputerName -iin @('localhost', '127.0.0.1', $env:COMPUTERNAME)
-            $CimSession = if ($isLocal) { New-CimSession -ErrorAction Stop } else { New-CimSession -ComputerName $ComputerName -ErrorAction Stop }
+            . $PSScriptRoot\Get-LocalOrRemoteCimSession.ps1
+            $CimSession = Get-LocalOrRemoteCimSession -ComputerName $ComputerName
             $baseBoard   = Get-CimInstance -CimSession $CimSession -ClassName Win32_BaseBoard -ErrorAction Stop
 
             return [PSCustomObject]@{

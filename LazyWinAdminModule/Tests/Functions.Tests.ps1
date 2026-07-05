@@ -1,4 +1,4 @@
-﻿#Requires -Version 7.4
+#Requires -Version 7.4
 #Requires -Modules @{ ModuleName = 'Pester'; ModuleVersion = '5.0' }
 [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute(
     'PSAvoidUsingWriteHost', '',
@@ -1132,6 +1132,7 @@ Describe 'Get-ComputerADInfo' {
         }
 
         It 'Returns $null when AdFilter contains disallowed characters' {
+            # semicolon and pipe are still rejected
             $result = Get-ComputerADInfo -Type 'Computer' -AdFilter 'PC*; DROP'
             $result | Should -BeNullOrEmpty
         }
@@ -1145,6 +1146,24 @@ Describe 'Get-ComputerADInfo' {
                 })
             }
             $result = Get-ComputerADInfo -Type 'Computer' -AdFilter 'PC*'
+            $result | Should -Not -BeNullOrEmpty
+        }
+
+        It 'Accepts DOMAIN\sAMAccountName (backslash)' {
+            Mock Get-ADUser { return @([PSCustomObject]@{ DisplayName = "Jane Doe" }) }
+            $result = Get-ComputerADInfo -Type 'User' -AdFilter 'CONTOSO\jane.doe'
+            $result | Should -Not -BeNullOrEmpty
+        }
+
+        It 'Accepts CN=Users,DC=example,DC=com (commas + equals)' {
+            Mock Get-ADUser { return @([PSCustomObject]@{ DisplayName = "Jane Doe" }) }
+            $result = Get-ComputerADInfo -Type 'User' -AdFilter 'CN=Users,DC=example,DC=com'
+            $result | Should -Not -BeNullOrEmpty
+        }
+
+        It 'Accepts Jane (Contractor) (parentheses in CN)' {
+            Mock Get-ADUser { return @([PSCustomObject]@{ DisplayName = "Jane (Contractor)" }) }
+            $result = Get-ComputerADInfo -Type 'User' -AdFilter 'Jane (Contractor)'
             $result | Should -Not -BeNullOrEmpty
         }
     }
@@ -1244,10 +1263,10 @@ Describe 'Get-ComputerADInfo' {
             $result | Should -Not -BeNullOrEmpty
         }
 
-        It 'Group objects have expected properties (including SamAccountName)' {
+        It 'Group objects have expected properties (excluding SamAccountName due to SEC-5)' {
             $result = Get-ComputerADInfo -Type 'Group'
             $obj    = $result | Select-Object -First 1
-            @('Name','SamAccountName','GroupCategory','GroupScope','Description') |
+            @('Name','GroupCategory','GroupScope','Description') |
               ForEach-Object { $obj.PSObject.Properties.Name | Should -Contain $_ }
         }
     }

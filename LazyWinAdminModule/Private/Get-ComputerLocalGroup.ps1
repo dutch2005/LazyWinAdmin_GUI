@@ -1,4 +1,4 @@
-﻿function Get-ComputerLocalGroup {
+function Get-ComputerLocalGroup {
     <#
     .SYNOPSIS
         Retrieves local groups from a remote computer using CIM.
@@ -10,16 +10,19 @@
     )
 
     process {
+        . $PSScriptRoot\Get-LocalOrRemoteCimSession.ps1
         try {
-            $isLocal   = $ComputerName -iin @('localhost', '127.0.0.1', $env:COMPUTERNAME)
-            $cimParams = @{ ClassName = "Win32_Group"; Filter = "LocalAccount = True"; ErrorAction = "Stop" }
-            if (-not $isLocal) { $cimParams.ComputerName = $ComputerName }
+            $CimSession = Get-LocalOrRemoteCimSession -ComputerName $ComputerName
+            $cimParams = @{ ClassName = "Win32_Group"; Filter = "LocalAccount = True"; CimSession = $CimSession; ErrorAction = "Stop" }
             $groups = Get-CimInstance @cimParams
             return $groups | Select-Object Name, Caption, SID, Status
         }
         catch {
             Write-Warning "Error getting local groups for $ComputerName`: $($_.Exception.Message)"
             return $null
+        }
+        finally {
+            if ($CimSession) { Remove-CimSession $CimSession -ErrorAction SilentlyContinue }
         }
     }
 }

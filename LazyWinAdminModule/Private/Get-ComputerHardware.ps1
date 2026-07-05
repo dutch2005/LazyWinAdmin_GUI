@@ -1,4 +1,4 @@
-﻿function Get-ComputerHardware {
+function Get-ComputerHardware {
     <#
     .SYNOPSIS
         Retrieves hardware information (System, CPU, RAM, Disks) from a remote computer.
@@ -13,11 +13,9 @@
     )
 
     process {
-        $CimSession = $null
+        . $PSScriptRoot\Get-LocalOrRemoteCimSession.ps1
         try {
-            $isLocal    = $ComputerName -iin @('localhost', '127.0.0.1', $env:COMPUTERNAME)
-            $CimSession = if ($isLocal) { New-CimSession -ErrorAction Stop } else { New-CimSession -ComputerName $ComputerName -ErrorAction Stop }
-
+            $CimSession = Get-LocalOrRemoteCimSession -ComputerName $ComputerName
             $cs   = Get-CimInstance -CimSession $CimSession -ClassName Win32_ComputerSystem    -ErrorAction Stop
             $os   = Get-CimInstance -CimSession $CimSession -ClassName Win32_OperatingSystem   -ErrorAction Stop
             $bios = Get-CimInstance -CimSession $CimSession -ClassName Win32_Bios              -ErrorAction Stop

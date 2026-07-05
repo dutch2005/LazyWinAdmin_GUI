@@ -1,4 +1,4 @@
-﻿function Get-ComputerSoftware {
+function Get-ComputerSoftware {
     <#
     .SYNOPSIS
         Retrieves installed software from a remote computer via registry enumeration.
@@ -16,12 +16,12 @@
     )
 
     process {
+        . $PSScriptRoot\Get-LocalOrRemoteCimSession.ps1
         try {
+            $CimSession = Get-LocalOrRemoteCimSession -ComputerName $ComputerName
             $hive    = [UInt32]2147483650  # HKLM
-            $isLocal = $ComputerName -iin @('localhost', '127.0.0.1', $env:COMPUTERNAME)
 
-            $regParams = @{ Namespace = "root\default"; ClassName = "StdRegProv"; ErrorAction = "Stop" }
-            if (-not $isLocal) { $regParams.ComputerName = $ComputerName }
+            $regParams = @{ Namespace = "root\default"; ClassName = "StdRegProv"; CimSession = $CimSession; ErrorAction = "Stop" }
             $reg = Get-CimInstance @regParams
 
             $uninstallPaths = @(
@@ -82,8 +82,12 @@
             return $results | Sort-Object Name
         }
         catch {
-            Write-Warning "Error retrieving software on $ComputerName`: $($_.Exception.Message)"
+            Write-Warning "Failed to query software. (type: $($_.Exception.GetType().Name))"
+            Write-Verbose "Exception detail: $($_.Exception.Message)"
             return $null
+        }
+        finally {
+            if ($CimSession) { Remove-CimSession $CimSession -ErrorAction SilentlyContinue }
         }
     }
 }

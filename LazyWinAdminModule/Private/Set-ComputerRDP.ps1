@@ -1,4 +1,4 @@
-﻿function Set-ComputerRDP {
+function Set-ComputerRDP {
     <#
     .SYNOPSIS
         Enables or Disables Remote Desktop on a remote computer.
@@ -34,8 +34,8 @@
         }
         $CimSession = $null
         try {
-            $isLocal    = $ComputerName -iin @('localhost', '127.0.0.1', $env:COMPUTERNAME)
-            $CimSession = if ($isLocal) { New-CimSession -ErrorAction Stop } else { New-CimSession -ComputerName $ComputerName -ErrorAction Stop }
+        . $PSScriptRoot\Get-LocalOrRemoteCimSession.ps1
+        $CimSession = Get-LocalOrRemoteCimSession -ComputerName $ComputerName
 
             # --- STEP 3: computer.set_rdp_registry ---
             # Toggle fDenyTSConnections in the Terminal Server registry key.

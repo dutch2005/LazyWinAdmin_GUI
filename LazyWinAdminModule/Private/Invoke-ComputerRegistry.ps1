@@ -1,4 +1,4 @@
-﻿function Invoke-ComputerRegistry {
+function Invoke-ComputerRegistry {
     <#
     .SYNOPSIS
         Performs registry operations (Get, Set, New, Remove) on a remote computer.
@@ -31,7 +31,9 @@
     )
 
     process {
+        . $PSScriptRoot\Get-LocalOrRemoteCimSession.ps1
         try {
+            $CimSession = Get-LocalOrRemoteCimSession -ComputerName $ComputerName
             $hives = @{
                 "HKCR" = [UInt32]2147483648
                 "HKCU" = [UInt32]2147483649
@@ -40,9 +42,7 @@
             }
             $hDef = $hives[$Hive]
 
-            $isLocal   = $ComputerName -iin @('localhost', '127.0.0.1', $env:COMPUTERNAME)
-            $regParams = @{ Namespace = "root\default"; ClassName = "StdRegProv"; ErrorAction = "Stop" }
-            if (-not $isLocal) { $regParams.ComputerName = $ComputerName }
+            $regParams = @{ Namespace = "root\default"; ClassName = "StdRegProv"; CimSession = $CimSession; ErrorAction = "Stop" }
             $reg = Get-CimInstance @regParams
 
             switch ($Action) {
@@ -112,6 +112,9 @@
         catch {
             Write-Warning "Registry operation failed on $ComputerName`: $($_.Exception.Message)"
             return $null
+        }
+        finally {
+            if ($CimSession) { Remove-CimSession $CimSession -ErrorAction SilentlyContinue }
         }
     }
 }

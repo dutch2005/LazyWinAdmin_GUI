@@ -1,4 +1,4 @@
-﻿function Get-ComputerLocalUser {
+function Get-ComputerLocalUser {
     <#
     .SYNOPSIS
         Retrieves local user accounts from a remote computer using CIM.
@@ -10,16 +10,19 @@
     )
 
     process {
+        . $PSScriptRoot\Get-LocalOrRemoteCimSession.ps1
         try {
-            $isLocal   = $ComputerName -iin @('localhost', '127.0.0.1', $env:COMPUTERNAME)
-            $cimParams = @{ ClassName = "Win32_UserAccount"; Filter = "LocalAccount = True"; ErrorAction = "Stop" }
-            if (-not $isLocal) { $cimParams.ComputerName = $ComputerName }
+            $CimSession = Get-LocalOrRemoteCimSession -ComputerName $ComputerName
+            $cimParams = @{ ClassName = "Win32_UserAccount"; Filter = "LocalAccount = True"; CimSession = $CimSession; ErrorAction = "Stop" }
             $users = Get-CimInstance @cimParams
             return $users | Select-Object Name, FullName, Disabled, Lockout, PasswordRequired, PasswordExpires, SID, Status
         }
         catch {
             Write-Warning "Error getting local users for $ComputerName`: $($_.Exception.Message)"
             return $null
+        }
+        finally {
+            if ($CimSession) { Remove-CimSession $CimSession -ErrorAction SilentlyContinue }
         }
     }
 }

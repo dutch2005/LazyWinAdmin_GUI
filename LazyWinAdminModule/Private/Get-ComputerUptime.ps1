@@ -1,4 +1,4 @@
-﻿function Get-ComputerUptime {
+function Get-ComputerUptime {
     [CmdletBinding()]
     param (
         [Parameter(ValueFromPipeline=$true)]
@@ -6,10 +6,10 @@
     )
 
     process {
+        . $PSScriptRoot\Get-LocalOrRemoteCimSession.ps1
         try {
-            $isLocal   = $ComputerName -iin @('localhost', '127.0.0.1', $env:COMPUTERNAME)
-            $cimParams = @{ ClassName = "Win32_OperatingSystem"; ErrorAction = "Stop" }
-            if (-not $isLocal) { $cimParams.ComputerName = $ComputerName }
+            $CimSession = Get-LocalOrRemoteCimSession -ComputerName $ComputerName
+            $cimParams = @{ ClassName = "Win32_OperatingSystem"; CimSession = $CimSession; ErrorAction = "Stop" }
             $cim = Get-CimInstance @cimParams
             
             # CIM natively returns a DateTime object for LastBootUpTime, no need to convert like WMI
@@ -29,6 +29,9 @@
         catch {
             Write-Warning "Error getting uptime for $ComputerName`: $($_.Exception.Message)"
             return "Error"
+        }
+        finally {
+            if ($CimSession) { Remove-CimSession $CimSession -ErrorAction SilentlyContinue }
         }
     }
 }

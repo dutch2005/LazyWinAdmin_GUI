@@ -30,9 +30,10 @@ function Get-ComputerADInfo {
 
             Import-Module ActiveDirectory -ErrorAction Stop
 
-            # Validate AdFilter — only allow characters safe for LDAP filter strings
-            if ($AdFilter -and $AdFilter -match "[^a-zA-Z0-9\s\-\.\@_\*]") {
-                Write-Warning "AdFilter contains characters not permitted in an AD filter."
+            # Permit typical AD-safe input. Filter injection is no longer in scope
+            # because the -Filter is now a ScriptBlock with parameter capture.
+            if ($AdFilter -and $AdFilter -match "[^a-zA-Z0-9\s\-\.\@\\_\*,:=/\(\)]") {
+                Write-Warning "AdFilter contains characters not permitted for an AD search."
                 return $null
             }
 

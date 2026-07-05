@@ -1,4 +1,4 @@
-﻿function Get-ComputerService {
+function Get-ComputerService {
     <#
     .SYNOPSIS
         Retrieves service information from a remote computer using CIM.
@@ -14,8 +14,9 @@
     )
 
     process {
+        . $PSScriptRoot\Get-LocalOrRemoteCimSession.ps1
         try {
-            $isLocal = $ComputerName -iin @('localhost', '127.0.0.1', $env:COMPUTERNAME)
+            $CimSession = Get-LocalOrRemoteCimSession -ComputerName $ComputerName
 
             $filter = ""
             if ($Name) {
@@ -27,10 +28,10 @@
 
             $params = @{
                 ClassName   = "Win32_Service"
+                CimSession  = $CimSession
                 ErrorAction = "Stop"
             }
             if ($filter)    { $params.Filter       = $filter       }
-            if (-not $isLocal) { $params.ComputerName = $ComputerName }
 
             $services = Get-CimInstance @params
             
@@ -39,6 +40,9 @@
         catch {
             Write-Warning "Error getting services for $ComputerName`: $($_.Exception.Message)"
             return $null
+        }
+        finally {
+            if ($CimSession) { Remove-CimSession $CimSession -ErrorAction SilentlyContinue }
         }
     }
 }

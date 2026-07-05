@@ -1,4 +1,4 @@
-﻿function Invoke-ComputerServiceControl {
+function Invoke-ComputerServiceControl {
     <#
     .SYNOPSIS
         Starts, stops, or restarts a Windows service on a local or remote computer.
@@ -33,12 +33,13 @@
     )
 
     $pastTense = @{ Start = 'Started'; Stop = 'Stopped'; Restart = 'Restarted' }
-    $isLocal   = $ComputerName -iin @('localhost', '127.0.0.1', $env:COMPUTERNAME)
+    
+    . $PSScriptRoot\Get-LocalOrRemoteCimSession.ps1
 
     try {
+        $CimSession = Get-LocalOrRemoteCimSession -ComputerName $ComputerName
         # Verify service exists before attempting to control it
-        $checkParams = @{ ClassName = 'Win32_Service'; Filter = "Name='$ServiceName'"; ErrorAction = 'Stop' }
-        if (-not $isLocal) { $checkParams.ComputerName = $ComputerName }
+        $checkParams = @{ ClassName = 'Win32_Service'; Filter = "Name='$ServiceName'"; CimSession = $CimSession; ErrorAction = 'Stop' }
         $svc = Get-CimInstance @checkParams
         if (-not $svc) {
             return "[!] Service '$ServiceName' not found on $ComputerName."
@@ -47,8 +48,7 @@
         # Use -Query to invoke the instance method.  -Query accepts a plain string so
         # Pester mocks can intercept the call without a real CimInstance.
         $query      = "SELECT * FROM Win32_Service WHERE Name='$ServiceName'"
-        $cimInvoke  = @{ Query = $query; ErrorAction = 'Stop' }
-        if (-not $isLocal) { $cimInvoke.ComputerName = $ComputerName }
+        $cimInvoke  = @{ Query = $query; CimSession = $CimSession; ErrorAction = 'Stop' }
 
         if ($Action -eq 'Restart') {
             $stop = Invoke-CimMethod @cimInvoke -MethodName 'StopService'
@@ -71,5 +71,8 @@
     }
     catch {
         return "Error: $($_.Exception.Message)"
+    }
+    finally {
+        if ($CimSession) { Remove-CimSession $CimSession -ErrorAction SilentlyContinue }
     }
 }

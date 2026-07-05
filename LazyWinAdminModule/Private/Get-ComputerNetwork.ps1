@@ -1,4 +1,4 @@
-﻿function Get-ComputerNetwork {
+function Get-ComputerNetwork {
     <#
     .SYNOPSIS
         Retrieves network adapter configuration from a remote computer using CIM.
@@ -17,8 +17,8 @@
     process {
         $CimSession = $null
         try {
-            $isLocal    = $ComputerName -iin @('localhost', '127.0.0.1', $env:COMPUTERNAME)
-            $CimSession = if ($isLocal) { New-CimSession -ErrorAction Stop } else { New-CimSession -ComputerName $ComputerName -ErrorAction Stop }
+        . $PSScriptRoot\Get-LocalOrRemoteCimSession.ps1
+        $CimSession = Get-LocalOrRemoteCimSession -ComputerName $ComputerName
 
             $filter   = if ($OnlyIPEnabled) { "IPEnabled = True" } else { $null }
             $adapters = Get-CimInstance -CimSession $CimSession -ClassName Win32_NetworkAdapterConfiguration `
