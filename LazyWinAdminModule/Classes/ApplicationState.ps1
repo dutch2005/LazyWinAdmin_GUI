@@ -1,4 +1,4 @@
-# Requires PowerShell 7.4+
+﻿# Requires PowerShell 7.4+
 
 class LazyWinAdminState {
     [hashtable] $SyncHash
@@ -45,7 +45,9 @@ class LazyWinAdminState {
             try {
                 Remove-CimSession -CimSession $this.CimSessions[$ComputerName] -ErrorAction SilentlyContinue
             }
-            catch { }
+            catch {
+                Write-Verbose "EvictCimSession: could not close session for '$ComputerName': $_"
+            }
             $this.CimSessions.Remove($ComputerName)
         }
     }
@@ -53,7 +55,7 @@ class LazyWinAdminState {
     [void] Dispose() {
         # Close all cached CIM sessions before tearing down
         foreach ($cs in $this.CimSessions.Values) {
-            try { Remove-CimSession -CimSession $cs -ErrorAction SilentlyContinue } catch { }
+            try { Remove-CimSession -CimSession $cs -ErrorAction SilentlyContinue } catch { Write-Verbose "Dispose: could not close CIM session: $_" }
         }
         $this.CimSessions.Clear()
 

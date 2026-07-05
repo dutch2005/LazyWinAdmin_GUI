@@ -153,7 +153,7 @@ Click **Restart as Admin** in the status bar to relaunch elevated. Features that
 
 ```
 LazyWinAdminModule/
-├── LazyWinAdminModule.psd1     # Module manifest (v1.3.0, requires PS 7.4+)
+├── LazyWinAdminModule.psd1     # Module manifest (v1.3.1, requires PS 7.4+)
 ├── LazyWinAdminModule.psm1     # Root module — dot-sources all Private/Public files
 ├── Classes/
 │   └── ApplicationState.ps1   # LazyWinAdminState class: SyncHash, RunspacePool, CimSessions, UIQueue
@@ -163,9 +163,17 @@ LazyWinAdminModule/
 ├── UI/
 │   └── MainView.xaml          # WPF layout (11 tabs)
 └── Tests/
-    ├── Integrity.Tests.ps1    # File structure, manifest, XAML, ApplicationState
-    ├── Functions.Tests.ps1    # All private functions (228 tests, 0 failures)
-    └── Run-Tests.ps1          # Test runner with summary output
+    ├── Integrity.Tests.ps1                 # File structure, manifest, XAML, ApplicationState
+    ├── Functions.Tests.ps1                 # Core private functions
+    ├── Test-ComputerPort.Tests.ps1         # TCP port probe
+    ├── Connect-ExchangeSession.Tests.ps1   # Exchange Online connection
+    ├── Get-DeviceComplianceStatus.Tests.ps1
+    ├── Get-ExchangeMailboxPermission.Tests.ps1
+    ├── Get-IntuneManagementScript.Tests.ps1
+    ├── Set-DeviceComplianceItem.Tests.ps1
+    ├── Set-ExchangeMailboxPermission.Tests.ps1
+    ├── Get-ComputerRegistryValue.Tests.ps1
+    └── Run-Tests.ps1          # Test runner (auto-discovers *.Tests.ps1)
 ```
 
 ### Async pattern
@@ -201,7 +209,7 @@ pwsh -NoProfile -File .\LazyWinAdminModule\Tests\Run-Tests.ps1 -Output Detailed
 pwsh -NoProfile -File .\LazyWinAdminModule\Tests\Run-Tests.ps1 -Suite Integrity
 ```
 
-**228 tests, 0 failures.** Requires Pester 5.0+ (auto-installed by the runner if missing).
+**309 tests, 0 failures.** Requires Pester 5.0+ (auto-installed by the runner if missing).
 
 ---
 
@@ -218,6 +226,16 @@ pwsh -NoProfile -File .\LazyWinAdminModule\Tests\Run-Tests.ps1 -Suite Integrity
 ---
 
 ## Version history
+
+### v1.3.1 — 2026 (clean-code & full test coverage)
+- **309 Pester v5 tests, 0 failures** (up from 228) — 8 new test files covering all previously untested private functions: `Test-ComputerPort`, `Connect-ExchangeSession`, `Get-DeviceComplianceStatus`, `Get-ExchangeMailboxPermission`, `Get-IntuneManagementScript`, `Set-DeviceComplianceItem`, `Set-ExchangeMailboxPermission`, `Get-ComputerRegistryValue`
+- **Zero PSScriptAnalyzer warnings/errors** across all production code (Classes, Private, Public) and all test files
+- **GitHub Actions CI/CD** — `.github/workflows/ci.yml` blocks any PR or push with lint issues or test failures; separate lint steps for Classes, Private, Public, Tests with appropriate rule exclusions for test files
+- **Trailing whitespace removed** from 4 private functions (`Test-ComputerPort`, `Get-ComputerRegistryValue`, `Get-ComputerService`, `Get-ComputerUptime`)
+- **`Get-DeviceComplianceStatus` strict-mode fix** — null-guards added to all 5 compliance checks so the function is safe under `Set-StrictMode -Version Latest`
+- **`Set-ExchangeMailboxPermission` syntax fix** — replaced invalid `return if (...)` expression with standard conditional return
+- **`Run-Tests.ps1` dynamic discovery** — test runner now auto-discovers all `*.Tests.ps1` files instead of hardcoding two suites; `-Suite Functions` runs all non-Integrity suites
+- **`PSScriptAnalyzerSettings.psd1`** — severity narrowed to `Error, Warning` so the CI threshold is consistent with the settings file
 
 ### v1.3.0 — 2026 (2026 refactor & value-add pass)
 - **Service control** — Start, Stop, and Restart the selected service directly from the Services tab via new CIM-based `Invoke-ComputerServiceControl` private function *(requires admin)*
