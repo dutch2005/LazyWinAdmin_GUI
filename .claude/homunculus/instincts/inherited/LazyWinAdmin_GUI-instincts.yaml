@@ -1,0 +1,454 @@
+# Instincts generated from https://github.com/dutch2005/LazyWinAdmin_GUI
+# Generated: 2026-04-21T07:57:15.876Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: LazyWinAdmin_GUI-commit-conventional
+trigger: "when writing a commit message"
+confidence: 0.85
+domain: git
+source: repo-analysis
+source_repo: https://github.com/dutch2005/LazyWinAdmin_GUI
+---
+
+# LazyWinAdmin_GUI Commit Conventional
+
+## Action
+
+Use conventional commit format with prefixes: fix, test, chore
+
+## Evidence
+
+- 3 commits analyzed
+- Detected conventional commit pattern
+- Examples: fix: zero PSScriptAnalyzer warnings — BOM, ShouldProcess, WMI→CIM, empty catch, CI workflow, test: add Pester v5 coverage for 8 previously untested private functions
+
+---
+id: LazyWinAdmin_GUI-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/dutch2005/LazyWinAdmin_GUI
+---
+
+# LazyWinAdmin_GUI Commit Length
+
+## Action
+
+Write moderate-length commit messages (~77 characters)
+
+## Evidence
+
+- Average commit message length: 77 chars
+- Based on 3 commits
+
+---
+id: LazyWinAdmin_GUI-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/dutch2005/LazyWinAdmin_GUI
+---
+
+# LazyWinAdmin_GUI Naming Files
+
+## Action
+
+Use kebab-case naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: kebab-case
+
+---
+id: LazyWinAdmin_GUI-import-relative
+trigger: "when importing modules"
+confidence: 0.75
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/dutch2005/LazyWinAdmin_GUI
+---
+
+# LazyWinAdmin_GUI Import Relative
+
+## Action
+
+Use relative imports for project files
+
+## Evidence
+
+- Import analysis shows relative import pattern
+- Example: import { x } from '../lib/x'
+
+---
+id: LazyWinAdmin_GUI-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/dutch2005/LazyWinAdmin_GUI
+---
+
+# LazyWinAdmin_GUI Export Style
+
+## Action
+
+Prefer named exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: named
+
+---
+id: LazyWinAdmin_GUI-test-naming
+trigger: "when creating a test file"
+confidence: 0.85
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/dutch2005/LazyWinAdmin_GUI
+---
+
+# LazyWinAdmin_GUI Test Naming
+
+## Action
+
+Name test files using the pattern: *.test.ts
+
+## Evidence
+
+- File pattern: *.test.ts
+- Consistent across test files
+
+---
+id: LazyWinAdmin_GUI-workflow-add-or-improve-private-function-tests
+trigger: "when doing add or improve private function tests"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/dutch2005/LazyWinAdmin_GUI
+---
+
+# LazyWinAdmin_GUI Workflow Add Or Improve Private Function Tests
+
+## Action
+
+Follow the add-or-improve-private-function-tests workflow:
+1. Create one or more new *.Tests.ps1 files in LazyWinAdminModule/Tests/ for each private function.
+2. Update Run-Tests.ps1 to ensure new tests are discovered and run.
+3. Optionally, fix minor issues in the corresponding private function implementation.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: LazyWinAdminModule/Tests/*.Tests.ps1, LazyWinAdminModule/Tests/Run-Tests.ps1, LazyWinAdminModule/Private/*.ps1
+
+---
+id: LazyWinAdmin_GUI-workflow-tighten-linting-and-ci-configuration
+trigger: "when doing tighten linting and ci configuration"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/dutch2005/LazyWinAdmin_GUI
+---
+
+# LazyWinAdmin_GUI Workflow Tighten Linting And Ci Configuration
+
+## Action
+
+Follow the tighten-linting-and-ci-configuration workflow:
+1. Update or add PSScriptAnalyzerSettings.psd1 with stricter rules.
+2. Fix all .ps1/.psd1 files to comply with the new rules (e.g., encoding, code style, error handling).
+3. Update or add .github/workflows/ci.yml to reflect new lint/test steps.
+4. Optionally, update test files to suppress or fix linter warnings.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: LazyWinAdminModule/PSScriptAnalyzerSettings.psd1, .github/workflows/ci.yml, LazyWinAdminModule/**/*.ps1
+
+---
+id: LazyWinAdmin_GUI-workflow-release-version-bump-and-readme-update
+trigger: "when doing release version bump and readme update"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/dutch2005/LazyWinAdmin_GUI
+---
+
+# LazyWinAdmin_GUI Workflow Release Version Bump And Readme Update
+
+## Action
+
+Follow the release-version-bump-and-readme-update workflow:
+1. Update ModuleVersion in LazyWinAdminModule.psd1.
+2. Update PSScriptAnalyzerSettings.psd1 or other config files if CI/lint settings change.
+3. Edit README.md to add version history, update test counts, and document new features or changes.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: LazyWinAdminModule/LazyWinAdminModule.psd1, LazyWinAdminModule/PSScriptAnalyzerSettings.psd1, README.md
+
+---
+id: lazywinadmin_gui-codingconvention-file-naming
+trigger: "When creating or renaming a file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: dutch2005/LazyWinAdmin_GUI
+---
+
+# Lazywinadmin_gui Codingconvention File Naming
+
+## Action
+
+Use kebab-case for file names (e.g., my-file.ts)
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.files
+- Consistent file naming in repository
+
+---
+id: lazywinadmin_gui-codingconvention-function-naming
+trigger: "When defining a function"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: dutch2005/LazyWinAdmin_GUI
+---
+
+# Lazywinadmin_gui Codingconvention Function Naming
+
+## Action
+
+Use camelCase for function names (e.g., myFunction)
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.functions
+
+---
+id: lazywinadmin_gui-codingconvention-class-naming
+trigger: "When defining a class"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: dutch2005/LazyWinAdmin_GUI
+---
+
+# Lazywinadmin_gui Codingconvention Class Naming
+
+## Action
+
+Use PascalCase for class names (e.g., MyClass)
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.classes
+
+---
+id: lazywinadmin_gui-codingconvention-constant-naming
+trigger: "When declaring a constant"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: dutch2005/LazyWinAdmin_GUI
+---
+
+# Lazywinadmin_gui Codingconvention Constant Naming
+
+## Action
+
+Use SCREAMING_SNAKE_CASE for constants (e.g., MY_CONSTANT)
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.constants
+
+---
+id: lazywinadmin_gui-codingconvention-import-style
+trigger: "When importing modules"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: dutch2005/LazyWinAdmin_GUI
+---
+
+# Lazywinadmin_gui Codingconvention Import Style
+
+## Action
+
+Use relative import paths
+
+## Evidence
+
+- Pattern in codeStyle.importStyle
+
+---
+id: lazywinadmin_gui-codingconvention-export-style
+trigger: "When exporting from a module"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: dutch2005/LazyWinAdmin_GUI
+---
+
+# Lazywinadmin_gui Codingconvention Export Style
+
+## Action
+
+Use named exports
+
+## Evidence
+
+- Pattern in codeStyle.exportStyle
+
+---
+id: lazywinadmin_gui-testing-pattern-private-function-tests
+trigger: "When adding or improving tests for private PowerShell functions"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: dutch2005/LazyWinAdmin_GUI
+---
+
+# Lazywinadmin_gui Testing Pattern Private Function Tests
+
+## Action
+
+Create a new *.Tests.ps1 file in LazyWinAdminModule/Tests/ for each private function and update Run-Tests.ps1 to discover it
+
+## Evidence
+
+- Workflow: add-or-improve-private-function-tests
+- Files: LazyWinAdminModule/Tests/*.Tests.ps1, LazyWinAdminModule/Tests/Run-Tests.ps1
+
+---
+id: lazywinadmin_gui-testing-pattern-unit-tests
+trigger: "When writing tests"
+confidence: 0.7
+domain: testing
+source: repo-analysis
+source_repo: dutch2005/LazyWinAdmin_GUI
+---
+
+# Lazywinadmin_gui Testing Pattern Unit Tests
+
+## Action
+
+Write unit tests using the *.test.ts file pattern
+
+## Evidence
+
+- Pattern in testing.filePattern
+- testing.testTypes includes 'unit'
+
+---
+id: lazywinadmin_gui-git-commit-format
+trigger: "When writing a commit message"
+confidence: 0.85
+domain: git
+source: repo-analysis
+source_repo: dutch2005/LazyWinAdmin_GUI
+---
+
+# Lazywinadmin_gui Git Commit Format
+
+## Action
+
+Use conventional commit prefixes (fix, test, chore) followed by a concise summary
+
+## Evidence
+
+- Pattern in commits.prefixes
+- Examples: 'fix: zero PSScriptAnalyzer warnings...', 'test: add Pester v5 coverage...'
+
+---
+id: lazywinadmin_gui-git-commit-length
+trigger: "When writing a commit message"
+confidence: 0.7
+domain: git
+source: repo-analysis
+source_repo: dutch2005/LazyWinAdmin_GUI
+---
+
+# Lazywinadmin_gui Git Commit Length
+
+## Action
+
+Keep commit messages concise, averaging around 77 characters
+
+## Evidence
+
+- Pattern in commits.averageLength
+
+---
+id: lazywinadmin_gui-workflow-add-private-function-tests
+trigger: "When someone wants to increase test coverage for private functions or add tests for new/refactored private code"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: dutch2005/LazyWinAdmin_GUI
+---
+
+# Lazywinadmin_gui Workflow Add Private Function Tests
+
+## Action
+
+Create new *.Tests.ps1 files for each private function, update Run-Tests.ps1, and optionally fix minor issues in the private function implementation
+
+## Evidence
+
+- Workflow: add-or-improve-private-function-tests
+- Commits: 'test: add Pester v5 coverage for 8 previously untested private functions'
+
+---
+id: lazywinadmin_gui-workflow-tighten-linting
+trigger: "When someone wants to enforce stricter linting or CI standards, or resolve existing linter warnings"
+confidence: 0.85
+domain: workflow
+source: repo-analysis
+source_repo: dutch2005/LazyWinAdmin_GUI
+---
+
+# Lazywinadmin_gui Workflow Tighten Linting
+
+## Action
+
+Update PSScriptAnalyzerSettings.psd1 with stricter rules, fix all .ps1/.psd1 files to comply, update .github/workflows/ci.yml, and optionally update test files to suppress or fix linter warnings
+
+## Evidence
+
+- Workflow: tighten-linting-and-ci-configuration
+- Commits: 'fix: zero PSScriptAnalyzer warnings...', 'chore: bump to v1.3.1 — 309 tests, zero lint, tightened CI settings'
+
+---
+id: lazywinadmin_gui-workflow-release-bump
+trigger: "When someone wants to publish a new release or document recent changes"
+confidence: 0.85
+domain: workflow
+source: repo-analysis
+source_repo: dutch2005/LazyWinAdmin_GUI
+---
+
+# Lazywinadmin_gui Workflow Release Bump
+
+## Action
+
+Update ModuleVersion in LazyWinAdminModule.psd1, update config files if CI/lint settings change, and edit README.md with version history, test counts, and notable changes
+
+## Evidence
+
+- Workflow: release-version-bump-and-readme-update
+- Commits: 'chore: bump to v1.3.1 — 309 tests, zero lint, tightened CI settings'
+
