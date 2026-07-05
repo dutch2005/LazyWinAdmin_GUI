@@ -1,4 +1,4 @@
-function Get-ComputerUptime {
+﻿function Get-ComputerUptime {
     [CmdletBinding()]
     param (
         [Parameter(ValueFromPipeline=$true)]
@@ -27,7 +27,7 @@ function Get-ComputerUptime {
             return "Unknown"
         }
         catch {
-            Write-Warning "Error getting uptime for $ComputerName`: $_"
+            Write-Warning "Error getting uptime for $ComputerName`: $($_.Exception.Message)"
             return "Error"
         }
     }

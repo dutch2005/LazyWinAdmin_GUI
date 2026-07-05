@@ -1,4 +1,4 @@
-function Get-ComputerNetwork {
+﻿function Get-ComputerNetwork {
     <#
     .SYNOPSIS
         Retrieves network adapter configuration from a remote computer using CIM.
@@ -40,7 +40,7 @@ function Get-ComputerNetwork {
             return $results | Sort-Object Description
         }
         catch {
-            Write-Warning "Error retrieving network info on $ComputerName`: $_"
+            Write-Warning "Error retrieving network info on $ComputerName`: $($_.Exception.Message)"
             return $null
         }
         finally {

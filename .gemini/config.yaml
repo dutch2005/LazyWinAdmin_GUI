@@ -1,0 +1,41 @@
+# Gemini Code Assist — repository-level configuration.
+# Reference: https://developers.google.com/gemini-code-assist/docs/review-github-code
+#
+# Install the Gemini Code Assist GitHub App from the Marketplace and grant it
+# access to this repository for this file to take effect:
+#   https://github.com/apps/gemini-code-assist
+#
+# The app reacts to: PRs opened / synchronised, PR comments starting with
+# `/gemini` (summary / review / help), and the style guide below.
+
+have_fun: false
+
+code_review:
+  disable: false
+  # Flag every finding at or above "medium". Low-severity noise hurts signal.
+  comment_severity_threshold: MEDIUM
+
+  # Do not open a PR summary thread for trivial diffs (docs-only, lockfile bumps).
+  # The threshold is token-approximate; 2k ≈ ~100 LOC changed.
+  max_review_comments: -1
+
+  # Reviewers should focus on these pull_request actions.
+  pull_request_opened:
+    help: false
+    summary: true
+    code_review: true
+
+ignore_patterns:
+  # Legacy 2012 WinForms code — preserved for reference, not actively maintained.
+  - "LazyWinAdmin/**"
+  - "Sources/**"
+  # Media and screenshots.
+  - "Media/**"
+  # Test data fixtures not treated as production code.
+  - "**/*.png"
+  - "**/*.gif"
+  - "**/*.jpg"
+  # Generated / machinery files.
+  - ".claude/**"
+  - ".agent/**"
+  - ".agents/**"
