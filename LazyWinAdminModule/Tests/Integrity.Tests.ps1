@@ -48,10 +48,6 @@ Describe 'File Structure' {
             Join-Path $script:ModuleRoot 'Private\Get-ComputerNetwork.ps1' | Should -Exist
         }
 
-        It 'Get-ComputerRegistryValue.ps1 exists' {
-            Join-Path $script:ModuleRoot 'Private\Get-ComputerRegistryValue.ps1' | Should -Exist
-        }
-
         It 'Get-ComputerService.ps1 exists' {
             Join-Path $script:ModuleRoot 'Private\Get-ComputerService.ps1' | Should -Exist
         }

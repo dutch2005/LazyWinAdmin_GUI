@@ -428,6 +428,9 @@
                                 <TextBlock Text="User Principal Name (optional — leave blank for interactive sign-in):"
                                            TextWrapping="Wrap" Margin="0,0,0,5"/>
                                 <TextBox Name="txtExchangeUpn" Padding="6" Margin="0,0,0,15"/>
+                                <TextBlock Text="Customer tenant (optional — MSP delegated/GDAP access, e.g. customer.onmicrosoft.com; leave blank for your own tenant):"
+                                           TextWrapping="Wrap" Margin="0,0,0,5"/>
+                                <TextBox Name="txtExchangeDelegatedOrg" Padding="6" Margin="0,0,0,15"/>
                                 <Button Name="btnConnectExchange" Content="Connect to Exchange Online"
                                         Padding="12" FontSize="14" Background="#2F2F2F" Foreground="White"/>
                                 <TextBlock Name="lblExchangeStatus" Text="Not Connected"
@@ -461,8 +464,10 @@
                                     <GridView>
                                         <GridViewColumn Header="Mailbox"      DisplayMemberBinding="{Binding Mailbox}"      Width="270"/>
                                         <GridViewColumn Header="Display Name" DisplayMemberBinding="{Binding DisplayName}"  Width="200"/>
-                                        <GridViewColumn Header="Full Access"  DisplayMemberBinding="{Binding FullAccess}"   Width="90"/>
-                                        <GridViewColumn Header="Send As"      DisplayMemberBinding="{Binding SendAs}"       Width="80"/>
+                                        <GridViewColumn Header="Full Access"    DisplayMemberBinding="{Binding FullAccess}"    Width="90"/>
+                                        <GridViewColumn Header="Send As"        DisplayMemberBinding="{Binding SendAs}"        Width="80"/>
+                                        <GridViewColumn Header="Send on Behalf" DisplayMemberBinding="{Binding SendOnBehalf}"  Width="100"/>
+                                        <GridViewColumn Header="Type"           DisplayMemberBinding="{Binding RecipientType}" Width="130"/>
                                     </GridView>
                                 </ListView.View>
                             </ListView>

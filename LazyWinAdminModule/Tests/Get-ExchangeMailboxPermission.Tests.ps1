@@ -16,7 +16,7 @@ BeforeAll {
 
     # Stubs for Exchange cmdlets
     if (-not (Get-Command Get-Mailbox -ErrorAction SilentlyContinue)) {
-        function Get-Mailbox { param([string]$RecipientTypeDetails, [string]$Identity) }
+        function Get-Mailbox { param([string[]]$RecipientTypeDetails, [string]$Identity, $ResultSize) }
     }
     if (-not (Get-Command Get-MailboxPermission -ErrorAction SilentlyContinue)) {
         function Get-MailboxPermission { param([string]$Identity) }
@@ -26,9 +26,19 @@ BeforeAll {
     }
 
     $script:FakeMailbox = [PSCustomObject]@{
-        Alias            = 'shared-mb'
+        Alias              = 'shared-mb'
         PrimarySmtpAddress = 'shared@contoso.com'
-        DisplayName      = 'Shared Mailbox'
+        DisplayName        = 'Shared Mailbox'
+        RecipientTypeDetails = 'SharedMailbox'
+    }
+
+    # Mailbox fixture carrying a Send-on-Behalf delegate list.
+    $script:FakeSobMailbox = [PSCustomObject]@{
+        Alias                = 'user-mb'
+        PrimarySmtpAddress   = 'colleague@contoso.com'
+        DisplayName          = 'Colleague Mailbox'
+        RecipientTypeDetails = 'UserMailbox'
+        GrantSendOnBehalfTo  = @('user@contoso.com')
     }
 }
 
@@ -111,6 +121,41 @@ Describe 'Get-ExchangeMailboxPermission' {
         }
     }
 
+    Context 'User with Send-on-Behalf only (on a user mailbox)' {
+
+        BeforeAll {
+            Mock Get-Mailbox { @($script:FakeSobMailbox) }
+            Mock Get-MailboxPermission { @() }
+            Mock Get-RecipientPermission { @() }
+        }
+
+        It 'Detects SendOnBehalf from GrantSendOnBehalfTo and reports the user mailbox' {
+            $result = Get-ExchangeMailboxPermission -UserPrincipalName 'user@contoso.com'
+            $result       | Should -Not -BeNullOrEmpty
+            $result.SendOnBehalf | Should -BeTrue
+            $result.FullAccess   | Should -BeFalse
+            $result.SendAs       | Should -BeFalse
+            $result.RecipientType | Should -Be 'UserMailbox'
+        }
+    }
+
+    Context 'Scans more than shared mailboxes by default' {
+
+        BeforeAll {
+            Mock Get-Mailbox { @() }
+        }
+
+        It 'Requests user, shared, room and equipment mailbox types by default' {
+            Get-ExchangeMailboxPermission -UserPrincipalName 'user@contoso.com' | Out-Null
+            Should -Invoke Get-Mailbox -Times 1 -Exactly -ParameterFilter {
+                $RecipientTypeDetails -contains 'UserMailbox' -and
+                $RecipientTypeDetails -contains 'SharedMailbox' -and
+                $RecipientTypeDetails -contains 'RoomMailbox'  -and
+                $RecipientTypeDetails -contains 'EquipmentMailbox'
+            }
+        }
+    }
+
     Context 'Result object shape' {
 
         BeforeAll {
@@ -121,13 +166,15 @@ Describe 'Get-ExchangeMailboxPermission' {
             Mock Get-RecipientPermission { @() }
         }
 
-        It 'Result objects have Mailbox, DisplayName, FullAccess, SendAs properties' {
+        It 'Result objects have Mailbox, DisplayName, RecipientType, FullAccess, SendAs, SendOnBehalf properties' {
             $result = Get-ExchangeMailboxPermission -UserPrincipalName 'user@contoso.com'
             $obj    = $result | Select-Object -First 1
             $obj.PSObject.Properties.Name | Should -Contain 'Mailbox'
             $obj.PSObject.Properties.Name | Should -Contain 'DisplayName'
+            $obj.PSObject.Properties.Name | Should -Contain 'RecipientType'
             $obj.PSObject.Properties.Name | Should -Contain 'FullAccess'
             $obj.PSObject.Properties.Name | Should -Contain 'SendAs'
+            $obj.PSObject.Properties.Name | Should -Contain 'SendOnBehalf'
         }
     }
 
