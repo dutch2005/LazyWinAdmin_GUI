@@ -1,4 +1,4 @@
-﻿function Get-IntuneManagementScript {
+function Get-IntuneManagementScript {
     <#
     .SYNOPSIS
         Lists Intune device management scripts and optionally downloads their content.
@@ -44,16 +44,35 @@
                 New-Item -ItemType Directory -Path $DownloadPath -Force | Out-Null
             }
 
+            $resolvedRoot = (Resolve-Path -LiteralPath $DownloadPath).ProviderPath
+
             foreach ($script in $scripts) {
                 try {
                     $detail = Invoke-MgGraphRequest -Method GET `
                         -Uri "https://graph.microsoft.com/beta/deviceManagement/deviceManagementScripts/$($script.id)" `
                         -ErrorAction Stop
                     if ($detail.scriptContent) {
-                        $decoded  = [System.Text.Encoding]::UTF8.GetString(
-                                        [System.Convert]::FromBase64String($detail.scriptContent))
-                        $filePath = Join-Path $DownloadPath $detail.fileName
-                        $decoded | Out-File -FilePath $filePath -Encoding UTF8 -Force
+                        $rawName  = [string]$detail.fileName
+                        $safeName = [System.IO.Path]::GetFileName($rawName)
+                        $invalid  = [System.IO.Path]::GetInvalidFileNameChars() -join ''
+                        $escaped  = [regex]::Escape($invalid)
+                        $safeName = [regex]::Replace($safeName, "[$escaped]", '_')
+                        if ([string]::IsNullOrWhiteSpace($safeName) -or $safeName -in '.', '..') {
+                            Write-Warning "Skipping script '$($script.displayName)': server-supplied filename is unsafe."
+                            continue
+                        }
+
+                        $filePath = Join-Path -Path $resolvedRoot -ChildPath $safeName
+                        $fullPath = [System.IO.Path]::GetFullPath($filePath)
+                        $rootWithSep = $resolvedRoot.TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar) + [System.IO.Path]::DirectorySeparatorChar
+                        if (-not $fullPath.StartsWith($rootWithSep, [System.StringComparison]::OrdinalIgnoreCase)) {
+                            Write-Warning "Skipping script '$($script.displayName)': resolved path escapes download folder."
+                            continue
+                        }
+
+                        $decoded = [System.Text.Encoding]::UTF8.GetString(
+                                       [System.Convert]::FromBase64String($detail.scriptContent))
+                        $decoded | Out-File -LiteralPath $fullPath -Encoding UTF8 -Force
                     }
                 }
                 catch {
