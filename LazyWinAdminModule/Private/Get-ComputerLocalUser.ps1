@@ -18,7 +18,7 @@
             return $users | Select-Object Name, FullName, Disabled, Lockout, PasswordRequired, PasswordExpires, SID, Status
         }
         catch {
-            Write-Warning "Error getting local users for $ComputerName`: $_"
+            Write-Warning "Error getting local users for $ComputerName`: $($_.Exception.Message)"
             return $null
         }
     }

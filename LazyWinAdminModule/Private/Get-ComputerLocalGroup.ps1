@@ -18,7 +18,7 @@
             return $groups | Select-Object Name, Caption, SID, Status
         }
         catch {
-            Write-Warning "Error getting local groups for $ComputerName`: $_"
+            Write-Warning "Error getting local groups for $ComputerName`: $($_.Exception.Message)"
             return $null
         }
     }

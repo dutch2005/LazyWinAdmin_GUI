@@ -98,7 +98,7 @@
             }
         }
         catch {
-            Write-Warning "Registry operation failed on $ComputerName`: $_"
+            Write-Warning "Registry operation failed on $ComputerName`: $($_.Exception.Message)"
             return $null
         }
     }

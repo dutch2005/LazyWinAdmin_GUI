@@ -37,7 +37,7 @@
             return $services | Select-Object Name, DisplayName, State, StartMode, StartName, ProcessId
         }
         catch {
-            Write-Warning "Error getting services for $ComputerName`: $_"
+            Write-Warning "Error getting services for $ComputerName`: $($_.Exception.Message)"
             return $null
         }
     }

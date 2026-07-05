@@ -36,7 +36,8 @@
         return $results
     }
     catch {
-        Write-Warning "Error querying mailbox permissions: $_"
+        Write-Warning "Error querying mailbox permissions (type: $($_.Exception.GetType().Name))."
+        Write-Verbose "Exchange exception detail: $($_.Exception.Message)"
         return $null
     }
 }

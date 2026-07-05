@@ -48,7 +48,7 @@
             }
         }
         catch {
-            Write-Warning "Error reading registry on $ComputerName`: $_"
+            Write-Warning "Error reading registry on $ComputerName`: $($_.Exception.Message)"
             return $null
         }
     }

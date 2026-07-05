@@ -27,7 +27,7 @@
             }
         }
         catch {
-            Write-Warning "Error retrieving motherboard info on $ComputerName`: $_"
+            Write-Warning "Error retrieving motherboard info on $ComputerName`: $($_.Exception.Message)"
             return $null
         }
         finally {
