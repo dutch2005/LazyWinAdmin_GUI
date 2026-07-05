@@ -30,6 +30,7 @@ param (
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+$ConfirmPreference = 'None'
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 1. Ensure Pester v5+ is available
