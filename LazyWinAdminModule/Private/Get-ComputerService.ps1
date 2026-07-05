@@ -1,4 +1,4 @@
-function Get-ComputerService {
+﻿function Get-ComputerService {
     <#
     .SYNOPSIS
         Retrieves service information from a remote computer using CIM.
@@ -37,7 +37,7 @@ function Get-ComputerService {
             return $services | Select-Object Name, DisplayName, State, StartMode, StartName, ProcessId
         }
         catch {
-            Write-Warning "Error getting services for $ComputerName`: $_"
+            Write-Warning "Error getting services for $ComputerName`: $($_.Exception.Message)"
             return $null
         }
     }

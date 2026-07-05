@@ -1,4 +1,4 @@
-function Invoke-ComputerServiceControl {
+﻿function Invoke-ComputerServiceControl {
     <#
     .SYNOPSIS
         Starts, stops, or restarts a Windows service on a local or remote computer.

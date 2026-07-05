@@ -1,4 +1,4 @@
-#Requires -Version 7.4
+﻿#Requires -Version 7.4
 #Requires -Modules @{ ModuleName = 'Pester'; ModuleVersion = '5.0' }
 <#
 .SYNOPSIS
@@ -280,7 +280,7 @@ Describe 'ApplicationState Class' {
 
     AfterAll {
         if ($script:State) {
-            try { $script:State.Dispose() } catch { }
+            try { $script:State.Dispose() } catch { Write-Verbose "Dispose error during test teardown: $_" }
         }
     }
 

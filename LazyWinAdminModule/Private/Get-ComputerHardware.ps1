@@ -1,4 +1,4 @@
-function Get-ComputerHardware {
+﻿function Get-ComputerHardware {
     <#
     .SYNOPSIS
         Retrieves hardware information (System, CPU, RAM, Disks) from a remote computer.
@@ -53,7 +53,7 @@ function Get-ComputerHardware {
             }
         }
         catch {
-            Write-Warning "Error retrieving hardware on $ComputerName`: $_"
+            Write-Warning "Error retrieving hardware on $ComputerName`: $($_.Exception.Message)"
             return $null
         }
         finally {

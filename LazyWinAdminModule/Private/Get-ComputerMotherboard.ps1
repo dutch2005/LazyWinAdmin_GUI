@@ -1,4 +1,4 @@
-function Get-ComputerMotherboard {
+﻿function Get-ComputerMotherboard {
     <#
     .SYNOPSIS
         Retrieves motherboard information from a remote computer using CIM.
@@ -27,7 +27,7 @@ function Get-ComputerMotherboard {
             }
         }
         catch {
-            Write-Warning "Error retrieving motherboard info on $ComputerName`: $_"
+            Write-Warning "Error retrieving motherboard info on $ComputerName`: $($_.Exception.Message)"
             return $null
         }
         finally {

@@ -1,4 +1,4 @@
-function Get-ComputerADInfo {
+﻿function Get-ComputerADInfo {
     <#
     .SYNOPSIS
         Queries Active Directory for computer, user, or group objects.
@@ -72,7 +72,8 @@ function Get-ComputerADInfo {
             }
         }
         catch {
-            Write-Warning "Error querying Active Directory for $Type`: $_"
+            Write-Warning "Error querying Active Directory for $Type (type: $($_.Exception.GetType().Name))."
+            Write-Verbose "AD exception detail: $($_.Exception.Message)"
             return $null
         }
     }
