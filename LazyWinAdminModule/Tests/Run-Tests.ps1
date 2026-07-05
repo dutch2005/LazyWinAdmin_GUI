@@ -1,4 +1,4 @@
-#Requires -Version 7.4
+﻿#Requires -Version 7.4
 <#
 .SYNOPSIS
     Runner script for the LazyWinAdmin Pester v5 test suite.
@@ -14,6 +14,9 @@
     pwsh -File Run-Tests.ps1 -Verbose
 #>
 
+[System.Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+    'PSAvoidUsingWriteHost', '',
+    Justification = 'Test runner intentionally uses Write-Host for colored console output.')]
 [CmdletBinding()]
 param (
     # Override test output verbosity. Defaults to Detailed.
@@ -57,23 +60,26 @@ else {
 Import-Module Pester -MinimumVersion '5.0.0' -Force
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 2. Locate test files
+# 2. Locate test files (dynamically discover all *.Tests.ps1 in Tests dir)
 # ─────────────────────────────────────────────────────────────────────────────
-$TestsDir        = $PSScriptRoot
-$IntegrityFile   = Join-Path $TestsDir 'Integrity.Tests.ps1'
-$FunctionsFile   = Join-Path $TestsDir 'Functions.Tests.ps1'
+$TestsDir     = $PSScriptRoot
+$allTestFiles = Get-ChildItem -Path $TestsDir -Filter '*.Tests.ps1' |
+                    Select-Object -ExpandProperty FullName
 
-foreach ($f in @($IntegrityFile, $FunctionsFile)) {
-    if (-not (Test-Path $f)) {
-        Write-Error "Test file not found: $f"
-        exit 1
-    }
+if (-not $allTestFiles) {
+    Write-Error "No *.Tests.ps1 files found in: $TestsDir"
+    exit 1
 }
 
-$testPaths = switch ($Suite) {
-    'Integrity' { @($IntegrityFile) }
-    'Functions' { @($FunctionsFile) }
-    default     { @($IntegrityFile, $FunctionsFile) }
+$testPaths = @(switch ($Suite) {
+    'Integrity' { $allTestFiles | Where-Object { $_ -like '*Integrity*' } }
+    'Functions' { $allTestFiles | Where-Object { $_ -notlike '*Integrity*' } }
+    default     { $allTestFiles }
+})
+
+if (-not $testPaths) {
+    Write-Error "No test files matched Suite '$Suite' in: $TestsDir"
+    exit 1
 }
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -1,4 +1,4 @@
-function Set-ComputerRDP {
+﻿function Set-ComputerRDP {
     <#
     .SYNOPSIS
         Enables or Disables Remote Desktop on a remote computer.
@@ -18,7 +18,7 @@ function Set-ComputerRDP {
         call. Splitting them makes each step independently verifiable and rollback-safe.
         Adheres to: cim_session.* ALWAYS reuse-before-create (CONTRACTS)
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param (
         [Parameter(Mandatory=$true)]
         [string]$ComputerName,
@@ -28,6 +28,10 @@ function Set-ComputerRDP {
     )
 
     process {
+        $action = if ($Enabled) { 'Enable' } else { 'Disable' }
+        if (-not $PSCmdlet.ShouldProcess($ComputerName, "$action RDP")) {
+            return "[!] Skipped by -WhatIf or -Confirm."
+        }
         $CimSession = $null
         try {
             $isLocal    = $ComputerName -iin @('localhost', '127.0.0.1', $env:COMPUTERNAME)
@@ -70,7 +74,7 @@ function Set-ComputerRDP {
             return "RDP $action on $ComputerName"
         }
         catch {
-            Write-Warning "Error setting RDP status on $ComputerName`: $_"
+            Write-Warning "Error setting RDP status on $ComputerName`: $($_.Exception.Message)"
             # Return generic message — do not surface exception detail to UI layer
             return "Error: RDP operation failed on $ComputerName"
         }

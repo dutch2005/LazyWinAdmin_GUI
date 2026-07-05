@@ -1,5 +1,19 @@
-#Requires -Version 7.4
+﻿#Requires -Version 7.4
 #Requires -Modules @{ ModuleName = 'Pester'; ModuleVersion = '5.0' }
+[System.Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+    'PSAvoidUsingWriteHost', '',
+    Justification = 'Test file uses Write-Host in mock assertions.')]
+[System.Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+    'PSAvoidUsingComputerNameHardcoded', '',
+    Justification = 'Test fixtures require hardcoded computer names as test inputs.')]
+[System.Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+    'PSReviewUnusedParameter', '',
+    Justification = 'Mock stub functions declare params to match real signatures.')]
+[System.Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+    'PSAvoidUsingConvertToSecureStringWithPlainText', '',
+    Justification = 'Test verifies credentials are NOT exposed — requires known plaintext.')]
+param()
+
 <#
 .SYNOPSIS
     Comprehensive function tests for the LazyWinAdmin module private functions.
