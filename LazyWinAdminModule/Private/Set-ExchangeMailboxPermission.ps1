@@ -3,43 +3,63 @@ function Set-ExchangeMailboxPermission {
     .SYNOPSIS
         Mirrors or grants mailbox permissions in Exchange Online.
     .DESCRIPTION
-        Two modes:
+        Two modes, selected by parameter set:
           Mirror — copies every FullAccess and SendAs permission held by SourceUser
                    across all shared mailboxes to TargetUser.  Used for offboarding /
-                   role handover scenarios.
+                   role handover scenarios.  Use the -SourceUser + -TargetUser pair.
           Grant  — grants FullAccess and SendAs on a single named mailbox to a user.
-    .PARAMETER Action
-        'Mirror' or 'Grant'.
-    .PARAMETER SourceUser
-        UPN of the user whose permissions are copied (Mirror only).
-    .PARAMETER TargetUser
-        UPN of the user who receives the copied permissions (Mirror only).
-    .PARAMETER Mailbox
-        Primary SMTP address or alias of the target shared mailbox (Grant only).
-    .PARAMETER User
-        UPN of the user to grant permissions to (Grant only).
-    #>
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory=$true)]
-        [ValidateSet('Mirror', 'Grant')]
-        [string]$Action,
+                   Use the -Mailbox + -User pair.
 
-        # Mirror parameters
+        Parameter sets enforce the correct argument combination at bind time —
+        callers cannot mix Mirror and Grant parameters in one call.
+    .PARAMETER SourceUser
+        UPN of the user whose permissions are copied (Mirror set).
+    .PARAMETER TargetUser
+        UPN of the user who receives the copied permissions (Mirror set).
+    .PARAMETER Mailbox
+        Primary SMTP address or alias of the target shared mailbox (Grant set).
+    .PARAMETER User
+        UPN of the user to grant permissions to (Grant set).
+    .EXAMPLE
+        Set-ExchangeMailboxPermission -SourceUser old@contoso.com -TargetUser new@contoso.com
+        Mirrors all shared-mailbox permissions from old@ to new@.
+    .EXAMPLE
+        Set-ExchangeMailboxPermission -Mailbox shared@contoso.com -User user@contoso.com
+        Grants FullAccess and SendAs on shared@ to user@.
+    #>
+    [CmdletBinding(DefaultParameterSetName = 'Mirror', SupportsShouldProcess = $true)]
+    param (
+        # Mirror parameter set
+        [Parameter(Mandatory = $true, ParameterSetName = 'Mirror')]
+        [ValidateNotNullOrEmpty()]
         [string]$SourceUser,
+
+        [Parameter(Mandatory = $true, ParameterSetName = 'Mirror')]
+        [ValidateNotNullOrEmpty()]
         [string]$TargetUser,
 
-        # Grant parameters
+        # Grant parameter set
+        [Parameter(Mandatory = $true, ParameterSetName = 'Grant')]
+        [ValidateNotNullOrEmpty()]
         [string]$Mailbox,
+
+        [Parameter(Mandatory = $true, ParameterSetName = 'Grant')]
+        [ValidateNotNullOrEmpty()]
         [string]$User
     )
 
-    try {
-        if ($Action -eq 'Mirror') {
-            if (-not $SourceUser -or -not $TargetUser) {
-                return "[!] Mirror requires both SourceUser and TargetUser."
-            }
+    # The parameter binder has already enforced the correct combination —
+    # missing or mixed params produce a ParameterBindingException before
+    # this body runs.  No manual validation needed.
+    $action = $PSCmdlet.ParameterSetName
+    $target = if ($action -eq 'Mirror') { "$SourceUser -> $TargetUser" } else { $Mailbox }
 
+    if (-not $PSCmdlet.ShouldProcess($target, "Set mailbox permission ($action)")) {
+        return "[!] Skipped by -WhatIf or -Confirm."
+    }
+
+    try {
+        if ($action -eq 'Mirror') {
             $sharedMailboxes = Get-Mailbox -RecipientTypeDetails SharedMailbox -ErrorAction Stop
             $count = 0
 
@@ -64,17 +84,14 @@ function Set-ExchangeMailboxPermission {
 
             $srcMasked = Hide-UpnLocalPart $SourceUser
             $tgtMasked = Hide-UpnLocalPart $TargetUser
-            return if ($count -gt 0) {
-                "[OK] Mirrored $count permission(s) from $srcMasked to $tgtMasked"
+            if ($count -gt 0) {
+                return "[OK] Mirrored $count permission(s) from $srcMasked to $tgtMasked"
             } else {
-                "[!] No shared mailbox permissions found for $srcMasked"
+                return "[!] No shared mailbox permissions found for $srcMasked"
             }
         }
-        elseif ($Action -eq 'Grant') {
-            if (-not $Mailbox -or -not $User) {
-                return "[!] Grant requires both Mailbox and User."
-            }
-
+        else {
+            # Grant parameter set
             Add-MailboxPermission -Identity $Mailbox -User $User `
                 -AccessRights FullAccess -InheritanceType All -AutoMapping:$false `
                 -ErrorAction Stop | Out-Null
@@ -85,7 +102,8 @@ function Set-ExchangeMailboxPermission {
         }
     }
     catch {
-        Write-Warning "Exchange permission operation failed: $_"
+        Write-Warning "Exchange permission operation failed (type: $($_.Exception.GetType().Name))."
+        Write-Verbose "Exchange exception detail: $($_.Exception.Message)"
         return "[!] Operation failed. Verify Exchange Online connection and target mailbox/user."
     }
 }

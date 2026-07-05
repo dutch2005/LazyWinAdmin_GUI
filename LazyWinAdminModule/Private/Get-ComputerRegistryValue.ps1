@@ -1,4 +1,4 @@
-function Get-ComputerRegistryValue {
+﻿function Get-ComputerRegistryValue {
     <#
     .SYNOPSIS
         Retrieves a registry value from a remote computer using CIM (WMI over WinRM).
@@ -48,7 +48,7 @@ function Get-ComputerRegistryValue {
             }
         }
         catch {
-            Write-Warning "Error reading registry on $ComputerName`: $_"
+            Write-Warning "Error reading registry on $ComputerName`: $($_.Exception.Message)"
             return $null
         }
     }

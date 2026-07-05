@@ -1,4 +1,4 @@
-function Connect-ExchangeSession {
+﻿function Connect-ExchangeSession {
     <#
     .SYNOPSIS
         Connects to Exchange Online using modern authentication.

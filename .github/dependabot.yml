@@ -1,0 +1,20 @@
+version: 2
+updates:
+  # Keep GitHub Actions versions fresh so security patches land automatically.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Brussels
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - infra
+    commit-message:
+      prefix: chore
+      include: scope
+
+  # PowerShell modules are not tracked by Dependabot directly; pin versions in
+  # the module manifest and review Microsoft.Graph / Az minor bumps manually.

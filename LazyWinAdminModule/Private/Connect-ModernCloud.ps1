@@ -1,4 +1,4 @@
-function Connect-ModernCloud {
+﻿function Connect-ModernCloud {
     <#
     .SYNOPSIS
         Connects to Microsoft Graph / Entra ID using modern authentication.

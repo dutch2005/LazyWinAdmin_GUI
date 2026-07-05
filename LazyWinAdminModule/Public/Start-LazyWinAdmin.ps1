@@ -1,10 +1,14 @@
-function Start-LazyWinAdmin {
+﻿function Start-LazyWinAdmin {
     <#
     .SYNOPSIS
         Starts the modernized WPF-based LazyWinAdmin GUI.
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param ()
+
+    if (-not $PSCmdlet.ShouldProcess('LazyWinAdmin GUI', 'Start')) {
+        return
+    }
 
     # Load required assemblies for WPF
     Add-Type -AssemblyName PresentationFramework
@@ -287,6 +291,9 @@ function Start-LazyWinAdmin {
         #      (e.g. key 's' for search) unpacked by Set-Variable, overwriting $s
         #      before & $s could invoke the scriptblock.
         function Invoke-AsyncAction {
+            [Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+                'PSUseUsingScopeModifierInNewRunspaces', '',
+                Justification = '$__p__ and $__action__ are param() in the ScriptBlock; $key is a foreach variable — all declared within the block')]
             param(
                 [scriptblock]$ScriptBlock,
                 [hashtable]$Parameters             = @{},
@@ -921,7 +928,7 @@ function Start-LazyWinAdmin {
             Invoke-AsyncAction `
                 -InitializationScript ([scriptblock]::Create(". '$PrivatePath\Set-ExchangeMailboxPermission.ps1'")) `
                 -Parameters  @{ src = $src; tgt = $tgt } `
-                -ScriptBlock { Set-ExchangeMailboxPermission -Action Mirror -SourceUser $src -TargetUser $tgt } `
+                -ScriptBlock { Set-ExchangeMailboxPermission -SourceUser $src -TargetUser $tgt } `
                 -OnCompleted {
                     param($res)
                     $AppendOutput.Invoke("[Exchange Mirror] $res")
@@ -940,7 +947,7 @@ function Start-LazyWinAdmin {
             Invoke-AsyncAction `
                 -InitializationScript ([scriptblock]::Create(". '$PrivatePath\Set-ExchangeMailboxPermission.ps1'")) `
                 -Parameters  @{ mb = $mb; u = $user } `
-                -ScriptBlock { Set-ExchangeMailboxPermission -Action Grant -Mailbox $mb -User $u } `
+                -ScriptBlock { Set-ExchangeMailboxPermission -Mailbox $mb -User $u } `
                 -OnCompleted {
                     param($res)
                     $AppendOutput.Invoke("[Exchange Grant] $res")

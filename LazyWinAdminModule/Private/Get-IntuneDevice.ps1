@@ -1,4 +1,4 @@
-function Get-IntuneDevice {
+﻿function Get-IntuneDevice {
     <#
     .SYNOPSIS
         Retrieves managed devices from Microsoft Intune using Microsoft Graph.
@@ -35,7 +35,8 @@ function Get-IntuneDevice {
                                  JoinType, ManagementState, DeviceEnrollmentType
         }
         catch {
-            Write-Warning "Error querying Intune: $_"
+            Write-Warning "Error querying Intune (type: $($_.Exception.GetType().Name))."
+            Write-Verbose "Intune exception detail: $($_.Exception.Message)"
             return $null
         }
     }
