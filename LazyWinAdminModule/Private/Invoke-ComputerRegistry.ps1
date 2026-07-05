@@ -1,4 +1,4 @@
-function Invoke-ComputerRegistry {
+﻿function Invoke-ComputerRegistry {
     <#
     .SYNOPSIS
         Performs registry operations (Get, Set, New, Remove) on a remote computer.
@@ -98,7 +98,7 @@ function Invoke-ComputerRegistry {
             }
         }
         catch {
-            Write-Warning "Registry operation failed on $ComputerName`: $_"
+            Write-Warning "Registry operation failed on $ComputerName`: $($_.Exception.Message)"
             return $null
         }
     }

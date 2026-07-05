@@ -1,0 +1,14 @@
+# CODEOWNERS — auto-requests review from the listed owners on every PR.
+# Reference: https://docs.github.com/en/repositories/managing-your-repositories-settings-and-security/customizing-your-repository/about-code-owners
+
+# Default owner for everything in the repo.
+*                               @dutch2005
+
+# The .speq contract is architectural — same owner but flagged for extra scrutiny.
+/lazywinadmin.speq              @dutch2005
+/state_lazywinadmin.speq        @dutch2005
+
+# CI / reviewer-bot configs — anyone changing these should be explicitly approved.
+/.github/                       @dutch2005
+/.gemini/                       @dutch2005
+/.coderabbit.yaml               @dutch2005

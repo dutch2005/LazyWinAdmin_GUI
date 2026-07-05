@@ -1,4 +1,4 @@
-function Get-ComputerLocalUser {
+﻿function Get-ComputerLocalUser {
     <#
     .SYNOPSIS
         Retrieves local user accounts from a remote computer using CIM.
@@ -18,7 +18,7 @@ function Get-ComputerLocalUser {
             return $users | Select-Object Name, FullName, Disabled, Lockout, PasswordRequired, PasswordExpires, SID, Status
         }
         catch {
-            Write-Warning "Error getting local users for $ComputerName`: $_"
+            Write-Warning "Error getting local users for $ComputerName`: $($_.Exception.Message)"
             return $null
         }
     }

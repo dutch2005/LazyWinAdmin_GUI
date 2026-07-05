@@ -14,7 +14,6 @@ function Test-ComputerPort {
         try {
             $tcpClient   = New-Object System.Net.Sockets.TcpClient
             $connectTask = $tcpClient.BeginConnect($ComputerName, $Port, $null, $null)
-
             # Wait for the async connect, but no longer than $TimeoutMs.
             # WaitOne returns $true  = handle was signaled (connect completed, either OK or error)
             #                $false = timed out, connect still pending in the background
