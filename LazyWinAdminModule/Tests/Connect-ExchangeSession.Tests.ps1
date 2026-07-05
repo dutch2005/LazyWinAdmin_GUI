@@ -16,7 +16,7 @@ BeforeAll {
 
     # Stubs for Exchange cmdlets that may not be present on test machine
     if (-not (Get-Command Connect-ExchangeOnline -ErrorAction SilentlyContinue)) {
-        function Connect-ExchangeOnline { param([bool]$ShowBanner, [string]$UserPrincipalName) }
+        function Connect-ExchangeOnline { param([bool]$ShowBanner, [string]$UserPrincipalName, [string]$DelegatedOrganization) }
     }
     if (-not (Get-Command Get-OrganizationConfig -ErrorAction SilentlyContinue)) {
         function Get-OrganizationConfig { param() }
@@ -70,6 +70,20 @@ Describe 'Connect-ExchangeSession' {
 
         It 'Accepts -UserPrincipalName parameter without throwing' {
             { Connect-ExchangeSession -UserPrincipalName 'admin@contoso.com' } | Should -Not -Throw
+        }
+
+        It 'Forwards -DelegatedOrganization to Connect-ExchangeOnline for a customer tenant' {
+            Connect-ExchangeSession -UserPrincipalName 'admin@data4.nl' -DelegatedOrganization 'customer.onmicrosoft.com' | Out-Null
+            Should -Invoke Connect-ExchangeOnline -Times 1 -Exactly -ParameterFilter {
+                $DelegatedOrganization -eq 'customer.onmicrosoft.com'
+            }
+        }
+
+        It 'Does NOT pass DelegatedOrganization when connecting to the home tenant' {
+            Connect-ExchangeSession -UserPrincipalName 'admin@data4.nl' | Out-Null
+            Should -Invoke Connect-ExchangeOnline -Times 1 -Exactly -ParameterFilter {
+                [string]::IsNullOrEmpty($DelegatedOrganization)
+            }
         }
     }
 
