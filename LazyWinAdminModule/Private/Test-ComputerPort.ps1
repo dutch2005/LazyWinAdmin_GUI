@@ -1,4 +1,4 @@
-﻿function Test-ComputerPort {
+function Test-ComputerPort {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
@@ -12,17 +12,30 @@
     process {
         $tcpClient = $null
         try {
-            $tcpClient = New-Object System.Net.Sockets.TcpClient
+            $tcpClient   = New-Object System.Net.Sockets.TcpClient
             $connectTask = $tcpClient.BeginConnect($ComputerName, $Port, $null, $null)
-            
-            # Non-blocking wait with timeout to prevent hanging the runspace
-            $connectTask.AsyncWaitHandle.WaitOne($TimeoutMs, $false) | Out-Null
-            
-            if ($tcpClient.Connected) {
+            # Wait for the async connect, but no longer than $TimeoutMs.
+            # WaitOne returns $true  = handle was signaled (connect completed, either OK or error)
+            #                $false = timed out, connect still pending in the background
+            # When it times out we must NOT call EndConnect — that would block the runspace
+            # waiting for the very operation the timeout was meant to abandon. The `finally`
+            # block disposes the TcpClient, which cancels the pending connect.
+            $waitResult = $connectTask.AsyncWaitHandle.WaitOne($TimeoutMs, $false)
+
+            if (-not $waitResult) {
+                return "Closed/Filtered"
+            }
+
+            # Handle signaled. EndConnect either succeeds (socket is open) or throws a
+            # SocketException for connect-level failures (ECONNREFUSED, host unreachable,
+            # RST). Both are expected results of a reachability probe and map to
+            # "Closed/Filtered". Only unexpected framework/runtime errors fall through
+            # to the outer catch and surface as "Error".
+            try {
                 $tcpClient.EndConnect($connectTask)
                 return "Open"
             }
-            else {
+            catch [System.Net.Sockets.SocketException] {
                 return "Closed/Filtered"
             }
         }
