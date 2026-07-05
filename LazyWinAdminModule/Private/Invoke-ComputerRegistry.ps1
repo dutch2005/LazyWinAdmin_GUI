@@ -59,21 +59,33 @@
                     return $null
                 }
                 "Set" {
-                    $methodName = "Set$($ValueType)Value"
-
-                    # $cimArgs renamed from $args — $args is a PowerShell automatic variable
-                    if ($ValueType -eq "String") {
-                        $cimArgs = @{ hDefKey = $hDef; sSubKeyName = $KeyPath; sValueName = $ValueName; sValue = [string]$Value }
-                    }
-                    elseif ($ValueType -eq "DWord") {
-                        $cimArgs = @{ hDefKey = $hDef; sSubKeyName = $KeyPath; sValueName = $ValueName; uValue = [uint32]$Value }
-                    }
-                    elseif ($ValueType -eq "QWord") {
-                        $cimArgs = @{ hDefKey = $hDef; sSubKeyName = $KeyPath; sValueName = $ValueName; uValue = [uint64]$Value }
-                    }
-                    else {
-                        Write-Warning "ValueType '$ValueType' is not yet fully implemented."
-                        return $false
+                    # Explicit method-name + argument-shape switch per ValueType.
+                    # Rationale: StdRegProv exposes one Set*Value method per registry type
+                    # (SetStringValue, SetDWORDValue, SetQWORDValue, ...). Each takes a
+                    # differently-named value argument (sValue vs. uValue). An explicit
+                    # switch is auditable by a reviewer — the previous `"Set$($ValueType)Value"`
+                    # composition made the actual method target dependent on a runtime
+                    # string, which is harder to reason about and harder for
+                    # PSScriptAnalyzer to flag if the ValidateSet ever drifts from the
+                    # set of methods the class actually exposes.
+                    # $cimArgs: $args is a PowerShell automatic variable — do not reuse the name.
+                    switch ($ValueType) {
+                        "String" {
+                            $methodName = "SetStringValue"
+                            $cimArgs    = @{ hDefKey = $hDef; sSubKeyName = $KeyPath; sValueName = $ValueName; sValue = [string]$Value }
+                        }
+                        "DWord" {
+                            $methodName = "SetDWORDValue"
+                            $cimArgs    = @{ hDefKey = $hDef; sSubKeyName = $KeyPath; sValueName = $ValueName; uValue = [uint32]$Value }
+                        }
+                        "QWord" {
+                            $methodName = "SetQWORDValue"
+                            $cimArgs    = @{ hDefKey = $hDef; sSubKeyName = $KeyPath; sValueName = $ValueName; uValue = [uint64]$Value }
+                        }
+                        default {
+                            Write-Warning "ValueType '$ValueType' is not yet fully implemented."
+                            return $false
+                        }
                     }
 
                     $res = Invoke-CimMethod -InputObject $reg -MethodName $methodName -Arguments $cimArgs
