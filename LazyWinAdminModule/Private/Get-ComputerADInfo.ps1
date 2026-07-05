@@ -1,4 +1,4 @@
-﻿function Get-ComputerADInfo {
+function Get-ComputerADInfo {
     <#
     .SYNOPSIS
         Queries Active Directory for computer, user, or group objects.
@@ -85,8 +85,9 @@
                         $result = Get-ADGroup -Filter * `
                             -Properties Description, MemberOf -ErrorAction Stop
                     }
+                    # SamAccountName is pii — omitted from projection so it never reaches the UI layer
                     return $result |
-                        Select-Object Name, SamAccountName, GroupCategory, GroupScope, Description
+                        Select-Object Name, GroupCategory, GroupScope, Description
                 }
             }
         }
