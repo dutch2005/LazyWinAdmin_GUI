@@ -38,34 +38,54 @@
 
             switch ($Type) {
                 "Computer" {
-                    $ldapFilter = if ($AdFilter) { "Name -like '$AdFilter'" } `
-                                  elseif ($ComputerName) { "Name -eq '$ComputerName'" } `
-                                  else { "Name -like '*'" }
-
-                    return Get-ADComputer -Filter $ldapFilter `
-                        -Properties Description, OperatingSystem, OperatingSystemVersion,
-                                    LastLogonDate, DistinguishedName, Enabled -ErrorAction Stop |
+                    # ScriptBlock -Filter form: AD cmdlets parameterise $AdFilter / $ComputerName
+                    # safely into the LDAP query, eliminating interpolation-based injection.
+                    if ($AdFilter) {
+                        $result = Get-ADComputer -Filter { Name -like $AdFilter } `
+                            -Properties Description, OperatingSystem, OperatingSystemVersion,
+                                        LastLogonDate, DistinguishedName, Enabled -ErrorAction Stop
+                    }
+                    elseif ($ComputerName) {
+                        $result = Get-ADComputer -Filter { Name -eq $ComputerName } `
+                            -Properties Description, OperatingSystem, OperatingSystemVersion,
+                                        LastLogonDate, DistinguishedName, Enabled -ErrorAction Stop
+                    }
+                    else {
+                        $result = Get-ADComputer -Filter * `
+                            -Properties Description, OperatingSystem, OperatingSystemVersion,
+                                        LastLogonDate, DistinguishedName, Enabled -ErrorAction Stop
+                    }
+                    return $result |
                         Select-Object Name, DNSHostName, OperatingSystem, OperatingSystemVersion,
                                       LastLogonDate, Enabled, Description, DistinguishedName
                 }
                 "User" {
-                    $ldapFilter = if ($AdFilter) { "DisplayName -like '$AdFilter' -or SamAccountName -like '$AdFilter'" } `
-                                  else { "Enabled -eq `$true" }
-
                     # SamAccountName is pii — Select-Object excludes it from the returned object
                     # to prevent accidental logging in the UI layer
-                    return Get-ADUser -Filter $ldapFilter `
-                        -Properties DisplayName, EmailAddress, Department, Title,
-                                    LastLogonDate, Enabled -ErrorAction Stop |
+                    if ($AdFilter) {
+                        $result = Get-ADUser -Filter { DisplayName -like $AdFilter -or SamAccountName -like $AdFilter } `
+                            -Properties DisplayName, EmailAddress, Department, Title,
+                                        LastLogonDate, Enabled -ErrorAction Stop
+                    }
+                    else {
+                        $result = Get-ADUser -Filter { Enabled -eq $true } `
+                            -Properties DisplayName, EmailAddress, Department, Title,
+                                        LastLogonDate, Enabled -ErrorAction Stop
+                    }
+                    return $result |
                         Select-Object DisplayName, EmailAddress, Department, Title,
                                       LastLogonDate, Enabled, DistinguishedName
                 }
                 "Group" {
-                    $ldapFilter = if ($AdFilter) { "Name -like '$AdFilter'" } `
-                                  else { "Name -like '*'" }
-
-                    return Get-ADGroup -Filter $ldapFilter `
-                        -Properties Description, MemberOf -ErrorAction Stop |
+                    if ($AdFilter) {
+                        $result = Get-ADGroup -Filter { Name -like $AdFilter } `
+                            -Properties Description, MemberOf -ErrorAction Stop
+                    }
+                    else {
+                        $result = Get-ADGroup -Filter * `
+                            -Properties Description, MemberOf -ErrorAction Stop
+                    }
+                    return $result |
                         Select-Object Name, SamAccountName, GroupCategory, GroupScope, Description
                 }
             }
