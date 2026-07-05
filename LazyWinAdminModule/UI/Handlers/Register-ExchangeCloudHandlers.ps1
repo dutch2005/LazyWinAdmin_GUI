@@ -1,4 +1,4 @@
-﻿# LazyWinAdmin UI section — Exchange + Cloud Auth tab handlers.
+# LazyWinAdmin UI section — Exchange + Cloud Auth tab handlers.
 # Dot-sourced by Start-LazyWinAdmin INTO its scope.
 
 # --- EXCHANGE HANDLERS ---
@@ -42,7 +42,7 @@ $btnGetMailboxPerms.Add_Click({
                 $lblMailboxPermsCount.Text = "$($lvMailboxPerms.Items.Count) mailbox(es)"
             } else {
                 $lblMailboxPermsCount.Text = "0 mailbox(es)"
-                $AppendOutput.Invoke("[Exchange] No shared mailbox permissions found for $upn.")
+                $AppendOutput.Invoke("[Exchange] No mailbox permissions found for $(Hide-UpnLocalPart $upn).")
             }
         }
 })

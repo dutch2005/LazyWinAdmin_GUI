@@ -1,4 +1,4 @@
-﻿function Set-ExchangeMailboxPermission {
+function Set-ExchangeMailboxPermission {
     <#
     .SYNOPSIS
         Mirrors or grants mailbox permissions in Exchange Online.
@@ -98,10 +98,12 @@
                 }
             }
 
+            $srcMasked = Hide-UpnLocalPart $SourceUser
+            $tgtMasked = Hide-UpnLocalPart $TargetUser
             if ($count -gt 0) {
-                return "[OK] Mirrored $count permission(s) from $SourceUser to $TargetUser"
+                return "[OK] Mirrored $count permission(s) from $srcMasked to $tgtMasked"
             }
-            return "[!] No mailbox permissions found for $SourceUser"
+            return "[!] No mailbox permissions found for $srcMasked"
         }
         else {
             Add-MailboxPermission -Identity $Mailbox -User $User `
@@ -112,7 +114,7 @@
             Set-Mailbox -Identity $Mailbox `
                 -GrantSendOnBehalfTo @{ Add = $User } -ErrorAction Stop | Out-Null
 
-            return "[OK] Granted FullAccess, SendAs and SendOnBehalf on $Mailbox to $User"
+            return "[OK] Granted FullAccess, SendAs and SendOnBehalf on $(Hide-UpnLocalPart $Mailbox) to $(Hide-UpnLocalPart $User)"
         }
     }
     catch {
