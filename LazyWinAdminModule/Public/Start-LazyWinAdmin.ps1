@@ -27,6 +27,10 @@ function Start-LazyWinAdmin {
     Add-Type -AssemblyName PresentationCore
     Add-Type -AssemblyName WindowsBase
 
+    # Enable logging Transcript to TEMP directory
+    $transcriptPath = Join-Path $env:TEMP "LazyWinAdmin_Debug.log"
+    Start-Transcript -Path $transcriptPath -Append -Force -ErrorAction SilentlyContinue
+
     # Initialize State
     $state = [LazyWinAdminState]::new()
 
@@ -104,5 +108,6 @@ function Start-LazyWinAdmin {
     }
     finally {
         $state.Dispose()
+        Stop-Transcript -ErrorAction SilentlyContinue
     }
 }

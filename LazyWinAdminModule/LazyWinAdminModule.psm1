@@ -2,6 +2,11 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Continue"
 
+# --- GLOBAL DEBUG MODE ENABLED ---
+$global:VerbosePreference = 'Continue'
+$global:DebugPreference = 'Continue'
+Write-Verbose "LazyWinAdmin Debug Mode Enabled - Logging all operations..."
+
 # Load Classes
 $classFiles = Get-ChildItem -Path (Join-Path $PSScriptRoot "Classes") -Filter "*.ps1"
 foreach ($file in $classFiles) {
