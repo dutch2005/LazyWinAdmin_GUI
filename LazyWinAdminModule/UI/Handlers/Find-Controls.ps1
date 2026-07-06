@@ -127,3 +127,21 @@ $btnExportMailboxPerms  = $window.FindName("btnExportMailboxPerms")
 
 # Default value
 $txtComputerName.Text = $env:COMPUTERNAME
+
+# --- RMM & PIM CONTROLS ---
+$txtRmmComputer      = $window.FindName("txtRmmComputer")
+$txtRmmOutput        = $window.FindName("txtRmmOutput")
+$btnRmmProcess       = $window.FindName("btnRmmProcess")
+$btnRmmEventLog      = $window.FindName("btnRmmEventLog")
+$btnRmmVolume        = $window.FindName("btnRmmVolume")
+$btnRmmSmb           = $window.FindName("btnRmmSmb")
+$btnRmmUpdates       = $window.FindName("btnRmmUpdates")
+$btnRmmSession       = $window.FindName("btnRmmSession")
+
+$txtRmmCloudTarget   = $window.FindName("txtRmmCloudTarget")
+$txtRmmTicket        = $window.FindName("txtRmmTicket")
+$btnRmmBitLocker     = $window.FindName("btnRmmBitLocker")
+$btnRmmIntuneSync    = $window.FindName("btnRmmIntuneSync")
+$btnRmmEntraLogs     = $window.FindName("btnRmmEntraLogs")
+$btnRmmRevokeSession = $window.FindName("btnRmmRevokeSession")
+$btnRmmResetMFA      = $window.FindName("btnRmmResetMFA")

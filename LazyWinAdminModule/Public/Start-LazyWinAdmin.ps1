@@ -1,4 +1,4 @@
-﻿function Start-LazyWinAdmin {
+function Start-LazyWinAdmin {
     <#
     .SYNOPSIS
         Starts the modernized WPF-based LazyWinAdmin GUI.
@@ -91,6 +91,7 @@
         . (Join-Path $UiHandlerPath 'Register-GovernanceHandlers.ps1')
         . (Join-Path $UiHandlerPath 'Register-RegistryAdHandlers.ps1')
         . (Join-Path $UiHandlerPath 'Register-ExchangeCloudHandlers.ps1')
+        . (Join-Path $UiHandlerPath 'Register-RmmHandlers.ps1')
         . (Join-Path $UiHandlerPath 'Register-ExportHandlers.ps1')
 
         # Clipboard context menus + dispatcher/clock timers (runs at load time).

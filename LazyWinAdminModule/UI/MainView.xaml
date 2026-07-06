@@ -559,6 +559,60 @@
                 </Grid>
             </TabItem>
 
+                        <!-- TAB 12: RMM & PIM -->
+            <TabItem Header="RMM &amp; PIM Features">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <TextBlock Text="Target Computer:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBox Name="txtRmmComputer" Width="150" VerticalAlignment="Center" Padding="6" Text="{Binding ElementName=txtComputerName, Path=Text}"/>
+                        
+                        <Button Name="btnRmmProcess" Content="Get Processes" Width="100" Margin="10,0,0,0" Padding="6" Background="#E8F0FE"/>
+                        <Button Name="btnRmmEventLog" Content="Event Logs" Width="90" Margin="10,0,0,0" Padding="6" Background="#E8F0FE"/>
+                        <Button Name="btnRmmVolume" Content="Volumes" Width="80" Margin="10,0,0,0" Padding="6" Background="#E8F0FE"/>
+                        <Button Name="btnRmmSmb" Content="SMB Shares" Width="90" Margin="10,0,0,0" Padding="6" Background="#E8F0FE"/>
+                        <Button Name="btnRmmUpdates" Content="Updates" Width="80" Margin="10,0,0,0" Padding="6" Background="#E8F0FE"/>
+                        <Button Name="btnRmmSession" Content="PSRemoting" Width="100" Margin="10,0,0,0" Padding="6" Background="#CEEAD6"/>
+                    </StackPanel>
+                    
+                    <TabControl Grid.Row="1" Background="Transparent" BorderThickness="0">
+                        <TabItem Header="On-Premise Tools">
+                            <GroupBox Header="Tool Output" Padding="5">
+                                <TextBox Name="txtRmmOutput" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" Background="#FFFFFF" Padding="10"/>
+                            </GroupBox>
+                        </TabItem>
+                        <TabItem Header="Cloud Identity (PIM)">
+                            <Grid Margin="10">
+                                <StackPanel>
+                                    <TextBlock Text="PIM Elevated Cloud Actions" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                        <TextBlock Text="User UPN/Target:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                        <TextBox Name="txtRmmCloudTarget" Width="200" VerticalAlignment="Center" Padding="6"/>
+                                        <TextBlock Text="Ticket/Justification:" VerticalAlignment="Center" Margin="15,0,10,0"/>
+                                        <TextBox Name="txtRmmTicket" Width="150" VerticalAlignment="Center" Padding="6" Text="INC12345 Needs fix"/>
+                                    </StackPanel>
+                                    
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                        <Button Name="btnRmmBitLocker" Content="Get BitLocker Key" Width="140" Margin="0,0,10,0" Padding="6" Background="#E8F0FE"/>
+                                        <Button Name="btnRmmIntuneSync" Content="Intune Sync" Width="100" Margin="0,0,10,0" Padding="6" Background="#E8F0FE"/>
+                                        <Button Name="btnRmmEntraLogs" Content="Sign-in Logs" Width="120" Margin="0,0,10,0" Padding="6" Background="#E8F0FE"/>
+                                    </StackPanel>
+                                    
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                        <Button Name="btnRmmRevokeSession" Content="Revoke Sessions" Width="130" Margin="0,0,10,0" Padding="6" Background="#FCE8E6"/>
+                                        <Button Name="btnRmmResetMFA" Content="Reset MFA" Width="100" Margin="0,0,10,0" Padding="6" Background="#FCE8E6"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                        </TabItem>
+                    </TabControl>
+                </Grid>
+            </TabItem>
+
             <!-- TAB 11: CLOUD AUTH -->
             <TabItem Header="Cloud Auth">
                 <Grid Margin="10">
@@ -612,3 +666,4 @@
         </StatusBar>
     </Grid>
 </Window>
+
