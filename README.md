@@ -134,6 +134,11 @@ Requires `ExchangeOnlineManagement` module and a one-time sign-in via the **Exch
 - Service principal sign-in (Tenant ID + Client ID + Client Secret)
 - Connection state tracked in `$state.SyncHash.CloudConnected` — cloud feature buttons blocked with a friendly message when not authenticated
 
+### RMM & PIM Features tab *(new in v1.4.0)*
+A comprehensive suite for endpoint management and identity protection, featuring:
+- **On-Premise Tools**: Remote Process Management, Event Logs extraction, Volume checking, SMB share/session enumeration, pending Windows Updates retrieval, and Interactive PSRemoting sessions (`Enter-LWAComputerSession`).
+- **Cloud Identity (PIM)**: Integrated Just-In-Time PIM elevation (`Invoke-LWAEntraPIMElevation`). Allows securely fetching BitLocker Recovery Keys, triggering Intune Device Syncs, querying Entra ID Sign-in Logs, forcefully Revoking user sessions, and Resetting user MFA with Ticket/Justification auditing.
+
 ---
 
 ## Admin elevation
@@ -226,6 +231,14 @@ pwsh -NoProfile -File .\LazyWinAdminModule\Tests\Run-Tests.ps1 -Suite Integrity
 ---
 
 ## Version history
+
+### v1.4.0 — 2026 (RMM & PIM Edition)
+- **Advanced RMM & PIM Tab**: 13 brand new fully-integrated functions for complete endpoint and identity governance.
+- **Just-In-Time PIM Elevation**: Added `Test-LWAEntraRole` and `Invoke-LWAEntraPIMElevation` to seamlessly elevate privileges for cloud actions (BitLocker, Intune Sync) requiring a justification ticket (e.g. `INC12345`).
+- **Identity Protection**: Integrated tools to fetch Entra ID sign-in logs, reset MFA, and revoke active sessions directly from the GUI.
+- **On-Premise Diagnostics**: Added Process Management, Event Logs, Windows Update checks, SMB Session management, Volumes, and interactive PSRemoting via CIM/WMI modules.
+- **UI Async Fixes**: Rewrote background thread serialization so massive CIM instance returns (like processes or event logs) are parsed locally in the Runspace, preventing WPF dispatcher freezes.
+- **Extensive Test Coverage**: Total test count increased to **439 tests** with 0 failures to cover all 13 new Cloud and On-Premise scripts.
 
 ### v1.3.1 — 2026 (clean-code & full test coverage)
 - **309 Pester v5 tests, 0 failures** (up from 228) — 8 new test files covering all previously untested private functions: `Test-ComputerPort`, `Connect-ExchangeSession`, `Get-DeviceComplianceStatus`, `Get-ExchangeMailboxPermission`, `Get-IntuneManagementScript`, `Set-DeviceComplianceItem`, `Set-ExchangeMailboxPermission`, `Get-ComputerRegistryValue`
