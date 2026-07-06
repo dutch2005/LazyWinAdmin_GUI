@@ -1,6 +1,8 @@
 # LazyWinAdmin UI section - RMM & PIM handlers.
 # Dot-sourced by Start-LazyWinAdmin INTO its scope.
 
+$RmmInitScript = [scriptblock]::Create("Import-Module '$($PrivatePath)\..\LazyWinAdminModule.psm1' -Force")
+
 # --- ON-PREMISE RMM HANDLERS ---
 
 $btnRmmProcess.Add_Click({
@@ -9,11 +11,12 @@ $btnRmmProcess.Add_Click({
     $txtRmmOutput.Text = "Fetching processes for $comp..."
     
     Invoke-AsyncAction `
+        -InitializationScript $RmmInitScript `
         -Parameters @{ c = $comp } `
-        -ScriptBlock { Get-LWAComputerProcess -ComputerName $c } `
+        -ScriptBlock { Get-LWAComputerProcess -ComputerName $c | Format-Table -AutoSize | Out-String } `
         -OnCompleted {
             param($res)
-            $txtRmmOutput.Text = ($res | Format-Table -AutoSize | Out-String)
+            $txtRmmOutput.Text = $res
         }
 })
 
@@ -23,11 +26,12 @@ $btnRmmEventLog.Add_Click({
     $txtRmmOutput.Text = "Fetching event logs for $comp..."
     
     Invoke-AsyncAction `
+        -InitializationScript $RmmInitScript `
         -Parameters @{ c = $comp } `
-        -ScriptBlock { Get-LWAComputerEventLog -ComputerName $c } `
+        -ScriptBlock { Get-LWAComputerEventLog -ComputerName $c | Format-Table -AutoSize | Out-String } `
         -OnCompleted {
             param($res)
-            $txtRmmOutput.Text = ($res | Format-Table -AutoSize | Out-String)
+            $txtRmmOutput.Text = $res
         }
 })
 
@@ -37,11 +41,12 @@ $btnRmmVolume.Add_Click({
     $txtRmmOutput.Text = "Fetching volumes for $comp..."
     
     Invoke-AsyncAction `
+        -InitializationScript $RmmInitScript `
         -Parameters @{ c = $comp } `
-        -ScriptBlock { Get-LWAComputerVolume -ComputerName $c } `
+        -ScriptBlock { Get-LWAComputerVolume -ComputerName $c | Format-Table -AutoSize | Out-String } `
         -OnCompleted {
             param($res)
-            $txtRmmOutput.Text = ($res | Format-Table -AutoSize | Out-String)
+            $txtRmmOutput.Text = $res
         }
 })
 
@@ -51,11 +56,12 @@ $btnRmmSmb.Add_Click({
     $txtRmmOutput.Text = "Fetching SMB sessions for $comp..."
     
     Invoke-AsyncAction `
+        -InitializationScript $RmmInitScript `
         -Parameters @{ c = $comp } `
-        -ScriptBlock { Get-LWAComputerSmbSession -ComputerName $c } `
+        -ScriptBlock { Get-LWAComputerSmbSession -ComputerName $c | Format-Table -AutoSize | Out-String } `
         -OnCompleted {
             param($res)
-            $txtRmmOutput.Text = ($res | Format-Table -AutoSize | Out-String)
+            $txtRmmOutput.Text = $res
         }
 })
 
@@ -65,11 +71,12 @@ $btnRmmUpdates.Add_Click({
     $txtRmmOutput.Text = "Fetching pending Windows Updates for $comp..."
     
     Invoke-AsyncAction `
+        -InitializationScript $RmmInitScript `
         -Parameters @{ c = $comp } `
-        -ScriptBlock { Get-LWAComputerUpdate -ComputerName $c } `
+        -ScriptBlock { Get-LWAComputerUpdate -ComputerName $c | Format-Table -AutoSize | Out-String } `
         -OnCompleted {
             param($res)
-            $txtRmmOutput.Text = ($res | Format-Table -AutoSize | Out-String)
+            $txtRmmOutput.Text = $res
         }
 })
 
@@ -91,11 +98,12 @@ $btnRmmBitLocker.Add_Click({
     $txtRmmOutput.Text = "Fetching BitLocker key for device '$target' using Justification '$ticket' (Will auto-elevate PIM if needed)..."
     
     Invoke-AsyncAction `
+        -InitializationScript $RmmInitScript `
         -Parameters @{ t = $target; j = $ticket } `
-        -ScriptBlock { Get-LWABitLockerKey -DeviceId $t -Justification $j } `
+        -ScriptBlock { Get-LWABitLockerKey -DeviceId $t -Justification $j | Format-List | Out-String } `
         -OnCompleted {
             param($res)
-            $txtRmmOutput.Text = ($res | Format-List | Out-String)
+            $txtRmmOutput.Text = $res
         }
 })
 
@@ -107,11 +115,12 @@ $btnRmmIntuneSync.Add_Click({
     $txtRmmOutput.Text = "Triggering Intune Sync for device '$target' using Justification '$ticket'..."
     
     Invoke-AsyncAction `
+        -InitializationScript $RmmInitScript `
         -Parameters @{ t = $target; j = $ticket } `
-        -ScriptBlock { Invoke-LWAIntuneAction -DeviceId $t -Action "Sync" -Justification $j } `
+        -ScriptBlock { Invoke-LWAIntuneAction -DeviceId $t -Action "Sync" -Justification $j | Out-String } `
         -OnCompleted {
             param($res)
-            $txtRmmOutput.Text = "Intune Sync initiated successfully."
+            $txtRmmOutput.Text = "Intune Sync initiated successfully. $($res)"
         }
 })
 
@@ -122,17 +131,18 @@ $btnRmmEntraLogs.Add_Click({
     $txtRmmOutput.Text = "Fetching Entra ID Sign-in logs (User: $target) using Justification '$ticket'..."
     
     Invoke-AsyncAction `
+        -InitializationScript $RmmInitScript `
         -Parameters @{ t = $target; j = $ticket } `
         -ScriptBlock { 
             if ([string]::IsNullOrWhiteSpace($t)) {
-                Get-LWAEntraLog -Justification $j 
+                Get-LWAEntraLog -Justification $j | Format-Table -AutoSize | Out-String
             } else {
-                Get-LWAEntraLog -UserPrincipalName $t -Justification $j 
+                Get-LWAEntraLog -UserPrincipalName $t -Justification $j | Format-Table -AutoSize | Out-String
             }
         } `
         -OnCompleted {
             param($res)
-            $txtRmmOutput.Text = ($res | Format-Table -AutoSize | Out-String)
+            $txtRmmOutput.Text = $res
         }
 })
 
@@ -144,11 +154,12 @@ $btnRmmRevokeSession.Add_Click({
     $txtRmmOutput.Text = "Revoking sessions for '$target' using Justification '$ticket'..."
     
     Invoke-AsyncAction `
+        -InitializationScript $RmmInitScript `
         -Parameters @{ t = $target; j = $ticket } `
-        -ScriptBlock { Revoke-LWAEntraSession -UserPrincipalName $t -Justification $j } `
+        -ScriptBlock { Revoke-LWAEntraSession -UserPrincipalName $t -Justification $j | Out-String } `
         -OnCompleted {
             param($res)
-            $txtRmmOutput.Text = "Sessions revoked successfully for $target."
+            $txtRmmOutput.Text = "Sessions revoked successfully for $target. $($res)"
         }
 })
 
@@ -160,10 +171,11 @@ $btnRmmResetMFA.Add_Click({
     $txtRmmOutput.Text = "Resetting MFA for '$target' using Justification '$ticket'..."
     
     Invoke-AsyncAction `
+        -InitializationScript $RmmInitScript `
         -Parameters @{ t = $target; j = $ticket } `
-        -ScriptBlock { Reset-LWAEntraMFA -UserPrincipalName $t -Justification $j } `
+        -ScriptBlock { Reset-LWAEntraMFA -UserPrincipalName $t -Justification $j | Out-String } `
         -OnCompleted {
             param($res)
-            $txtRmmOutput.Text = "MFA reset initiated for $target. They will be prompted to re-register on next login."
+            $txtRmmOutput.Text = "MFA reset initiated for $target. They will be prompted to re-register on next login. $($res)"
         }
 })
