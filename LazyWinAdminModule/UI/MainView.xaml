@@ -559,7 +559,54 @@
                 </Grid>
             </TabItem>
 
-                        <!-- TAB 12: RMM & PIM -->
+                                    <!-- TAB 11: HELPDESK QUICK ACTIONS -->
+            <TabItem Header="Helpdesk Quick Actions">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <TextBlock Text="Target Computer/User/Email:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBox Name="txtHelpdeskTarget" Width="250" VerticalAlignment="Center" Padding="6"/>
+                    </StackPanel>
+
+                    <GroupBox Header="Quick Actions" Grid.Row="1" Padding="10" Margin="0,0,0,10">
+                        <UniformGrid Columns="4" Rows="4">
+                            <!-- Endpoint Actions -->
+                            <Button Name="btnGetLaps" Content="Get LAPS Password" Margin="5" Padding="5" Background="#E8F0FE"/>
+                            <Button Name="btnStartRdp" Content="Start Remote Desktop" Margin="5" Padding="5" Background="#CEEAD6"/>
+                            <Button Name="btnQuickAssist" Content="Launch Quick Assist" Margin="5" Padding="5" Background="#E8F0FE"/>
+                            <Button Name="btnRestartComputer" Content="Restart Computer" Margin="5" Padding="5" Background="#FAD2CF"/>
+                            <Button Name="btnRemoteCommand" Content="Remote Command..." Margin="5" Padding="5" Background="#FFF3E0"/>
+                            <Button Name="btnGpUpdate" Content="Force GPUpdate" Margin="5" Padding="5" Background="#E8F0FE"/>
+                            <Button Name="btnFlushDns" Content="Flush DNS Cache" Margin="5" Padding="5" Background="#E8F0FE"/>
+                            
+                            <!-- Printer Actions -->
+                            <Button Name="btnGetPrinter" Content="List Printers" Margin="5" Padding="5" Background="#E8F0FE"/>
+                            <Button Name="btnRestartSpooler" Content="Restart Print Spooler" Margin="5" Padding="5" Background="#FAD2CF"/>
+
+                            <!-- Identity Actions -->
+                            <Button Name="btnUnlockAd" Content="Unlock AD Account" Margin="5" Padding="5" Background="#CEEAD6"/>
+                            <Button Name="btnResetAdPassword" Content="Reset AD Password" Margin="5" Padding="5" Background="#FAD2CF"/>
+                            <Button Name="btnEntraSync" Content="Force Entra Delta Sync" Margin="5" Padding="5" Background="#E8F0FE"/>
+
+                            <!-- Exchange Actions -->
+                            <Button Name="btnMessageTrace" Content="Message Trace (48h)" Margin="5" Padding="5" Background="#E8F0FE"/>
+                            <Button Name="btnMailboxStats" Content="Mailbox Stats" Margin="5" Padding="5" Background="#E8F0FE"/>
+                            <Button Name="btnExchangeBlockDomain" Content="Block Sender/Domain" Margin="5" Padding="5" Background="#FAD2CF"/>
+                            <Button Name="btnGetAutoReply" Content="Get Out of Office" Margin="5" Padding="5" Background="#E8F0FE"/>
+                        </UniformGrid>
+                    </GroupBox>
+                    
+                    <GroupBox Header="Output" Grid.Row="2" Padding="5">
+                        <TextBox Name="txtHelpdeskOutput" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" Background="#FFFFFF" Padding="10"/>
+                    </GroupBox>
+                </Grid>
+            </TabItem>
+<!-- TAB 12: RMM & PIM -->
             <TabItem Header="RMM &amp; PIM Features">
                 <Grid Margin="10">
                     <Grid.RowDefinitions>
@@ -666,4 +713,5 @@
         </StatusBar>
     </Grid>
 </Window>
+
 

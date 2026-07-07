@@ -1,4 +1,4 @@
-﻿#Requires -Version 7.4
+#Requires -Version 7.4
 #Requires -Modules @{ ModuleName = 'Pester'; ModuleVersion = '5.0' }
 [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute(
     'PSAvoidUsingComputerNameHardcoded', '',
@@ -16,13 +16,16 @@ BeforeAll {
 
     # Stubs for Exchange cmdlets that may not be present on test machine
     if (-not (Get-Command Connect-ExchangeOnline -ErrorAction SilentlyContinue)) {
-        function Connect-ExchangeOnline { param([bool]$ShowBanner, [string]$UserPrincipalName, [string]$DelegatedOrganization) }
+        function Connect-ExchangeOnline { param([bool]$ShowBanner, [string]$UserPrincipalName, [string]$DelegatedOrganization, [switch]$SkipLoadingFormatData) }
     }
     if (-not (Get-Command Get-OrganizationConfig -ErrorAction SilentlyContinue)) {
         function Get-OrganizationConfig { param() }
     }
     if (-not (Get-Command Disconnect-ExchangeOnline -ErrorAction SilentlyContinue)) {
         function Disconnect-ExchangeOnline { param([switch]$Confirm) }
+    }
+    if (-not (Get-Command Assert-ModuleRequirement -ErrorAction SilentlyContinue)) {
+        function Assert-ModuleRequirement { param([string]$ModuleName, [string]$MinimumVersion) return $true }
     }
 }
 
@@ -31,7 +34,7 @@ Describe 'Connect-ExchangeSession' {
     Context 'Module not found' {
 
         BeforeAll {
-            Mock Get-Module { return $null } -ParameterFilter { $Name -eq 'ExchangeOnlineManagement' -and $ListAvailable }
+            Mock Assert-ModuleRequirement { throw "ExchangeOnlineManagement module not found." } -ParameterFilter { $ModuleName -eq 'ExchangeOnlineManagement' }
         }
 
         It 'Returns [!] message when ExchangeOnlineManagement module is not available' {
@@ -48,6 +51,7 @@ Describe 'Connect-ExchangeSession' {
     Context 'Successful connection' {
 
         BeforeAll {
+            Mock Assert-ModuleRequirement { return $true } -ParameterFilter { $ModuleName -eq 'ExchangeOnlineManagement' }
             Mock Get-Module {
                 [PSCustomObject]@{ Name = 'ExchangeOnlineManagement'; Version = '3.0.0' }
             } -ParameterFilter { $Name -eq 'ExchangeOnlineManagement' -and $ListAvailable }
@@ -90,6 +94,7 @@ Describe 'Connect-ExchangeSession' {
     Context 'Connection failure' {
 
         BeforeAll {
+            Mock Assert-ModuleRequirement { return $true } -ParameterFilter { $ModuleName -eq 'ExchangeOnlineManagement' }
             Mock Get-Module {
                 [PSCustomObject]@{ Name = 'ExchangeOnlineManagement'; Version = '3.0.0' }
             } -ParameterFilter { $Name -eq 'ExchangeOnlineManagement' -and $ListAvailable }

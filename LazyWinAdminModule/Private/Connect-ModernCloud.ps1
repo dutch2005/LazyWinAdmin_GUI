@@ -1,4 +1,4 @@
-﻿function Connect-ModernCloud {
+function Connect-ModernCloud {
     <#
     .SYNOPSIS
         Connects to Microsoft Graph / Entra ID using modern authentication.
@@ -16,6 +16,8 @@
     )
 
     try {
+        Assert-ModuleRequirement -ModuleName 'Microsoft.Graph.Authentication' | Out-Null
+
         if ($Interactive) {
             Write-Verbose "Triggering interactive login..."
             Connect-MgGraph -Scopes "User.ReadBasic.All", "Group.Read.All", "DeviceManagementManagedDevices.Read.All", "DeviceManagementConfiguration.Read.All"

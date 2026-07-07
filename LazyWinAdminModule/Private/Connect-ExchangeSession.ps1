@@ -1,4 +1,4 @@
-﻿function Connect-ExchangeSession {
+function Connect-ExchangeSession {
     <#
     .SYNOPSIS
         Connects to Exchange Online using modern authentication.
@@ -32,13 +32,21 @@
     )
 
     try {
-        if (-not (Get-Module -Name ExchangeOnlineManagement -ListAvailable)) {
-            return "[!] ExchangeOnlineManagement module not found. Install with: Install-Module ExchangeOnlineManagement -Scope CurrentUser"
-        }
+        # Ensure the ExchangeOnlineManagement module is present and at least version 3.0.0
+        Assert-ModuleRequirement -ModuleName 'ExchangeOnlineManagement' -MinimumVersion '3.0.0' | Out-Null
+
+        $exoModules = Get-Module -Name ExchangeOnlineManagement -ListAvailable
 
         Import-Module ExchangeOnlineManagement -ErrorAction Stop
 
         $params = @{ ShowBanner = $false; ErrorAction = 'Stop' }
+        
+        # Implement EXO V3 optimizations if available
+        $latestExo = $exoModules | Sort-Object Version -Descending | Select-Object -First 1
+        if ($latestExo -and [version]$latestExo.Version -ge [version]'3.0.0') {
+            $params.SkipLoadingFormatData = $true
+        }
+
         if ($UserPrincipalName)     { $params.UserPrincipalName     = $UserPrincipalName }
         if ($DelegatedOrganization) { $params.DelegatedOrganization = $DelegatedOrganization }
 
@@ -49,6 +57,9 @@
     }
     catch {
         Write-Verbose "Exchange connection exception: $_"
+        if ($_.Exception.Message -match "Failed to install required module" -or $_.Exception.Message -match "ExchangeOnlineManagement module not found") {
+            return "[!] ExchangeOnlineManagement module not found or failed to install. Error: $($_.Exception.Message)"
+        }
         return "[!] Connection failed. Verify the ExchangeOnlineManagement module is installed and credentials are correct."
     }
 }
