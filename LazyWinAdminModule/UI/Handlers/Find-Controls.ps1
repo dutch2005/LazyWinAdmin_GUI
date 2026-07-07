@@ -166,3 +166,11 @@ $btnMailboxStats = $window.FindName('btnMailboxStats')
 $btnExchangeBlockDomain = $window.FindName('btnExchangeBlockDomain')
 $btnGetAutoReply = $window.FindName('btnGetAutoReply')
 
+
+$btnUninstallSoftware = $window.FindName('btnUninstallSoftware')
+$btnForceUpdates = $window.FindName('btnForceUpdates')
+$btnSendPopup = $window.FindName('btnSendPopup')
+$btnForceLogoff = $window.FindName('btnForceLogoff')
+$btnLockWorkstation = $window.FindName('btnLockWorkstation')
+$btnSetTenant = $window.FindName('btnSetTenant')
+

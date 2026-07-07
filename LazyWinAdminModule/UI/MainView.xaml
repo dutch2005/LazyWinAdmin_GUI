@@ -573,30 +573,38 @@
                         <TextBox Name="txtHelpdeskTarget" Width="250" VerticalAlignment="Center" Padding="6"/>
                     </StackPanel>
 
-                    <GroupBox Header="Quick Actions" Grid.Row="1" Padding="10" Margin="0,0,0,10">
-                        <UniformGrid Columns="4" Rows="4">
+                                        <GroupBox Header="Quick Actions" Grid.Row="1" Padding="10" Margin="0,0,0,10">
+                        <UniformGrid Columns="5" Rows="5">
                             <!-- Endpoint Actions -->
                             <Button Name="btnGetLaps" Content="Get LAPS Password" Margin="5" Padding="5" Background="#E8F0FE"/>
                             <Button Name="btnStartRdp" Content="Start Remote Desktop" Margin="5" Padding="5" Background="#CEEAD6"/>
                             <Button Name="btnQuickAssist" Content="Launch Quick Assist" Margin="5" Padding="5" Background="#E8F0FE"/>
                             <Button Name="btnRestartComputer" Content="Restart Computer" Margin="5" Padding="5" Background="#FAD2CF"/>
                             <Button Name="btnRemoteCommand" Content="Remote Command..." Margin="5" Padding="5" Background="#FFF3E0"/>
+                            
+                            <!-- Advanced Endpoint Actions -->
                             <Button Name="btnGpUpdate" Content="Force GPUpdate" Margin="5" Padding="5" Background="#E8F0FE"/>
                             <Button Name="btnFlushDns" Content="Flush DNS Cache" Margin="5" Padding="5" Background="#E8F0FE"/>
-                            
-                            <!-- Printer Actions -->
+                            <Button Name="btnUninstallSoftware" Content="Silent Uninstall" Margin="5" Padding="5" Background="#FAD2CF"/>
+                            <Button Name="btnForceUpdates" Content="Force Win Updates" Margin="5" Padding="5" Background="#FFF3E0"/>
+                            <Button Name="btnSendPopup" Content="Send Screen Popup" Margin="5" Padding="5" Background="#E8F0FE"/>
+
+                            <!-- Session / Printer Actions -->
                             <Button Name="btnGetPrinter" Content="List Printers" Margin="5" Padding="5" Background="#E8F0FE"/>
                             <Button Name="btnRestartSpooler" Content="Restart Print Spooler" Margin="5" Padding="5" Background="#FAD2CF"/>
+                            <Button Name="btnForceLogoff" Content="Force User Logoff" Margin="5" Padding="5" Background="#FAD2CF"/>
+                            <Button Name="btnLockWorkstation" Content="Lock Workstation" Margin="5" Padding="5" Background="#FFF3E0"/>
+                            <Button Name="btnSetTenant" Content="Switch M365 Tenant" Margin="5" Padding="5" Background="#CEEAD6"/>
 
                             <!-- Identity Actions -->
                             <Button Name="btnUnlockAd" Content="Unlock AD Account" Margin="5" Padding="5" Background="#CEEAD6"/>
                             <Button Name="btnResetAdPassword" Content="Reset AD Password" Margin="5" Padding="5" Background="#FAD2CF"/>
-                            <Button Name="btnEntraSync" Content="Force Entra Delta Sync" Margin="5" Padding="5" Background="#E8F0FE"/>
+                            <Button Name="btnEntraSync" Content="Force Entra Sync" Margin="5" Padding="5" Background="#E8F0FE"/>
 
                             <!-- Exchange Actions -->
-                            <Button Name="btnMessageTrace" Content="Message Trace (48h)" Margin="5" Padding="5" Background="#E8F0FE"/>
+                            <Button Name="btnMessageTrace" Content="Message Trace" Margin="5" Padding="5" Background="#E8F0FE"/>
                             <Button Name="btnMailboxStats" Content="Mailbox Stats" Margin="5" Padding="5" Background="#E8F0FE"/>
-                            <Button Name="btnExchangeBlockDomain" Content="Block Sender/Domain" Margin="5" Padding="5" Background="#FAD2CF"/>
+                            <Button Name="btnExchangeBlockDomain" Content="Block Sender" Margin="5" Padding="5" Background="#FAD2CF"/>
                             <Button Name="btnGetAutoReply" Content="Get Out of Office" Margin="5" Padding="5" Background="#E8F0FE"/>
                         </UniformGrid>
                     </GroupBox>
@@ -713,5 +721,6 @@
         </StatusBar>
     </Grid>
 </Window>
+
 
 
