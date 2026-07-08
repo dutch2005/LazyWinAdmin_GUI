@@ -1,4 +1,4 @@
-﻿@{
+@{
     RootModule        = 'LazyWinAdminModule.psm1'
     ModuleVersion     = '1.3.1'
     GUID              = '1b9e5d4a-5c20-4e3a-b892-0b13d2f9a1c2'
@@ -20,14 +20,14 @@
     # in PowerShell 7.4+ (enforced by PowerShellVersion = '7.4' above).
     # Listing 'ThreadJob' in RequiredModules causes Import-Module to fail because
     # PS cannot resolve it as a named module even though the cmdlet is available.
-    RequiredModules   = @(
-        'Microsoft.Graph.Authentication',
-        'Microsoft.Graph.Users',
-        'Microsoft.Graph.Groups',
-        'Microsoft.Graph.DeviceManagement',
-        'Az.Accounts',
-        'Az.ResourceGraph'
-    )
+    # RequiredModules   = @(
+    #     'Microsoft.Graph.Authentication',
+    #     'Microsoft.Graph.Users',
+    #     'Microsoft.Graph.Groups',
+    #     'Microsoft.Graph.DeviceManagement',
+    #     'Az.Accounts',
+    #     'Az.ResourceGraph'
+    # )
 
     FunctionsToExport = @('Start-LazyWinAdmin')
     CmdletsToExport   = @()

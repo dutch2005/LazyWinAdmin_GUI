@@ -39,6 +39,11 @@ function Assert-ModuleRequirement {
 
     if ($needsInstall) {
         Write-Verbose "Attempting to install module '$ModuleName'..."
+        
+        # Display a 5-second auto-closing notification so the user knows why the app might pause
+        $wshell = New-Object -ComObject Wscript.Shell
+        $wshell.Popup("Module '$ModuleName' is required but not installed.`n`nIt is being downloaded and installed in the background right now. This may take a moment...", 5, "LazyWinAdmin - Installing Dependency", 0x40) | Out-Null
+
         try {
             $installParams = @{
                 Name               = $ModuleName
