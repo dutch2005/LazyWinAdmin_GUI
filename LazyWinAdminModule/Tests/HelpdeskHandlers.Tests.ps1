@@ -98,3 +98,67 @@ Describe 'Helpdesk handler integrity' {
         ([regex]::Matches($content, $pattern)).Count | Should -Be 1
     }
 }
+
+Describe 'Helpdesk handler behavior' {
+    BeforeAll {
+        Set-Item -Path Function:Restart-LWAComputer -Value { param($ComputerName) $ComputerName }
+        $script:Controls = @{}
+        $names = @(
+            'btnGetLaps', 'btnStartRdp', 'btnQuickAssist', 'btnRestartComputer',
+            'btnRemoteCommand', 'btnGpUpdate', 'btnFlushDns',
+            'btnUninstallSoftware', 'btnForceUpdates', 'btnSendPopup',
+            'btnGetPrinter', 'btnRestartSpooler', 'btnForceLogoff',
+            'btnLockWorkstation', 'btnUnlockAd', 'btnResetAdPassword',
+            'btnEntraSync', 'btnSetTenant', 'btnMessageTrace',
+            'btnMailboxStats', 'btnExchangeBlockDomain', 'btnGetAutoReply'
+        )
+        foreach ($name in $names) {
+            $control = [pscustomobject]@{
+                Handlers = [System.Collections.Generic.List[scriptblock]]::new()
+            }
+            $control | Add-Member -MemberType ScriptMethod -Name Add_Click -Value {
+                param([scriptblock]$Handler)
+                $this.Handlers.Add($Handler)
+            }
+            $script:Controls[$name] = $control
+            Set-Variable -Name $name -Value $control -Scope Script
+        }
+        $script:txtHelpdeskTarget = [pscustomobject]@{ Text = '' }
+        $script:txtHelpdeskOutput = [pscustomobject]@{ Text = '' }
+        $script:UiHandlerPath = Split-Path $script:CompositionPath
+        . $script:CompositionPath
+    }
+
+    It 'registers one live click handler per Helpdesk button' {
+        foreach ($control in $script:Controls.Values) {
+            $control.Handlers.Count | Should -Be 1
+        }
+    }
+
+    It 'rejects an empty computer target without running the action' {
+        $script:txtHelpdeskTarget.Text = ' '
+        $script:txtHelpdeskOutput.Text = ''
+        Mock Restart-LWAComputer { throw 'Action must not run' }
+        & $script:Controls['btnRestartComputer'].Handlers[0]
+        Should -Invoke Restart-LWAComputer -Times 0
+        $script:txtHelpdeskOutput.Text | Should -Match 'Please specify a target computer'
+    }
+
+    It 'routes a computer target to the original restart command' {
+        $script:txtHelpdeskTarget.Text = 'PC-01'
+        $script:txtHelpdeskOutput.Text = ''
+        Mock Restart-LWAComputer { 'Restart requested' }
+        & $script:Controls['btnRestartComputer'].Handlers[0]
+        Should -Invoke Restart-LWAComputer -Times 1 -ParameterFilter {
+            $ComputerName -eq 'PC-01'
+        }
+        $script:txtHelpdeskOutput.Text | Should -Match 'Restart requested'
+    }
+
+    It 'keeps the password reset as a placeholder' {
+        $script:txtHelpdeskTarget.Text = 'alice'
+        $script:txtHelpdeskOutput.Text = ''
+        & $script:Controls['btnResetAdPassword'].Handlers[0]
+        $script:txtHelpdeskOutput.Text | Should -Match 'securely prompting'
+    }
+}

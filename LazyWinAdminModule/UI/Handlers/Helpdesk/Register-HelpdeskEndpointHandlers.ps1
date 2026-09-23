@@ -4,8 +4,21 @@ $btnGetLaps.Add_Click({
     $target = Get-HelpdeskTarget 'Please specify a target computer.'
     if (-not $target) { return }
 
-    Invoke-HelpdeskUiAction "Fetching LAPS password for $target..." {
-        Get-LWALapsPassword -ComputerName $target
+    Write-HelpdeskOutput "Fetching LAPS password for $target..."
+    try {
+        # Preserve the original non-blocking launch. Never echo the secret to the UI.
+        $runspace = [powershell]::Create().AddScript({
+            param($computerName, $privatePath)
+            . (Join-Path $privatePath 'Assert-ModuleRequirement.ps1')
+            . (Join-Path $privatePath 'Get-LWALapsPassword.ps1')
+            Get-LWALapsPassword -ComputerName $computerName
+        }).AddArgument($target).AddArgument($PrivatePath)
+        $runspace.BeginInvoke($null, $null) | Out-Null
+        Write-HelpdeskOutput 'Command launched...'
+    }
+    catch {
+        Write-Verbose "Helpdesk LAPS launch failed: $($_.Exception.Message)"
+        Write-HelpdeskOutput '[!] Action failed. Review the application log for details.'
     }
 })
 

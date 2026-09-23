@@ -1,4 +1,4 @@
-# LazyWinAdmin UI section — Helpdesk Quick Actions.
+# LazyWinAdmin UI section - Helpdesk Quick Actions.
 # Dot-sourced by Start-LazyWinAdmin into its scope.
 # Individual handler groups live under Helpdesk/ to keep each concern small.
 
