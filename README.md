@@ -193,7 +193,7 @@ In PowerShell 7+, `Get-CimInstance -ComputerName localhost` routes through WSMan
 
 ### CIM session reuse
 
-Private CIM actions use Get-LocalOrRemoteCimSession to select the local DCOM path or a named remote target. Callers may pass ReuseSession to retain an existing session, and actions that create a session dispose it when finished. The dedicated Pester suite covers local, remote, and reuse behavior.
+Private CIM actions use `Get-LocalOrRemoteCimSession` to select the local DCOM path or a named remote target. Callers may pass `-ReuseSession` to retain an existing session, and actions that create a session dispose it when finished. The dedicated Pester suite covers local, remote, and reuse behavior.
 ### Pre-flight guards
 
 | Guard | Blocks |
