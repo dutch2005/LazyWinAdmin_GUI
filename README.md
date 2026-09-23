@@ -191,6 +191,9 @@ All button actions run in background thread jobs via `Start-ThreadJob`. Complete
 
 In PowerShell 7+, `Get-CimInstance -ComputerName localhost` routes through WSMan (WinRM) even for the local machine. If WinRM is not running, CIM jobs stall for the full connection timeout (30 s), saturate the `Start-ThreadJob` pool (5 slots), and freeze the UI. All CIM-based private functions now detect a local target and omit `-ComputerName` entirely, using a direct in-process CIM session instead.
 
+### CIM session reuse
+
+Private CIM actions use Get-LocalOrRemoteCimSession to select the local DCOM path or a named remote target. Callers may pass ReuseSession to retain an existing session, and actions that create a session dispose it when finished. The dedicated Pester suite covers local, remote, and reuse behavior.
 ### Pre-flight guards
 
 | Guard | Blocks |

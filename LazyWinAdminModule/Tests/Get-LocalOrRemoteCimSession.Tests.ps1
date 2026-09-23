@@ -4,9 +4,17 @@ BeforeAll {
 
 Describe "Get-LocalOrRemoteCimSession" {
     It "reuses an existing CimSession if passed via -ReuseSession" {
-        $mockSession = [Microsoft.Management.Infrastructure.CimSession]::new()
-        $result = Get-LocalOrRemoteCimSession -ComputerName "Server1" -ReuseSession $mockSession
-        $result | Should -Be $mockSession
+        $remoteName = "Server1"
+        $existingSession = New-CimSession -ErrorAction Stop
+        try {
+            Mock New-CimSession { throw 'A reused session must not be recreated' }
+            $result = Get-LocalOrRemoteCimSession -ComputerName $remoteName -ReuseSession $existingSession
+            $result | Should -Be $existingSession
+            Should -Invoke New-CimSession -Times 0
+        }
+        finally {
+            Remove-CimSession -CimSession $existingSession
+        }
     }
 
     It "creates a local CimSession when ComputerName is localhost" {
@@ -17,8 +25,9 @@ Describe "Get-LocalOrRemoteCimSession" {
     }
 
     It "creates a remote CimSession when ComputerName is a remote server" {
+        $remoteName = "Server1"
         Mock New-CimSession { return "RemoteSession" } -ParameterFilter { $ComputerName -eq "Server1" }
-        $result = Get-LocalOrRemoteCimSession -ComputerName "Server1"
+        $result = Get-LocalOrRemoteCimSession -ComputerName $remoteName
         $result | Should -Be "RemoteSession"
         Assert-MockCalled New-CimSession -Times 1 -ParameterFilter { $ComputerName -eq "Server1" }
     }
