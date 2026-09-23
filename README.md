@@ -134,6 +134,9 @@ Requires `ExchangeOnlineManagement` module and a one-time sign-in via the **Exch
 - Service principal sign-in (Tenant ID + Client ID + Client Secret)
 - Connection state tracked in `$state.SyncHash.CloudConnected` — cloud feature buttons blocked with a friendly message when not authenticated
 
+### Helpdesk Quick Actions tab
+
+The Helpdesk tab registers its endpoint, session/printer, identity, and Exchange actions when the GUI starts. Its handlers live in UI/Handlers/Helpdesk/; each button is registered once. Empty targets are rejected before the command runs. Remote Command and password reset remain UI placeholders. LAPS launches asynchronously and does not print a returned password into the output box.
 ### RMM & PIM Features tab *(new in v1.4.0)*
 A comprehensive suite for endpoint management and identity protection, featuring:
 - **On-Premise Tools**: Remote Process Management, Event Logs extraction, Volume checking, SMB share/session enumeration, pending Windows Updates retrieval, and Interactive PSRemoting sessions (`Enter-LWAComputerSession`).
@@ -166,7 +169,8 @@ LazyWinAdminModule/
 ├── Public/
 │   └── Start-LazyWinAdmin.ps1 # WPF window, async dispatch, all button handlers
 ├── UI/
-│   └── MainView.xaml          # WPF layout (11 tabs)
+│   ├── MainView.xaml          # WPF layout (11 tabs)
+│   └── Handlers/Helpdesk/    # Modular Helpdesk button handlers and shared helpers
 └── Tests/
     ├── Integrity.Tests.ps1                 # File structure, manifest, XAML, ApplicationState
     ├── Functions.Tests.ps1                 # Core private functions
@@ -214,7 +218,7 @@ pwsh -NoProfile -File .\LazyWinAdminModule\Tests\Run-Tests.ps1 -Output Detailed
 pwsh -NoProfile -File .\LazyWinAdminModule\Tests\Run-Tests.ps1 -Suite Integrity
 ```
 
-**309 tests, 0 failures.** Requires Pester 5.0+ (auto-installed by the runner if missing).
+Requires Pester 5.0+ (auto-installed by the runner if missing). The HelpdeskHandlers suite checks parsing, file size, registration, and representative click behavior.
 
 ---
 
